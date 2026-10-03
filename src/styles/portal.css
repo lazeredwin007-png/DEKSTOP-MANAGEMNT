@@ -1,0 +1,152 @@
+/* Pixel ITAM - Enterprise Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Custom Scrollbars */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.04);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.3);
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.5);
+}
+
+/* Sticky Table Header */
+.sticky-header th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Hover-Expand Mini Sidebar Styles */
+#appSidebar {
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, background-color 0.2s ease;
+  will-change: width;
+}
+
+#appSidebar .nav-label {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#appSidebar:not(:hover) .nav-label {
+  opacity: 0;
+  max-width: 0;
+  pointer-events: none;
+}
+
+#appSidebar:hover .nav-label {
+  opacity: 1;
+  max-width: 180px;
+}
+
+#appSidebar .nav-header {
+  transition: opacity 0.2s ease, max-height 0.2s ease, margin 0.2s ease;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+#appSidebar:not(:hover) .nav-header {
+  opacity: 0;
+  max-height: 0;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  pointer-events: none;
+}
+
+#appSidebar:hover .nav-header {
+  opacity: 1;
+  max-height: 24px;
+}
+
+#appSidebar .nav-bottom-card {
+  transition: opacity 0.2s ease, max-height 0.3s ease;
+  overflow: hidden;
+}
+
+#appSidebar:not(:hover) .nav-bottom-card {
+  opacity: 0;
+  max-height: 0;
+  pointer-events: none;
+}
+
+#appSidebar:hover .nav-bottom-card {
+  opacity: 1;
+  max-height: 140px;
+}
+
+/* Fade in Animation */
+.animate-fade-in {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Print Optimization */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .no-print,
+  #appSidebar,
+  #appHeader,
+  .action-buttons,
+  #toastContainer,
+  button:not(.print-include) {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .print-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .table-responsive {
+    overflow: visible !important;
+  }
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+  th, td {
+    border: 1px solid #cbd5e1 !important;
+    padding: 6px 8px !important;
+    font-size: 10pt !important;
+  }
+}

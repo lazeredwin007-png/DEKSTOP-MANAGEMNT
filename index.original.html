@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixel Web Solutions - IT Asset Maintenance Portal</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.3); border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.5); }
+    @media print {
+      .no-print { display: none !important; }
+      .print-only { display: block !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+            <i data-lucide="cpu" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h1 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Pixel Web Solutions</h1>
+              <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-200 dark:border-blue-800">Verified Excel Dataset</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Strictly Uploaded Asset Maintenance Data (70 Systems)</p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2 sm:space-x-3">
+          <!-- Search -->
+          <div class="relative hidden md:block w-64">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="globalSearchInput" oninput="handleGlobalSearch(this.value)" placeholder="Search staff, IP, bay..." class="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-slate-200">
+          </div>
+
+          <!-- Export CSV -->
+          <button onclick="exportToCSV()" title="Export CSV" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition">
+            <i data-lucide="download" class="w-4 h-4"></i>
+          </button>
+
+          <!-- Dark Mode -->
+          <button onclick="toggleDarkMode()" title="Toggle Theme" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition">
+            <i data-lucide="moon" id="themeIcon" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="flex space-x-1 overflow-x-auto custom-scrollbar border-t border-slate-100 dark:border-slate-800/80 py-1.5 text-xs font-medium">
+        <button onclick="switchTab('dashboard')" id="tabBtn-dashboard" class="tab-btn px-3 py-1.5 rounded-lg text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 font-semibold flex items-center space-x-1.5 whitespace-nowrap">
+          <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
+          <span>Dashboard & KPIs</span>
+        </button>
+        <button onclick="switchTab('assets')" id="tabBtn-assets" class="tab-btn px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center space-x-1.5 whitespace-nowrap">
+          <i data-lucide="monitor" class="w-3.5 h-3.5"></i>
+          <span>Master Assets (70 Systems)</span>
+        </button>
+        <button onclick="switchTab('floor12')" id="tabBtn-floor12" class="tab-btn px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center space-x-1.5 whitespace-nowrap">
+          <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+          <span>1st & 2nd Floor Sheet (47)</span>
+        </button>
+        <button onclick="switchTab('swaps')" id="tabBtn-swaps" class="tab-btn px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center space-x-1.5 whitespace-nowrap">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+          <span>Swap Maintenance</span>
+        </button>
+        <button onclick="switchTab('requirements')" id="tabBtn-requirements" class="tab-btn px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center space-x-1.5 whitespace-nowrap">
+          <i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i>
+          <span>Requirements (2)</span>
+        </button>
+        <button onclick="switchTab('newassets')" id="tabBtn-newassets" class="tab-btn px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center space-x-1.5 whitespace-nowrap">
+          <i data-lucide="package-plus" class="w-3.5 h-3.5"></i>
+          <span>New Asset & Warranty</span>
+        </button>
+        <button onclick="switchTab('antivirus')" id="tabBtn-antivirus" class="tab-btn px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center space-x-1.5 whitespace-nowrap">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+          <span>Antivirus (Win 11)</span>
+        </button>
+        <button onclick="switchTab('sam')" id="tabBtn-sam" class="tab-btn px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center space-x-1.5 whitespace-nowrap">
+          <i data-lucide="users" class="w-3.5 h-3.5"></i>
+          <span>SAM Staff Names</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- ========================================== -->
+    <!-- TAB 1: DASHBOARD -->
+    <!-- ========================================== -->
+    <section id="tab-dashboard" class="tab-content space-y-6">
+      <!-- KPI Stats Directly from Uploaded Excel Summary -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-500">Total Users</span>
+            <div class="p-2 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-600"><i data-lucide="users" class="w-4 h-4"></i></div>
+          </div>
+          <p class="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">70</p>
+          <span class="text-[11px] text-blue-600 font-medium">As per Excel Summary</span>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-500">Desktop Users</span>
+            <div class="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600"><i data-lucide="monitor" class="w-4 h-4"></i></div>
+          </div>
+          <p class="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">49</p>
+          <span class="text-[11px] text-indigo-600 font-medium">70% of fleet</span>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-500">Laptop Users</span>
+            <div class="p-2 rounded-lg bg-cyan-50 dark:bg-cyan-950 text-cyan-600"><i data-lucide="laptop" class="w-4 h-4"></i></div>
+          </div>
+          <p class="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">17</p>
+          <span class="text-[11px] text-cyan-600 font-medium">Lenovo / Asus / Sony</span>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-500">Mac Users</span>
+            <div class="p-2 rounded-lg bg-purple-50 dark:bg-purple-950 text-purple-600"><i data-lucide="apple" class="w-4 h-4"></i></div>
+          </div>
+          <p class="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">2</p>
+          <span class="text-[11px] text-purple-600 font-medium">Tech Team (Ibrahim)</span>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-500">Own System WFH</span>
+            <div class="p-2 rounded-lg bg-amber-50 dark:bg-amber-950 text-amber-600"><i data-lucide="home" class="w-4 h-4"></i></div>
+          </div>
+          <p class="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">2</p>
+          <span class="text-[11px] text-amber-600 font-medium">Remote Workstations</span>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm">
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-4">Teams in 70 Assets Fleet</h3>
+          <div class="h-64 relative">
+            <canvas id="teamChart"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm">
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-4">Operating Systems Fleet</h3>
+          <div class="h-64 relative">
+            <canvas id="osChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: MASTER ASSETS (70 SYSTEMS) -->
+    <!-- ========================================== -->
+    <section id="tab-assets" class="tab-content hidden space-y-4">
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div class="relative flex-1">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="assetSearchInput" oninput="applyFilters()" placeholder="Filter by Staff Name, Team, CPU, IP, Asset Tag, Bay, Keyboard, Mouse..." class="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="resetFilters()" class="px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">Reset</button>
+            <button onclick="exportToCSV()" class="px-3 py-2 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center space-x-1.5">
+              <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+              <span>Export CSV</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Row -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+          <div>
+            <label class="block text-[10px] font-semibold text-slate-400 uppercase mb-1">Team</label>
+            <select id="filterTeam" onchange="applyFilters()" class="w-full py-1.5 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+              <option value="">All Teams</option>
+              <option value="BD">BD</option>
+              <option value="PHP 1">PHP 1</option>
+              <option value="PHP 2">PHP 2</option>
+              <option value="Tech Team">Tech Team</option>
+              <option value="Testing">Testing</option>
+              <option value="HR">HR & Admin</option>
+              <option value="SEO">SEO</option>
+              <option value="UI">UI</option>
+              <option value="Lead Generation">Lead Generation</option>
+              <option value="BA">BA</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-semibold text-slate-400 uppercase mb-1">Device Form</label>
+            <select id="filterForm" onchange="applyFilters()" class="w-full py-1.5 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+              <option value="">All</option>
+              <option value="Laptop">Laptop</option>
+              <option value="Desktop">Desktop</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-semibold text-slate-400 uppercase mb-1">OS</label>
+            <select id="filterOS" onchange="applyFilters()" class="w-full py-1.5 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+              <option value="">All</option>
+              <option value="UBNTHU">Ubuntu</option>
+              <option value="WINDOWS 10">Windows 10</option>
+              <option value="WINDOWS 11">Windows 11</option>
+              <option value="WINDOWS 7">Windows 7</option>
+              <option value="MAC OS">MAC OS</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-semibold text-slate-400 uppercase mb-1">Location</label>
+            <select id="filterLoc" onchange="applyFilters()" class="w-full py-1.5 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+              <option value="">All</option>
+              <option value="WFH">WFH</option>
+              <option value="B00">B00 Bay</option>
+              <option value="B01">B01 Bay</option>
+              <option value="B02">B02 Bay</option>
+              <option value="B03">B03 Bay</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table View -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+          <div class="font-medium text-slate-500">
+            Showing <span id="filteredCount" class="font-bold text-slate-900 dark:text-white">70</span> of 70 systems
+          </div>
+          <span class="text-[11px] text-slate-400">Strictly mapped from 'Pixel Asset Maintenance' sheet</span>
+        </div>
+
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th class="py-3 px-3">S.NO</th>
+                <th class="py-3 px-3">Staff Name</th>
+                <th class="py-3 px-3">TEAM</th>
+                <th class="py-3 px-3">IP</th>
+                <th class="py-3 px-3">CPU</th>
+                <th class="py-3 px-3">RAM</th>
+                <th class="py-3 px-3">SSD</th>
+                <th class="py-3 px-3">HDD</th>
+                <th class="py-3 px-3">Monitor Model & Size</th>
+                <th class="py-3 px-3">OS</th>
+                <th class="py-3 px-3">ASSET NAME</th>
+                <th class="py-3 px-3">BAY</th>
+                <th class="py-3 px-3">Monitor Asset</th>
+                <th class="py-3 px-3">Keyboard</th>
+                <th class="py-3 px-3">Mouse</th>
+                <th class="py-3 px-3">MAC / Serial</th>
+              </tr>
+            </thead>
+            <tbody id="assetsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: 1ST & 2ND FLOOR SHEET (47 ENTRIES) -->
+    <!-- ========================================== -->
+    <section id="tab-floor12" class="tab-content hidden space-y-4">
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-1">Pixel web solution's asset maintenance (Floor 1 & Floor 2 Sheet)</h3>
+        <p class="text-xs text-slate-500 mb-4">Original 47 rows from uploaded Excel section with Floor/Block, IP and Remarks.</p>
+
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th class="py-2.5 px-3">NO</th>
+                <th class="py-2.5 px-3">Staff Name</th>
+                <th class="py-2.5 px-3">TEAM</th>
+                <th class="py-2.5 px-3">IP</th>
+                <th class="py-2.5 px-3">SYSTEM TYPE</th>
+                <th class="py-2.5 px-3">MODEL</th>
+                <th class="py-2.5 px-3">CPU</th>
+                <th class="py-2.5 px-3">RAM</th>
+                <th class="py-2.5 px-3">SSD / HDD</th>
+                <th class="py-2.5 px-3">Monitor Model</th>
+                <th class="py-2.5 px-3">OS</th>
+                <th class="py-2.5 px-3">BLOCK</th>
+                <th class="py-2.5 px-3">Remarks</th>
+                <th class="py-2.5 px-3">STATUS</th>
+              </tr>
+            </thead>
+            <tbody id="floor12TableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+              <!-- Populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: SWAP ASSET MAINTENANCE -->
+    <!-- ========================================== -->
+    <section id="tab-swaps" class="tab-content hidden space-y-4">
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-1">Swape Asset Maintenance</h3>
+        <p class="text-xs text-slate-500 mb-4">Direct records from uploaded Swap sheet.</p>
+
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th class="py-2.5 px-3">S.NO</th>
+                <th class="py-2.5 px-3">Old User</th>
+                <th class="py-2.5 px-3">Team</th>
+                <th class="py-2.5 px-3">Asset Type</th>
+                <th class="py-2.5 px-3">Asset Detailed</th>
+                <th class="py-2.5 px-3">Swape User</th>
+                <th class="py-2.5 px-3">Team</th>
+                <th class="py-2.5 px-3">Date</th>
+                <th class="py-2.5 px-3">Remark</th>
+              </tr>
+            </thead>
+            <tbody id="swapsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+              <!-- Populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-4 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg text-xs space-y-1">
+          <div class="font-bold text-amber-800 dark:text-amber-300">Additional Remarks in Swap Sheet:</div>
+          <div class="text-slate-600 dark:text-slate-400">• "Mother borad issues changed new CPU"</div>
+          <div class="text-slate-600 dark:text-slate-400">• "OLD DISPLAY CRACK LAPTOP"</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 5: REQUIREMENTS -->
+    <!-- ========================================== -->
+    <section id="tab-requirements" class="tab-content hidden space-y-4">
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-1">REQUIREMENT Queue</h3>
+        <p class="text-xs text-slate-500 mb-4">Direct records from uploaded Requirement section.</p>
+
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th class="py-2.5 px-3">S.NO</th>
+                <th class="py-2.5 px-3">USER</th>
+                <th class="py-2.5 px-3">TL</th>
+                <th class="py-2.5 px-3">TEAM</th>
+                <th class="py-2.5 px-3">REQUIREMENT</th>
+                <th class="py-2.5 px-3">Status</th>
+                <th class="py-2.5 px-3">REMARK</th>
+                <th class="py-2.5 px-3">REQUIREMENT DATE</th>
+                <th class="py-2.5 px-3">Purchasing DATE</th>
+                <th class="py-2.5 px-3">ASSIGNED DATE</th>
+              </tr>
+            </thead>
+            <tbody id="reqTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+              <!-- Populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 6: NEW ASSET & WARRANTY -->
+    <!-- ========================================== -->
+    <section id="tab-newassets" class="tab-content hidden space-y-4">
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-1">New Asset and Warranty</h3>
+        <p class="text-xs text-slate-500 mb-4">Direct records from uploaded New Asset section.</p>
+
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th class="py-2.5 px-3">S.NO</th>
+                <th class="py-2.5 px-3">Asset Type</th>
+                <th class="py-2.5 px-3">Asset Deatiled & model</th>
+                <th class="py-2.5 px-3">Bill Date</th>
+                <th class="py-2.5 px-3">Assinged Date</th>
+                <th class="py-2.5 px-3">Status</th>
+                <th class="py-2.5 px-3">Floor</th>
+                <th class="py-2.5 px-3">User</th>
+                <th class="py-2.5 px-3">Team</th>
+                <th class="py-2.5 px-3">TL</th>
+              </tr>
+            </thead>
+            <tbody id="newAssetTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+              <!-- Populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 7: ANTIVIRUS -->
+    <!-- ========================================== -->
+    <section id="tab-antivirus" class="tab-content hidden space-y-4">
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-1">Windows 11 / Antivirus Software</h3>
+        <p class="text-xs text-slate-500 mb-4">Direct records from uploaded Antivirus section.</p>
+
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th class="py-2.5 px-3">S.NO</th>
+                <th class="py-2.5 px-3">USER</th>
+                <th class="py-2.5 px-3">TEAM</th>
+                <th class="py-2.5 px-3">ASSET</th>
+                <th class="py-2.5 px-3">MODEL</th>
+                <th class="py-2.5 px-3">OS</th>
+                <th class="py-2.5 px-3">Antivirus Software</th>
+                <th class="py-2.5 px-3">PRUCHES DATE</th>
+                <th class="py-2.5 px-3">EXPIRED</th>
+                <th class="py-2.5 px-3">Status</th>
+              </tr>
+            </thead>
+            <tbody id="antivirusTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+              <!-- Populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 8: SAM STAFF NAMES -->
+    <!-- ========================================== -->
+    <section id="tab-sam" class="tab-content hidden space-y-4">
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white">SAM Staff List (From Excel)</h3>
+            <p class="text-xs text-slate-500">Every staff name exactly as listed under SAM section.</p>
+          </div>
+          <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold" id="samCount">Names</span>
+        </div>
+
+        <div id="samGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 text-xs">
+          <!-- Populated -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // =========================================================================
+    // 100% FAITHFUL RAW DATA FROM USER'S EXCEL PASTE (WHITELISTED - NO DUMMY DATA)
+    // =========================================================================
+
+    // 1. Pixel Asset Maintenance (70 Systems Master List)
+    const masterAssets = [
+      { sno: 1, name: "Karthic S", team: "BD", ip: "WIFI", cpu: "i3 11th gen", ram: "8 DDR4", ssd: "260", hdd: "", model: "Laptop", size: "Asus VivoBook 15", os: "WINDOWS 10", mac: "JIO", asset: "Pixlap-01", bay: "B00-01", monAsset: "LCN0CV10Y748516", kb: "NA", kbAsset: "NA", mouse: "NA", mouseAsset: "NA" },
+      { sno: 2, name: "Santhosh Kumar", team: "BD", ip: "WIFI", cpu: "i3 11th gen", ram: "8 DDR4", ssd: "260", hdd: "", model: "Laptop", size: "Asus VivoBook 15", os: "WINDOWS 10", mac: "JIO", asset: "Pixlap-02", bay: "B00-02", monAsset: "LCN0CV10Y74651B", kb: "NA", kbAsset: "NA", mouse: "NA", mouseAsset: "NA" },
+      { sno: 3, name: "Karthick Prabhu", team: "BD", ip: "WFH", cpu: "i3 11th gen", ram: "8 DDR4", ssd: "240", hdd: "", model: "Laptop", size: "Lenovo 82H8", os: "WINDOWS 11", mac: "WFH", asset: "Pixlap-03", bay: "B00-03", monAsset: "PF2K3XJ5", kb: "NA", kbAsset: "NA", mouse: "NA", mouseAsset: "NA" },
+      { sno: 4, name: "Rammohan", team: "BD", ip: "WIFI", cpu: "i3 11th Gen", ram: "8 DDR4", ssd: "240", hdd: "", model: "Laptop", size: "Lenovo 82H8", os: "WINDOWS 11", mac: "JIO", asset: "Pixlap-04", bay: "B00-04", monAsset: "PF2K3XJ5", kb: "NA", kbAsset: "NA", mouse: "NA", mouseAsset: "NA" },
+      { sno: 5, name: "Ragulkrishna", team: "BD", ip: "WFH", cpu: "i3 11th Gen", ram: "8 DDR4", ssd: "", hdd: "", model: "Laptop", size: "Lenovo 82H8", os: "WINDOWS 11", mac: "WFH", asset: "Pixlap-05", bay: "B00-05", monAsset: "PF2T5AKX", kb: "NA", kbAsset: "NA", mouse: "NA", mouseAsset: "NA" },
+      { sno: 6, name: "Jeeva", team: "BD", ip: "WIFI", cpu: "i3 11th Gen", ram: "8 DDR4", ssd: "240", hdd: "", model: "Laptop", size: "Lenovo 82H8", os: "WINDOWS 11", mac: "JIO", asset: "Pixlap-06", bay: "B00-06", monAsset: "PF36N6W8", kb: "NA", kbAsset: "NA", mouse: "NA", mouseAsset: "NA" },
+      { sno: 7, name: "Parveen G", team: "BD", ip: "WIFI", cpu: "i3 11th Gen", ram: "8 DDR4", ssd: "240", hdd: "", model: "Laptop", size: "Lenovo 82H8", os: "WINDOWS 11", mac: "JIO", asset: "Pixlap-07", bay: "B00-07", monAsset: "PF3G27HK", kb: "NA", kbAsset: "NA", mouse: "NA", mouseAsset: "NA" },
+      { sno: 8, name: "Karthic R", team: "HR Admin", ip: "WIFI", cpu: "dule core", ram: "2 DDR2", ssd: "250", hdd: "", model: "Laptop", size: "Government Laptop", os: "WINDOWS 7", mac: "JIO", asset: "Pixlap-08", bay: "B01-01", monAsset: "NA", kb: "NA", kbAsset: "NA", mouse: "NA", mouseAsset: "NA" },
+      { sno: 9, name: "Arun Karthick K", team: "PHP 1", ip: "192.168.1.50", cpu: "I5 6th Gen", ram: "8 DDR4", ssd: "240", hdd: "1TB", model: "DELL D2020H", size: "19.5", os: "UBNTHU", mac: "00:e0:1a:21:01:41", asset: "PIXCPU-02", bay: "B01-03", monAsset: "PIXMON-02", kb: "logitech", kbAsset: "PIXKEY-02", mouse: "DELL", mouseAsset: "PIXMOU-02" },
+      { sno: 10, name: "Balaganesan", team: "PHP 1", ip: "192.168.1.51", cpu: "i5 7th Gen", ram: "8 DDR4", ssd: "240", hdd: "1TB", model: "Lenovo", size: "23.8", os: "windows 7", mac: "B0-6E-BF-D0-7A-CC", asset: "PIXCPU-01", bay: "B01-04", monAsset: "PIXMON-01", kb: "logitech", kbAsset: "PIXKEY-01", mouse: "dell", mouseAsset: "PIXMOU-01" },
+      { sno: 11, name: "Guruvarasu T", team: "PHP 1", ip: "192.168.1.52", cpu: "I3 2nd gen", ram: "8 DDR3", ssd: "240", hdd: "500", model: "DELL-E2218N", size: "19.5", os: "UBNTHU", mac: "70:54:D2:1B:13:78", asset: "PIXCPU-03", bay: "B01-05", monAsset: "PIXMON-03", kb: "Dell", kbAsset: "PIXKEY-03", mouse: "HP", mouseAsset: "PIXMOU-03" },
+      { sno: 12, name: "Ramachandran", team: "PHP 1", ip: "192.168.1.53", cpu: "I5 6TH Gen", ram: "8 DDR4", ssd: "240", hdd: "500", model: "SAMSUNG-200530Z", size: "21'inch", os: "UBNTHU", mac: "DC:4A:3E:94:F9:38", asset: "PIXCPU-04", bay: "B01-06", monAsset: "PIXMON-04", kb: "DELL", kbAsset: "PIXKEY-04", mouse: "DELL", mouseAsset: "PIXMOU-04" },
+      { sno: 13, name: "Vijay P", team: "PHP 1", ip: "192.168.1.65", cpu: "i5 7th Gen", ram: "8 DDR4", ssd: "240", hdd: "1TB", model: "LG", size: "19.5", os: "UBNTHU", mac: "18:31:BF:AF:E1:7E", asset: "PIXCPU-05", bay: "B01-07", monAsset: "PIXMON-05", kb: "logitech", kbAsset: "PIXKEY-05", mouse: "DELL", mouseAsset: "PIXMOU-05" },
+      { sno: 14, name: "Sathish Kumar", team: "PHP 2", ip: "192.168.1.60", cpu: "I5 4th Gen", ram: "8 DDR3", ssd: "240", hdd: "", model: "BenQ-202", size: "18.5", os: "UBNTHU", mac: "00:E0:4C:D4:7F:6F", asset: "PIXCPU-06", bay: "B01-08", monAsset: "PIXMON-06", kb: "DELL", kbAsset: "PIXKEY-06", mouse: "DEll", mouseAsset: "PIXMOU-06" },
+      { sno: 15, name: "deenadhayalan", team: "PHP 2", ip: "192.168.1.58", cpu: "I5 6TH Gen", ram: "8 DDR4", ssd: "240", hdd: "500", model: "SAMSUNG-LS22A33", size: "21'inch", os: "UBNTHU", mac: "2C:FD:A1:C0:A4:F5", asset: "PIXCPU-07", bay: "B01-09", monAsset: "PIXMON-07", kb: "Logitech", kbAsset: "PIXKEY-07", mouse: "Logitech", mouseAsset: "PIXMOU-07" },
+      { sno: 16, name: "Ramkumar", team: "PHP 2", ip: "192.168.1.57", cpu: "I5 4th Gen", ram: "8 DDR4", ssd: "240", hdd: "1TB", model: "SAMSUNG-LS22A33", size: "21'inch", os: "WINDOWS 7", mac: "d0:50:99:65:cd:45", asset: "PIXCPU-08", bay: "B01-10", monAsset: "PIXMON-08", kb: "Logitech", kbAsset: "PIXKEY-08", mouse: "DELL", mouseAsset: "PIXMOU-08" },
+      { sno: 17, name: "Ajith Kumar", team: "PHP 2", ip: "192.168.1.59", cpu: "I5 6th Gen", ram: "8 DDR4", ssd: "240", hdd: "", model: "Dell-D2020 H", size: "19.5", os: "UBNTHU", mac: "00:E0:1A:1C:01:33", asset: "PIXCPU-51", bay: "B01-11", monAsset: "PIXMON-51", kb: "Logitech", kbAsset: "PIXKEY-51", mouse: "Dell", mouseAsset: "PIXMOU-51" },
+      { sno: 18, name: "Karthic T", team: "BA", ip: "WIFI", cpu: "i3 11th Gen", ram: "8 DDR4", ssd: "240", hdd: "", model: "Laptop", size: "Lenovo 82H8", os: "WINDOWS 11", mac: "JIO", asset: "Pixlap-09", bay: "B01-13", monAsset: "PF3G2G6P", kb: "NA", kbAsset: "NA", mouse: "NA", mouseAsset: "NA" },
+      { sno: 19, name: "Saravanan", team: "BA", ip: "WIFI", cpu: "i3 11th Gen", ram: "8 DDR4", ssd: "240", hdd: "", model: "Laptop", size: "Lenovo 82H8", os: "WINDOWS 11", mac: "JIO", asset: "Pixlap-10", bay: "B01-14", monAsset: "PF3G2G6P", kb: "NA", kbAsset: "NA", mouse: "NA", mouseAsset: "NA" },
+      { sno: 20, name: "Ravindran J", team: "Tech Team", ip: "192.168.1.61", cpu: "I3 2nd gen", ram: "8 DDR3", ssd: "", hdd: "500", model: "VIEWSONIC", size: "18.5", os: "UBNTHU", mac: "00:E0:4C:25:6A:A7", asset: "PIXCPU-09", bay: "B01-15", monAsset: "PIXMON-09", kb: "LOGITECH", kbAsset: "PIXKEY-09", mouse: "DELL", mouseAsset: "PIXMOU-09" },
+      { sno: 21, name: "Sivaguru", team: "Tech Team", ip: "192.168.1.63", cpu: "I3 2nd gen", ram: "12 DDR3", ssd: "240", hdd: "500", model: "DELL", size: "18.5", os: "UBNTHU", mac: "78:2B:CB:AA:8E:6", asset: "PIXCPU-10", bay: "B01-16", monAsset: "PIXMON-10", kb: "LOGITECH", kbAsset: "PIXKEY-10", mouse: "DELL", mouseAsset: "PIXMOU-10" },
+      { sno: 22, name: "Arunmozhi A", team: "Tech Team", ip: "192.168.1.62", cpu: "i5 6th Gen", ram: "16 DDR4", ssd: "240", hdd: "500", model: "DELL", size: "21 inch", os: "UBNTHU", mac: "2C:FD:A1:C0:A3:71", asset: "PIXCPU-11", bay: "B01-17", monAsset: "PIXMON-11", kb: "LOGITECH", kbAsset: "PIXKEY-11", mouse: "HP", mouseAsset: "PIXMOU-11" },
+      { sno: 23, name: "Senthilkumar V", team: "Tech Team", ip: "192.168.1.85", cpu: "i5 6th Gen", ram: "8 DDR4", ssd: "260", hdd: "", model: "DELL", size: "19.5", os: "UBNTHU", mac: "D8:5E:D3:51:BB:A7", asset: "PIXCPU-12", bay: "B01-18", monAsset: "PIXMON-12", kb: "DELL", kbAsset: "PIXKEY-12", mouse: "DELL", mouseAsset: "PIXMOU-12" },
+      { sno: 24, name: "Abu Bakkar Umar K", team: "Tech Team", ip: "192.168.1.69", cpu: "i5 6th Gen", ram: "16 DDR4", ssd: "260", hdd: "", model: "DELL", size: "19.5", os: "UBNTHU", mac: "D8:5E:D3:51:BC:41", asset: "PIXCPU-13", bay: "B01-20", monAsset: "PIXMON-13", kb: "DELL", kbAsset: "PIXKEY-13", mouse: "DELL", mouseAsset: "PIXMOU-13" },
+      { sno: 25, name: "Arunkumar K", team: "Tech Team", ip: "192.168.1.64", cpu: "i5 7th Gen", ram: "16 DDR4", ssd: "260", hdd: "1TB", model: "DELL", size: "19.5", os: "UBNTHU", mac: "18:31:BF:AF:E2:5E:", asset: "PIXCPU-14", bay: "B01-21", monAsset: "PIXMON-14", kb: "DELL", kbAsset: "PIXKEY-14", mouse: "HP", mouseAsset: "PIXMOU-14" },
+      { sno: 26, name: "Mohammed Ibrahim S", team: "Tech Team", ip: "WIFI", cpu: "I3", ram: "8", ssd: "128", hdd: "", model: "DELL", size: "19.5", os: "MAC OS", mac: "WIFI MAC", asset: "PIXCPU-15", bay: "B01-22", monAsset: "PIXMON-15", kb: "LOGITECH", kbAsset: "PIXKEY-15", mouse: "HP", mouseAsset: "PIXMOU-15" },
+      { sno: 27, name: "Vinothkumar R", team: "Tech Team", ip: "192.168.1.77", cpu: "i5 7th Gen", ram: "16 DDR4", ssd: "260", hdd: "1TB", model: "DELL", size: "19.5", os: "UBNTHU", mac: "18:31:BF:AF:E2:80", asset: "PIXCPU-17", bay: "B01-23", monAsset: "PIXMON-17", kb: "DELL", kbAsset: "PIXKEY-17", mouse: "lOGITECH", mouseAsset: "PIXMOU-17" },
+      { sno: 28, name: "Vignesh Kumar S", team: "Tech Team", ip: "192.168.1.99", cpu: "I5 6th Gen", ram: "16 DDR4", ssd: "240", hdd: "1TB", model: "DELL", size: "19.5", os: "UBNTHU", mac: "D8:5E:D3:1C:C5:FF", asset: "PIXCPU-18", bay: "B01-24", monAsset: "PIXMON-18", kb: "DELL", kbAsset: "PIXKEY-18", mouse: "MOUSE", mouseAsset: "PIXMOU-18" },
+      { sno: 29, name: "Balaksrishnan N", team: "Testing", ip: "192.168.1.180", cpu: "I5 4th Gen", ram: "8 DDR3", ssd: "", hdd: "500", model: "ACER", size: "18.5", os: "WINDOWS 10", mac: "98:90:96:D1:8E:9B", asset: "PIXCPU-19", bay: "B01-25", monAsset: "PIXMON-19", kb: "LOGITECH", kbAsset: "PIXKEY-19", mouse: "DELL", mouseAsset: "PIXMOU-19" },
+      { sno: 30, name: "Deepan B", team: "Testing", ip: "192.168.1.97", cpu: "I5 4th Gen", ram: "8 DDR3", ssd: "", hdd: "500", model: "DELL", size: "21", os: "UBNTHU", mac: "98:90:96:D1:8E:9B", asset: "PIXCPU-20", bay: "B01-26", monAsset: "PIXMON-20", kb: "LOGITECH", kbAsset: "PIXKEY-20", mouse: "DELL", mouseAsset: "PIXMOU-20" },
+      { sno: 31, name: "Jaishreenaatth V A", team: "Testing", ip: "192.168.1.98", cpu: "I3 2nd gen", ram: "8 DDR3", ssd: "", hdd: "500", model: "BENQ", size: "15.5", os: "UBNTHU", mac: "00:E0:4C:31:DF:A2", asset: "PIXCPU-21", bay: "B01-27", monAsset: "PIXMON-21", kb: "LOGITECH", kbAsset: "PIXKEY-21", mouse: "DELL", mouseAsset: "PIXMOU-21" },
+      { sno: 32, name: "Gokul S", team: "Testing", ip: "192.168.1.81", cpu: "I5 4th Gen", ram: "8 DDR3", ssd: "", hdd: "500", model: "VIEWSONIC", size: "15.5", os: "", mac: "98:90:96:C9:EC:A7", asset: "PIXCPU-22", bay: "B01-28", monAsset: "PIXMON-22", kb: "LOGITECH", kbAsset: "PIXKEY-22", mouse: "HP", mouseAsset: "PIXMOU-22" },
+      { sno: 33, name: "Karthiga devi", team: "HR", ip: "192.168.1.73", cpu: "I3 2nd gen", ram: "8 DDR3", ssd: "", hdd: "500", model: "Chirag", size: "15.5", os: "WINDOWS 10", mac: "00:E0:4C:D2:C0:5D", asset: "PIXCPU-23", bay: "B01-29", monAsset: "PIXMON-23", kb: "DELL", kbAsset: "PIXKEY-23", mouse: "Dell", mouseAsset: "PIXMOU-23" },
+      { sno: 34, name: "Tharani", team: "HR", ip: "192.168.1.92", cpu: "I3 11th gen", ram: "8 DDR3", ssd: "", hdd: "320", model: "Dell", size: "18.5", os: "UBNTHU", mac: "90:b1:1c:72:64:1d", asset: "PIXCPU-24", bay: "B01-32", monAsset: "PIXMON-24", kb: "Dell", kbAsset: "PIXKEY-24", mouse: "Dell", mouseAsset: "PIXMOU-24" },
+      { sno: 35, name: "Meimozhi", team: "HR", ip: "192.168.1.92", cpu: "i3 3rd Gen", ram: "8 DDR3", ssd: "", hdd: "320", model: "Dell", size: "15.5", os: "UBNTHU", mac: "b0:83:fe:8e:4f:fb", asset: "PIXCPU-25", bay: "B01-33", monAsset: "PIXMON-25", kb: "DELL", kbAsset: "PIXKEY-25", mouse: "Dell", mouseAsset: "PIXMOU-25" },
+      { sno: 36, name: "Bindo J", team: "HR Admin", ip: "192.168.6.51", cpu: "i3 3rd Gen", ram: "3 DDR3", ssd: "", hdd: "320", model: "Dell", size: "15.5", os: "WINDOWS 10", mac: "38:60:77:56:51:90", asset: "PIXCPU-26", bay: "B02-01", monAsset: "PIXMON-26", kb: "DELL", kbAsset: "PIXKEY-26", mouse: "Dell", mouseAsset: "PIXMOU-26" },
+      { sno: 37, name: "Joshkia P", team: "SEO", ip: "192.168.6.58", cpu: "i3 3rd Gen", ram: "8 DDR3", ssd: "240 (LAPTOP DISK)", hdd: "", model: "DELL", size: "18.5", os: "UBNTHU", mac: "d00:50:99:43:63:18", asset: "PIXCPU-49", bay: "B02-10", monAsset: "PIXMON-49", kb: "DELL", kbAsset: "PIXKEY-49", mouse: "DELL", mouseAsset: "PIXMOU-49" },
+      { sno: 38, name: "Sobiya RS", team: "SEO", ip: "192.168.6.61", cpu: "I3 2nd gen", ram: "8 DDR3", ssd: "", hdd: "500", model: "DELL", size: "18.5", os: "UBNTHU", mac: "d4:be:d9:8f:62:9a", asset: "PIXCPU-34", bay: "B02-11", monAsset: "PIXMON-34", kb: "DELL", kbAsset: "PIXKEY-34", mouse: "DELL", mouseAsset: "PIXMOU-34" },
+      { sno: 39, name: "Lakshmi M", team: "SEO", ip: "192.168.6.77", cpu: "Intel Pentium", ram: "4 DDR3", ssd: "240", hdd: "", model: "Laptop", size: "acer aspir /UNGFTSI006H0690800", os: "WINDOWS 7", mac: "fc:45:96:59:9a:a9", asset: "Pixlap-13", bay: "B02-12", monAsset: "NA", kb: "DELL", kbAsset: "NA", mouse: "DELL", mouseAsset: "NA" },
+      { sno: 40, name: "Manju Priyadharshini R", team: "SEO", ip: "192.168.6.83", cpu: "I3 2nd gen", ram: "12 DDR3", ssd: "", hdd: "500", model: "SAMSUNG", size: "21.1", os: "UBNTHU", mac: "18:03:73:3E:5A:AE", asset: "PIXCPU-35", bay: "B02-13", monAsset: "PIXMON-35", kb: "DELL", kbAsset: "PIXKEY-35", mouse: "DELL", mouseAsset: "PIXMOU-35" },
+      { sno: 41, name: "Nagajothika K R", team: "SEO", ip: "192.168.6.84", cpu: "I5 2nd gen", ram: "8 DDR4", ssd: "", hdd: "500", model: "DELL", size: "15.5", os: "UBNTHU", mac: "D8:5E:D3:1C:C5:DF", asset: "PIXCPU-36", bay: "B02-14", monAsset: "PIXMON-36", kb: "LOGITECH", kbAsset: "PIXKEY-36", mouse: "Dell", mouseAsset: "PIXMOU-36" },
+      { sno: 42, name: "Niveda", team: "SEO", ip: "192.168.6.78", cpu: "I5 7th gen", ram: "8 DDR4", ssd: "240", hdd: "", model: "View Sonic", size: "15.5", os: "UBNTHU", mac: "18:31:BF:B2:76:46", asset: "PIXCPU-37", bay: "B02-15", monAsset: "PIXMON-37", kb: "LOGITECH", kbAsset: "PIXKEY-37", mouse: "HP", mouseAsset: "PIXMOU-37" },
+      { sno: 43, name: "Rajeshwari M", team: "SEO", ip: "192.168.6.66", cpu: "I5 2nd gen", ram: "8 DDR3", ssd: "", hdd: "500", model: "DELL", size: "15.5", os: "UBNTHU", mac: "Nill", asset: "PIXCPU-38", bay: "B02-16", monAsset: "PIXMON-38", kb: "LOGITECH", kbAsset: "PIXKEY-38", mouse: "DELL", mouseAsset: "PIXMOU-38" },
+      { sno: 44, name: "Archana P", team: "SEO", ip: "192.168.6.72", cpu: "i3 4th", ram: "4 DDR3", ssd: "500", hdd: "", model: "Laptop", size: "Soni Vaio /27544370-7005450", os: "WINDOWS 10", mac: "78:84:3C:F7:5E:A9", asset: "Pixlap-14", bay: "B02-17", monAsset: "NA", kb: "zebronics", kbAsset: "NA", mouse: "DELL", mouseAsset: "NA" },
+      { sno: 45, name: "Gomez Edwin", team: "System Admin", ip: "OFFICE LAP", cpu: "i3 11th Gen", ram: "8 DDR4", ssd: "240", hdd: "", model: "Laptop", size: "Lenovo 82H8", os: "WINDOWS 11", mac: "", asset: "Pixlap-15", bay: "B03-02", monAsset: "PF3FRQ32", kb: "Dell", kbAsset: "NA", mouse: "DELL", mouseAsset: "NA" },
+      { sno: 46, name: "Saravanan Balan", team: "UI", ip: "192.168.6.65", cpu: "I5 6th Gen", ram: "8 DDR3", ssd: "240", hdd: "500", model: "WIPRO", size: "18.5", os: "WINDOWS 10", mac: "18:31:BF:BA:F4:96", asset: "PIXCPU-39", bay: "B03-06", monAsset: "PIXMON-39", kb: "LOGITECH", kbAsset: "PIXKEY-39", mouse: "DELL", mouseAsset: "PIXMOU-39" },
+      { sno: 47, name: "Karthick P", team: "UI", ip: "OfficeDekstop", cpu: "", ram: "", ssd: "", hdd: "", model: "", size: "", os: "", mac: "", asset: "PIXCPU-40", bay: "B03-07", monAsset: "PIXMON-40", kb: "", kbAsset: "PIXKEY-40", mouse: "", mouseAsset: "PIXMOU-40" },
+      { sno: 48, name: "Sudhakar R", team: "UI", ip: "192.168.6.81", cpu: "I5 4th Gen", ram: "8 DDR3", ssd: "240", hdd: "", model: "DELL", size: "21 inch", os: "WINDOWS 10", mac: "64-00-6A-52-A2-85", asset: "PIXCPU-41", bay: "B03-08", monAsset: "PIXMON-41", kb: "DELL", kbAsset: "PIXKEY-41", mouse: "DELL", mouseAsset: "PIXMOU-41" },
+      { sno: 49, name: "Kannan T G", team: "UI", ip: "192.168.6.82", cpu: "I5 3rd", ram: "8 DDR3", ssd: "240", hdd: "", model: "DELL", size: "21 inch", os: "WINDOWS 10", mac: "00-23-24-63-C1-50", asset: "PIXCPU-42", bay: "B03-09", monAsset: "PIXMON-42", kb: "DELL", kbAsset: "PIXKEY-42", mouse: "DELL", mouseAsset: "PIXMOU-42" },
+      { sno: 50, name: "Vanitha B", team: "UI", ip: "192.168.6.69", cpu: "I5 6th Gen", ram: "8 DDR4", ssd: "240", hdd: "", model: "DELL", size: "15.5", os: "WINDOWS 10", mac: "00-E0-1A-1A-21-1E", asset: "PIXCPU-43", bay: "B03-10", monAsset: "PIXMON-43", kb: "LOGITECH", kbAsset: "PIXKEY-43", mouse: "DELL", mouseAsset: "PIXMOU-43" },
+      { sno: 51, name: "Prasanna N V", team: "UI", ip: "192.168.6.74", cpu: "I5 6th Gen", ram: "8 DDR4", ssd: "240", hdd: "500", model: "SAMSUNG", size: "21 INCH", os: "WINDOWS 10", mac: "FC-34-97-67-8A-70", asset: "PIXCPU-44", bay: "B03-11", monAsset: "PIXMON-44", kb: "LOGITECH", kbAsset: "PIXKEY-44", mouse: "DELL", mouseAsset: "PIXMOU-44" },
+      { sno: 52, name: "Vinothkumar E", team: "UI", ip: "192.168.6.73", cpu: "I5 7th Gen", ram: "8 DDR4", ssd: "240", hdd: "500", model: "BENQ", size: "18.5", os: "WINDOWS 10", mac: "18-33-EF-6E-F6-DB", asset: "PIXCPU-45", bay: "B03-12", monAsset: "PIXMON-45", kb: "LOGITECH", kbAsset: "PIXKEY-45", mouse: "HP", mouseAsset: "PIXMOU-45" },
+      { sno: 53, name: "Manojkumar S", team: "SEO", ip: "WIFI", cpu: "i3 11th Gen", ram: "8 DDR4", ssd: "240", hdd: "", model: "Laptop", size: "Lenovo 82H8", os: "WINDOWS 11", mac: "DIJISOL", asset: "Pixlap-12", bay: "B03-13", monAsset: "PF3447RT", kb: "LOGITECH", kbAsset: "NA", mouse: "DELL", mouseAsset: "NA" },
+      { sno: 54, name: "Sinu Thomas TG", team: "SEO", ip: "WIFI", cpu: "i3 11th Gen", ram: "8 DDR4", ssd: "240", hdd: "", model: "Laptop", size: "Lenovo 82H8", os: "WINDOWS 11", mac: "DIJISOL", asset: "Pixlap-11", bay: "B03-14", monAsset: "PF3G20Q5", kb: "LOGITECH", kbAsset: "NA", mouse: "DELL", mouseAsset: "NA" },
+      { sno: 55, name: "Vijay M", team: "SEO", ip: "192.168.6.87", cpu: "I3 2nd gen", ram: "8 DDR3", ssd: "160", hdd: "", model: "LG", size: "15.5", os: "UBNTHU", mac: "64:00:6A:37:28:5F", asset: "PIXCPU-28", bay: "B03-15", monAsset: "PIXMON-28", kb: "DELL", kbAsset: "PIXKEY-28", mouse: "DELL", mouseAsset: "PIXMOU-28" },
+      { sno: 56, name: "Praveen Kumar K A", team: "UI", ip: "192.168.6.62", cpu: "I5 6th Gen", ram: "8 DDR4", ssd: "500", hdd: "", model: "Lenovo", size: "21", os: "Windows 10", mac: "48-0F-CF-3C-44-29", asset: "PIXCPU-47", bay: "B03-16", monAsset: "PIXMON-47", kb: "DELL", kbAsset: "PIXKEY-47", mouse: "DELL", mouseAsset: "PIXMOU-47" },
+      { sno: 57, name: "Vanuvamalai Perumal", team: "Lead Generation", ip: "192.168.6.79", cpu: "I5 3rd", ram: "8 DDR3", ssd: "240", hdd: "", model: "DELL", size: "18.5", os: "WINDOWS10", mac: "D0-50-99-65-C8-64", asset: "PIXCPU-48", bay: "B03-17", monAsset: "PIXMON-48", kb: "DELL", kbAsset: "PIXKEY-48", mouse: "DELL", mouseAsset: "PIXMOU-48" },
+      { sno: 58, name: "Rajamadasami M", team: "SEO", ip: "192.168.6.89", cpu: "I3 2nd gen", ram: "8 DDR3", ssd: "", hdd: "500", model: "BENQ", size: "15.5", os: "UBNTHU", mac: "8:03:73:45:CB:DC", asset: "PIXCPU-31", bay: "B03-18", monAsset: "PIXMON-31", kb: "DELL", kbAsset: "PIXKEY-31", mouse: "DELL", mouseAsset: "PIXMOU-31" },
+      { sno: 59, name: "Udhaya Prakash P", team: "SEO", ip: "192.168.6.80", cpu: "I3 5th gen", ram: "6 DDR3", ssd: "", hdd: "500", model: "DELL", size: "18.5", os: "UBNTHU", mac: "00:E0:4A:0B:1C:31", asset: "PIXCPU-32", bay: "B03-19", monAsset: "PIXMON-32", kb: "LOGITECH", kbAsset: "PIXKEY-32", mouse: "HP", mouseAsset: "PIXMOU-32" },
+      { sno: 60, name: "Sundaraperumal M", team: "SEO", ip: "192.168.6.52", cpu: "i3 3rd Gen", ram: "8 DDR3", ssd: "", hdd: "500", model: "DELL", size: "18.5", os: "UBNTHU", mac: "D0:50:99:65:CD:45", asset: "PIXCPU-46", bay: "B03-20", monAsset: "PIXMON-46", kb: "LOGITECH", kbAsset: "PIXKEY-46", mouse: "DELL", mouseAsset: "PIXMOU-46" },
+      { sno: 61, name: "Durai Prakash S", team: "SEO", ip: "192.168.6.59", cpu: "I5 4th Gen", ram: "8 DDR3", ssd: "", hdd: "500", model: "DELL", size: "18.5", os: "UBNTHU", mac: "40:A8:F0:47:6D:AB", asset: "PIXCPU-50", bay: "B03-21", monAsset: "PIXMON-50", kb: "DELL", kbAsset: "PIXKEY-50", mouse: "DELL", mouseAsset: "PIXMOU-50" },
+      { sno: 62, name: "Surya PG", team: "SEO", ip: "192.168.6.60", cpu: "I5 4th Gen", ram: "8 DDR3", ssd: "", hdd: "500", model: "LG", size: "18.5", os: "UBNTHU", mac: "64:00:6A:52:A2:0D", asset: "PIXCPU-51", bay: "B03-22", monAsset: "PIXMON-51", kb: "DELL", kbAsset: "PIXKEY-51", mouse: "DELL", mouseAsset: "PIXMOU-51" },
+      { sno: 63, name: "Manojkumar", team: "SEO", ip: "192.168.6.90", cpu: "I3 2nd gen", ram: "8 DDR3", ssd: "240", hdd: "", model: "DELL", size: "15.5", os: "UBNTHU", mac: "64:00:6A:37:28:5F", asset: "PIXCPU-29", bay: "B03-23", monAsset: "PIXMON-29", kb: "LOGITECH", kbAsset: "PIXKEY-29", mouse: "DELL", mouseAsset: "PIXMOU-29" },
+      { sno: 64, name: "Venkadesan S", team: "SEO", ip: "192.168.6.85", cpu: "I3 4th gen", ram: "8 DDR3", ssd: "240", hdd: "", model: "FOXIN", size: "15.5", os: "UBNTHU", mac: "00:E0:4C:D4:7F:72", asset: "PIXCPU-33", bay: "B03-24", monAsset: "PIXMON-33", kb: "LOGITECH", kbAsset: "PIXKEY-33", mouse: "HP", mouseAsset: "PIXMOU-33" },
+      { sno: 65, name: "Jayaprakash S", team: "SEO", ip: "192.168.6.70", cpu: "I3 2nd gen", ram: "6 DDR3", ssd: "", hdd: "500", model: "DELL", size: "15.5", os: "UBNTHU", mac: "64:00:6A:37:28:5F", asset: "PIXCPU-30", bay: "B03-25", monAsset: "PIXMON-30", kb: "DELL", kbAsset: "PIXKEY-30", mouse: "Logitech", mouseAsset: "PIXMOU-30" },
+      { sno: 66, name: "Uttam Singh A", team: "SEO", ip: "192.168.6.63", cpu: "Intel Pentium", ram: "6 DDR3", ssd: "", hdd: "1TB", model: "DELL", size: "15.5", os: "UBNTHU", mac: "ec:a8:6b:f0:b2:e3", asset: "PIXCPU-27", bay: "B03-26", monAsset: "PIXMON-27", kb: "DELL", kbAsset: "PIXKEY-27", mouse: "Logitech", mouseAsset: "PIXMOU-27" },
+      { sno: 67, name: "Vinitha", team: "PHP 1", ip: "WFH", cpu: "i3 11th Gen", ram: "8 DDR4", ssd: "240", hdd: "", model: "Laptop", size: "Lenovo 82H8", os: "WINDOWS 11", mac: "", asset: "Pixlap-16", bay: "WFH", monAsset: "PF30ETDE", kb: "NA", kbAsset: "NA", mouse: "NA", mouseAsset: "NA" },
+      { sno: 68, name: "Kalavathy", team: "PHP 2", ip: "OfficeDekstop", cpu: "", ram: "", ssd: "", hdd: "", model: "", size: "", os: "", mac: "", asset: "", bay: "WFH", monAsset: "", kb: "", kbAsset: "", mouse: "", mouseAsset: "" },
+      { sno: 69, name: "Vijayaraman K", team: "PHP 2", ip: "OWNE", cpu: "", ram: "", ssd: "", hdd: "", model: "", size: "", os: "", mac: "", asset: "", bay: "WFH", monAsset: "", kb: "", kbAsset: "", mouse: "", mouseAsset: "" },
+      { sno: 70, name: "John Noel Kirubaharan", team: "SEO", ip: "OWNE", cpu: "", ram: "", ssd: "", hdd: "", model: "", size: "", os: "", mac: "", asset: "", bay: "WFH", monAsset: "", kb: "", kbAsset: "", mouse: "", mouseAsset: "" }
+    ];
+
+    // 2. 1st & 2nd Floor Sheet (47 Entries)
+    const floor12Data = [
+      { no: 1, name: "Gome Edwin Lazer Y", team: "System Admin", ip: "192.168.6.99", type: "Desktop", model: "CPU", cpu: "i3 2nd Gen", ram: "8 DDR3", ssd: "240", hdd: "Nill", mon: "DELL 22 inch", os: "Windows", block: "1ST FLOOR", remarks: "Bypass IP", status: "ASSINGED" },
+      { no: 2, name: "Siva Ganesh S", team: "SEO", ip: "192.168.6.77", type: "Desktop", model: "CPU", cpu: "i3 2nd Gen", ram: "8 DDR3", ssd: "240", hdd: "Nill", mon: "DELL 19.5 inch", os: "UBNTHU 24", block: "1ST FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 3, name: "Charanya D", team: "SEO", ip: "192.168.6.78", type: "Laptop", model: "Lenovo Thinkpad 3", cpu: "i5 10th GEN", ram: "8 DDR3", ssd: "240", hdd: "Nill", mon: "LAPTOP - LENOVO - IDEALPAD3", os: "WINDOWS 11 (Original)", block: "1ST FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 4, name: "Ramees Fathima C", team: "SEO", ip: "192.168.6.153", type: "Desktop", model: "CPU", cpu: "i3 2nd Gen", ram: "8 DDR3", ssd: "240", hdd: "Nill", mon: "DELL 19.5 inch", os: "UBNTHU 24", block: "1ST FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 5, name: "Rajeshwari M", team: "SEO", ip: "192.168.6.112", type: "Desktop", model: "CPU", cpu: "i5 4th GEN", ram: "8 DDR3", ssd: "240", hdd: "Nill", mon: "DELL 19.5 inch", os: "UBNTHU 24", block: "1ST FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 6, name: "Mohamed Sahil M", team: "SEO", ip: "192.168.6.91", type: "Desktop", model: "CPU", cpu: "i3 2nd Gen", ram: "8 DDR3", ssd: "240", hdd: "Nill", mon: "DELL 19.5 inch", os: "UBNTHU 24", block: "1ST FLOOR", remarks: "Slowness", status: "ASSINGED" },
+      { no: 7, name: "Ragul SV", team: "SEO", ip: "192.168.6.85", type: "Desktop", model: "CPU", cpu: "i5 4th GEN", ram: "8 DDR3", ssd: "240", hdd: "Nill", mon: "DELL 18.5 inch", os: "UBNTHU 24", block: "1ST FLOOR", remarks: "Netwrok issue", status: "ASSINGED" },
+      { no: 8, name: "Prabhakaran", team: "SEO", ip: "192.168.6.95", type: "Desktop", model: "CPU", cpu: "i5 6th GEN", ram: "16GB DDR4", ssd: "240", hdd: "Nill", mon: "DELL 21.5 inch", os: "Windows 10", block: "1ST FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 9, name: "Mohanapriya", team: "SEO", ip: "192.168.6.96", type: "Desktop", model: "CPU", cpu: "i3 2nd Gen", ram: "8 GB DDR3", ssd: "240", hdd: "Nill", mon: "DELL 18.5 inch", os: "Windows 10", block: "1ST FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 10, name: "Gayathri K", team: "HR", ip: "192.168.6.53", type: "Desktop", model: "CPU", cpu: "i3 2nd Gen", ram: "8 GB DDR3", ssd: "240", hdd: "Nill", mon: "DELL 19.5 inch", os: "UBNTHU 24", block: "1ST FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 11, name: "Sugitha Sri", team: "HR", ip: "192.168.6.78", type: "Desktop", model: "CPU", cpu: "i3 2nd Gen", ram: "8 GB DDR3", ssd: "240", hdd: "Nill", mon: "DELL 19.5 inch", os: "UBNTHU 24", block: "1ST FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 12, name: "Nishalini", team: "SEO", ip: "192.168.6.53", type: "Laptop", model: "Lenovo Thinkpad 3", cpu: "i5 10th GEN", ram: "8 DDR3", ssd: "240", hdd: "Nill", mon: "LAPTOP - LENOVO - IDEALPAD3", os: "WINDOWS 11 (Original)", block: "1ST FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 13, name: "Bindo", team: "HR", ip: "192.168.1.93", type: "Desktop", model: "CPU", cpu: "i3 2nd Gen", ram: "8 DDR3", ssd: "240", hdd: "Nill", mon: "DELL 19.5 inch", os: "Windows", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 15, name: "Karthick CN", team: "HR", ip: "192.168.1.94", type: "Desktop", model: "CPU", cpu: "i5 6th GEN", ram: "16GB DDR4", ssd: "240", hdd: "Nill", mon: "View Sonic 18.5", os: "UBNTHU 24", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 16, name: "Veerapandi L", team: "PHP", ip: "192.168.1.94", type: "Desktop", model: "CPU", cpu: "i5 7th GEN", ram: "16GB DDR4", ssd: "240", hdd: "500 GB", mon: "DELL 19.5 inch", os: "UBNTHU 24", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 17, name: "Ramkumar", team: "PHP", ip: "192.168.1.54", type: "Desktop", model: "CPU", cpu: "i5 7th GEN", ram: "16GB DDR4", ssd: "240", hdd: "Nill", mon: "Samsung 20 inch", os: "UBNTHU 24", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 18, name: "Deenadhayalan", team: "PHP", ip: "192.168.1.58", type: "Desktop", model: "CPU", cpu: "i5 6th GEN", ram: "16GB DDR4", ssd: "240", hdd: "500 GB", mon: "Samsung 20 inch", os: "UBNTHU 24", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 19, name: "Arun", team: "PHP", ip: "192.168.1.96", type: "Desktop", model: "CPU", cpu: "i5 7th GEN", ram: "16GB DDR4", ssd: "240", hdd: "1 TB", mon: "DELL 19.5 inch", os: "UBNTHU 24", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 20, name: "Saravanan S", team: "BD", ip: "192.168.1.65", type: "Laptop", model: "Lenovo Thinkpad 3", cpu: "i3 11th GEN", ram: "8 GB DDR4", ssd: "240", hdd: "Nill", mon: "LAPTOP - LENOVO - IDEALPAD3", os: "WINDOWS 11 (Original)", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 21, name: "Balaraman", team: "PHP", ip: "192.168.1.82", type: "Desktop", model: "CPU", cpu: "i5 6th GEN", ram: "16GB DDR4", ssd: "240", hdd: "Nill", mon: "DELL 19.5 inch", os: "UBNTHU 24", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 22, name: "Guruvarasu", team: "PHP", ip: "192.168.1.52", type: "Desktop", model: "CPU", cpu: "i5 6th GEN", ram: "16GB DDR4", ssd: "240", hdd: "Nill", mon: "DELL 19.5 inch", os: "UBNTHU 24", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 23, name: "Venkatesh", team: "PHP", ip: "192.168.1.116", type: "Desktop", model: "CPU", cpu: "i5 4th GEN", ram: "16GB DDR4", ssd: "240", hdd: "Nill", mon: "DELL 19.5 inch", os: "UBNTHU 24", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 24, name: "Sabari Vasan", team: "PHP", ip: "192.168.1.125", type: "Desktop", model: "CPU", cpu: "i5 7th GEN", ram: "16GB DDR4", ssd: "240", hdd: "Nill", mon: "DELL 21 inch", os: "UBNTHU 24", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 25, name: "Ravindran J", team: "PHP", ip: "192.168.1.89", type: "Desktop", model: "CPU", cpu: "i5 6th GEN", ram: "16GB DDR4", ssd: "240", hdd: "Nill", mon: "DELL 21 inch", os: "UBNTHU 24", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 26, name: "Senthilkumar M", team: "PHP", ip: "192.168.1.104", type: "Desktop", model: "CPU", cpu: "i5 6th GEN", ram: "16GB DDR4", ssd: "240", hdd: "500 GB", mon: "DELL 19.5 inch", os: "UBNTHU 24", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 27, name: "Arunmozhi A", team: "PHP", ip: "192.168.1.62", type: "Desktop", model: "CPU", cpu: "i5 7th GEN", ram: "16GB DDR4", ssd: "240", hdd: "1 TB", mon: "DELL 20 INCH", os: "UBNTHU 24", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 28, name: "Mobile Team", team: "Mobile Team", ip: "WIFI", type: "Desktop", model: "MAC 2", cpu: "i3 GEN", ram: "8 GB DDR3", ssd: "240", hdd: "Nill", mon: "DELL 19.5 inch", os: "MAC OS", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 29, name: "Mahalakshmi P", team: "Mobile", ip: "192.168.1.120", type: "Desktop", model: "CPU", cpu: "i5 7th GEN", ram: "32 GB RAM DDR4", ssd: "240", hdd: "1 TB", mon: "DELL 19.5 inch", os: "Windows 10", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 30, name: "Deepan B", team: "Testing", ip: "192.168.1.77", type: "Desktop", model: "CPU", cpu: "i3 2nd Gen", ram: "16GB DDR3", ssd: "240", hdd: "Nill", mon: "DELL 19.5 inch", os: "Windows 10", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 31, name: "Bala krishnan", team: "Testing", ip: "192.168.1.51", type: "Desktop", model: "CPU", cpu: "i5 7th GEN", ram: "12GB DDR4", ssd: "240", hdd: "Nill", mon: "DELL 18.5 inch", os: "Windows 10", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 32, name: "Veeramani", team: "PHP", ip: "192.168.1.88", type: "Desktop", model: "CPU", cpu: "i5 6th GEN", ram: "16GB DDR4", ssd: "240", hdd: "Nill", mon: "DELL 19.5 inch", os: "UBNTHU 24", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 33, name: "Bala Ganesh", team: "PHP", ip: "192.168.1.51", type: "Desktop", model: "CPU", cpu: "i5 7th GEN", ram: "16GB DDR4", ssd: "240", hdd: "1 TB", mon: "DELL 21.5 inch", os: "Windows 10", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 34, name: "Arun Karthick", team: "PHP", ip: "192.168.1.50", type: "Desktop", model: "CPU", cpu: "i5 6th GEN", ram: "16GB DDR4", ssd: "240", hdd: "500 GB", mon: "Samsung 20 inch", os: "UBNTHU 24", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 35, name: "Karthic Raja C", team: "HR ACCOUNT", ip: "192.168.1.64", type: "Desktop", model: "CPU", cpu: "intel pentium 2ng", ram: "16GB DDR3", ssd: "240", hdd: "500 GB", mon: "DELL 19.5 inch", os: "Windows 10", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 36, name: "Vinoth", team: "UI", ip: "192.168.1.84", type: "Desktop", model: "CPU", cpu: "i5 7th GEN", ram: "16GB DDR4", ssd: "240", hdd: "500 GB", mon: "DELL 19.5 inch", os: "Windows 10", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 37, name: "Sivabalan S", team: "UI", ip: "192.168.1.99", type: "Desktop", model: "CPU", cpu: "i5 7th GEN", ram: "16GB DDR4", ssd: "240", hdd: "1 TB", mon: "DELL 21.5 inch", os: "Windows 10", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 40, name: "Chandru Mouli", team: "UI", ip: "192.168.1.68", type: "Desktop", model: "CPU", cpu: "i5 10th GEN", ram: "16GB DDR4", ssd: "240", hdd: "Nill", mon: "DELL 19.5 inch", os: "Windows 10", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 41, name: "Ravindran J", team: "PHP", ip: "192.168.1.101", type: "Desktop", model: "CPU", cpu: "i5 6th GEN", ram: "16GB DDR4", ssd: "240", hdd: "Nill", mon: "DELL 19.5 inch", os: "Windows 10", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 42, name: "Suresh Krishna", team: "UI", ip: "192.168.1.85", type: "Desktop", model: "CPU", cpu: "i5 7th GEN", ram: "16GB DDR4", ssd: "240", hdd: "500 GB", mon: "DELL 19.5 inch", os: "Windows 10", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 43, name: "Prasanna", team: "PHP", ip: "192.168.1.87", type: "Desktop", model: "CPU", cpu: "i5 6th GEN", ram: "16GB DDR4", ssd: "240", hdd: "Nill", mon: "DELL 19.5 inch", os: "Windows 10", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 44, name: "Sudhakar", team: "UI", ip: "192.168.1.92", type: "Desktop", model: "CPU", cpu: "i5 4th GEN", ram: "16GB DDR4", ssd: "240", hdd: "Nill", mon: "DELL 19.5 inch", os: "Windows 10", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 45, name: "Praveenkumar", team: "UI", ip: "192.168.1.90", type: "Desktop", model: "CPU", cpu: "i5 6th GEN", ram: "16GB DDR4", ssd: "240", hdd: "1 TB", mon: "DELL 19.5 inch", os: "Windows 10", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" },
+      { no: 46, name: "Ibrahim", team: "Mobile", ip: "", type: "Laptop", model: "MAC 3", cpu: "", ram: "", ssd: "", hdd: "", mon: "", os: "", block: "", remarks: "Good Working", status: "ASSINGED" },
+      { no: 47, name: "Joel Jhone", team: "Mobile", ip: "192.168.1.115", type: "Desktop", model: "CPU", cpu: "i5 12th GEN", ram: "16GB DDR4", ssd: "240", hdd: "Nill", mon: "DELL 19.5 inch", os: "UBNTHU 24", block: "2ND FLOOR", remarks: "Good Working", status: "ASSINGED" }
+    ];
+
+    // 3. Swaps Sheet
+    const swapsData = [
+      { sno: 1, oldUser: "Edwin", oldTeam: "HR", type: "CPU", details: "i5 4th/8GB RAM/500 SSD", swapUser: "Naveen", swapTeam: "HR", date: "2026-10-03", remark: "Assinged" },
+      { sno: 2, oldUser: "Edwin", oldTeam: "HR", type: "monitor", details: "DELL 19.5", swapUser: "Naveen", swapTeam: "HR", date: "2026-10-03", remark: "Assinged" }
+    ];
+
+    // 4. Requirements Sheet
+    const reqData = [
+      { sno: 1, user: "EDWIN", tl: "Edwin", team: "ADMIIN", req: "RAM DDR 3", status: "Purchasing", remark: "SYSTEM SLOW", reqDate: "2026-10-03", purchaseDate: "2026-10-03", assignedDate: "2026-10-03" },
+      { sno: 2, user: "KARTHICK", tl: "Edwin", team: "ADMIIN", req: "SMPS", status: "Purchasied Pending", remark: "SYSTEM AUTO RESTART", reqDate: "2026-10-03", purchaseDate: "Waiting", assignedDate: "Waiting" }
+    ];
+
+    // 5. New Asset and Warranty Sheet
+    const newAssetsData = [
+      { sno: 1, type: "CPU", model: "i5 4th/8GB RAM/500 SSD", billDate: "2026-10-01", assignedDate: "2026-10-03", status: "Assinged", floor: "Floor 1", user: "Edwin", team: "ADMIN", tl: "ADMIN" },
+      { sno: 2, type: "RAM", model: "8GB RAM DDR 4", billDate: "2026-10-01", assignedDate: "NOT ASSINGED", status: "NOT ASSINGED", floor: "NOT ASSINGED", user: "NOT ASSINGED", team: "NOT ASSINGED", tl: "NOT ASSINGED" }
+    ];
+
+    // 6. Windows 11 / Antivirus
+    const antivirusData = [
+      { sno: 1, user: "Jeeva V", team: "BD", asset: "Laptop", model: "Lenovo 82H8", os: "WINDOWS 11", software: "Mcafee Antivirus", purchaseDate: "2026-10-03", expireDate: "2027-10-03", status: "ACTIVE" },
+      { sno: 2, user: "Praveen G", team: "BD", asset: "Laptop", model: "Lenovo 82H8", os: "WINDOWS 11", software: "Mcafee Antivirus", purchaseDate: "2026-10-03", expireDate: "2027-10-03", status: "ACTIVE" },
+      { sno: 3, user: "Janarthan M", team: "BD", asset: "Laptop", model: "Lenovo 82H8", os: "WINDOWS 11", software: "Mcafee Antivirus", purchaseDate: "2026-10-03", expireDate: "2027-10-03", status: "ACTIVE" }
+    ];
+
+    // 7. SAM Staff Names (Whitelisted exactly from Excel)
+    const samNames = [
+      "Abu Bakkar Umar K", "Ajith Kumar", "Archana P", "Arun Karthick K", "Arunmozhi A",
+      "Balaganesan", "Balaksrishnan N", "Bindo J", "Chandramouzhi", "deenadhayalan",
+      "Deepan B", "Fayith Ahamed", "Gokul S", "Gomez Edwin", "Guruvarasu T",
+      "Irwin Raj Kumar C", "Jeeva", "Joshkia P", "Karthic R", "Karthic S",
+      "Karthic T", "Karthick Prabhu", "Karthiga devi", "Kishore", "Lakshmi M",
+      "Manju Priyadharshini R", "Manojkumar", "Meimozhi", "Mohammed Ibrahim S",
+      "Nagajothika K R", "Nareshprabhakar R", "Niveda", "Nivetha", "Notassigned",
+      "Parveen G", "Prasanna N V", "Praveen Kumar K A", "Rajamadasami M",
+      "Rajeshwari M", "Ramachandran", "Ramkumar", "Rammohan", "Ravindran J",
+      "Santhosh Kumar", "Saraswathi", "Saravanan", "Saravanan Balan", "Selva Priya",
+      "Senthilkumar V", "Sinu Thomas TG", "Sivaguru", "Sobiya RS", "sudakar",
+      "Surya PG", "Tharani", "Udhaya Prakash P", "Vanitha B", "Vanuvamalai Perumal",
+      "Veerapandi", "Vignesh Kumar S", "Vijay M", "Vijay P", "Vinothkumar E",
+      "venkateshan", "Jayaprakash S", "Athi Suresh", "Sivapriya", "Loginth.S",
+      "Notassign/Manoj Kumar", "Ramshraeyus", "Harun Rasith", "Nisha T",
+      "Khadhar Sheik", "Arun Raja", "Vinitha", "Notassigned/Kalavathi", "Vijayaraman K"
+    ];
+
+    // Initialize
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      renderDashboardCharts();
+      renderMasterAssets(masterAssets);
+      renderFloor12Table();
+      renderSwapsTable();
+      renderReqTable();
+      renderNewAssetTable();
+      renderAntivirusTable();
+      renderSAMNames();
+    });
+
+    // Navigation Tabs
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-blue-50', 'dark:bg-blue-950/60', 'text-blue-600', 'dark:text-blue-400', 'font-semibold');
+        btn.classList.add('text-slate-600', 'dark:text-slate-400');
+      });
+
+      const targetTab = document.getElementById(`tab-${tabId}`);
+      const targetBtn = document.getElementById(`tabBtn-${tabId}`);
+      if (targetTab) targetTab.classList.remove('hidden');
+      if (targetBtn) {
+        targetBtn.classList.remove('text-slate-600', 'dark:text-slate-400');
+        targetBtn.classList.add('bg-blue-50', 'dark:bg-blue-950/60', 'text-blue-600', 'dark:text-blue-400', 'font-semibold');
+      }
+      lucide.createIcons();
+    }
+
+    // Theme Toggle
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('pixel_theme', isDark ? 'dark' : 'light');
+      const icon = document.getElementById('themeIcon');
+      if (icon) icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+      lucide.createIcons();
+      renderDashboardCharts();
+    }
+
+    // Charts
+    let teamChartInstance = null;
+    let osChartInstance = null;
+    function renderDashboardCharts() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const textColor = isDark ? '#94a3b8' : '#475569';
+
+      // Team
+      const teams = {};
+      masterAssets.forEach(a => {
+        const t = a.team || 'Unassigned';
+        teams[t] = (teams[t] || 0) + 1;
+      });
+
+      const teamCtx = document.getElementById('teamChart');
+      if (teamCtx) {
+        if (teamChartInstance) teamChartInstance.destroy();
+        teamChartInstance = new Chart(teamCtx, {
+          type: 'bar',
+          data: {
+            labels: Object.keys(teams),
+            datasets: [{ data: Object.values(teams), backgroundColor: '#3b82f6', borderRadius: 4 }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { ticks: { color: textColor, font: { size: 9 } } },
+              y: { ticks: { color: textColor, stepSize: 2 } }
+            }
+          }
+        });
+      }
+
+      // OS
+      const osMap = {};
+      masterAssets.forEach(a => {
+        let os = (a.os || 'None').trim();
+        if (os.toUpperCase().includes('UBNTHU')) os = 'Ubuntu';
+        else if (os.toUpperCase().includes('11')) os = 'Windows 11';
+        else if (os.toUpperCase().includes('10')) os = 'Windows 10';
+        else if (os.toUpperCase().includes('7')) os = 'Windows 7';
+        else if (os.toUpperCase().includes('MAC')) os = 'MAC OS';
+        else if (!os) os = 'Not Specified';
+        osMap[os] = (osMap[os] || 0) + 1;
+      });
+
+      const osCtx = document.getElementById('osChart');
+      if (osCtx) {
+        if (osChartInstance) osChartInstance.destroy();
+        osChartInstance = new Chart(osCtx, {
+          type: 'doughnut',
+          data: {
+            labels: Object.keys(osMap),
+            datasets: [{ data: Object.values(osMap), backgroundColor: ['#f97316', '#3b82f6', '#06b6d4', '#8b5cf6', '#64748b', '#cbd5e1'] }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 } } } }
+          }
+        });
+      }
+    }
+
+    // Render Master Assets (70)
+    function renderMasterAssets(data) {
+      const tbody = document.getElementById('assetsTableBody');
+      document.getElementById('filteredCount').textContent = data.length;
+
+      if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="16" class="text-center py-6 text-slate-400">No records match your search.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.map(a => `
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+          <td class="py-2.5 px-3 font-mono text-slate-400">${a.sno}</td>
+          <td class="py-2.5 px-3 font-bold text-slate-900 dark:text-white">${a.name}</td>
+          <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-medium">${a.team}</span></td>
+          <td class="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-300">${a.ip}</td>
+          <td class="py-2.5 px-3 text-slate-700 dark:text-slate-200">${a.cpu || '-'}</td>
+          <td class="py-2.5 px-3 font-semibold">${a.ram || '-'}</td>
+          <td class="py-2.5 px-3">${a.ssd || '-'}</td>
+          <td class="py-2.5 px-3">${a.hdd || '-'}</td>
+          <td class="py-2.5 px-3 text-slate-600 dark:text-slate-300">${a.model} ${a.size ? '(' + a.size + ')' : ''}</td>
+          <td class="py-2.5 px-3 font-medium text-blue-600 dark:text-blue-400">${a.os || '-'}</td>
+          <td class="py-2.5 px-3 font-mono font-bold text-indigo-600 dark:text-indigo-400">${a.asset || '-'}</td>
+          <td class="py-2.5 px-3 font-medium">${a.bay || '-'}</td>
+          <td class="py-2.5 px-3 font-mono text-slate-500">${a.monAsset || '-'}</td>
+          <td class="py-2.5 px-3 text-slate-500">${a.kb || '-'}</td>
+          <td class="py-2.5 px-3 text-slate-500">${a.mouse || '-'}</td>
+          <td class="py-2.5 px-3 font-mono text-[10px] text-slate-400">${a.mac || '-'}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Filter Logic
+    function applyFilters() {
+      const q = (document.getElementById('assetSearchInput').value || '').toLowerCase().trim();
+      const team = document.getElementById('filterTeam').value;
+      const form = document.getElementById('filterForm').value;
+      const os = document.getElementById('filterOS').value;
+      const loc = document.getElementById('filterLoc').value;
+
+      const filtered = masterAssets.filter(a => {
+        if (q) {
+          const match = (a.name || '').toLowerCase().includes(q)
+            || (a.ip || '').toLowerCase().includes(q)
+            || (a.asset || '').toLowerCase().includes(q)
+            || (a.bay || '').toLowerCase().includes(q)
+            || (a.cpu || '').toLowerCase().includes(q)
+            || (a.team || '').toLowerCase().includes(q)
+            || (a.model || '').toLowerCase().includes(q)
+            || (a.kb || '').toLowerCase().includes(q)
+            || (a.mouse || '').toLowerCase().includes(q);
+          if (!match) return false;
+        }
+        if (team && a.team !== team) return false;
+        if (form) {
+          if (form === 'Laptop' && a.model !== 'Laptop') return false;
+          if (form === 'Desktop' && a.model === 'Laptop') return false;
+        }
+        if (os && !(a.os || '').toUpperCase().includes(os)) return false;
+        if (loc && !(a.bay || '').includes(loc) && !(a.ip || '').includes(loc)) return false;
+        return true;
+      });
+
+      renderMasterAssets(filtered);
+    }
+
+    function resetFilters() {
+      document.getElementById('assetSearchInput').value = '';
+      document.getElementById('filterTeam').value = '';
+      document.getElementById('filterForm').value = '';
+      document.getElementById('filterOS').value = '';
+      document.getElementById('filterLoc').value = '';
+      renderMasterAssets(masterAssets);
+    }
+
+    function handleGlobalSearch(val) {
+      document.getElementById('assetSearchInput').value = val;
+      switchTab('assets');
+      applyFilters();
+    }
+
+    // Render Floor 1 & 2 Sheet (47)
+    function renderFloor12Table() {
+      const tbody = document.getElementById('floor12TableBody');
+      tbody.innerHTML = floor12Data.map(r => `
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+          <td class="py-2.5 px-3 font-mono text-slate-400">${r.no}</td>
+          <td class="py-2.5 px-3 font-bold text-slate-900 dark:text-white">${r.name}</td>
+          <td class="py-2.5 px-3">${r.team}</td>
+          <td class="py-2.5 px-3 font-mono">${r.ip}</td>
+          <td class="py-2.5 px-3">${r.type}</td>
+          <td class="py-2.5 px-3">${r.model}</td>
+          <td class="py-2.5 px-3">${r.cpu}</td>
+          <td class="py-2.5 px-3 font-semibold">${r.ram}</td>
+          <td class="py-2.5 px-3">${r.ssd} / ${r.hdd}</td>
+          <td class="py-2.5 px-3">${r.mon}</td>
+          <td class="py-2.5 px-3 text-blue-600">${r.os}</td>
+          <td class="py-2.5 px-3 font-medium text-slate-700 dark:text-slate-300">${r.block}</td>
+          <td class="py-2.5 px-3 ${r.remarks.includes('Slowness') || r.remarks.includes('issue') ? 'text-amber-600 font-bold' : 'text-slate-500'}">${r.remarks}</td>
+          <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-semibold">${r.status}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    // Render Swaps
+    function renderSwapsTable() {
+      const tbody = document.getElementById('swapsTableBody');
+      tbody.innerHTML = swapsData.map(s => `
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+          <td class="py-2.5 px-3 font-mono">${s.sno}</td>
+          <td class="py-2.5 px-3 font-bold">${s.oldUser}</td>
+          <td class="py-2.5 px-3">${s.oldTeam}</td>
+          <td class="py-2.5 px-3 font-medium">${s.type}</td>
+          <td class="py-2.5 px-3 font-mono">${s.details}</td>
+          <td class="py-2.5 px-3 font-bold text-blue-600">➔ ${s.swapUser}</td>
+          <td class="py-2.5 px-3">${s.swapTeam}</td>
+          <td class="py-2.5 px-3 font-mono">${s.date}</td>
+          <td class="py-2.5 px-3 font-semibold text-emerald-600">${s.remark}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Render Requirements
+    function renderReqTable() {
+      const tbody = document.getElementById('reqTableBody');
+      tbody.innerHTML = reqData.map(r => `
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+          <td class="py-2.5 px-3 font-mono">${r.sno}</td>
+          <td class="py-2.5 px-3 font-bold">${r.user}</td>
+          <td class="py-2.5 px-3">${r.tl}</td>
+          <td class="py-2.5 px-3">${r.team}</td>
+          <td class="py-2.5 px-3 font-bold text-amber-600">${r.req}</td>
+          <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-bold">${r.status}</span></td>
+          <td class="py-2.5 px-3 text-rose-600 font-medium">${r.remark}</td>
+          <td class="py-2.5 px-3 font-mono">${r.reqDate}</td>
+          <td class="py-2.5 px-3 font-mono">${r.purchaseDate}</td>
+          <td class="py-2.5 px-3 font-mono">${r.assignedDate}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Render New Assets
+    function renderNewAssetTable() {
+      const tbody = document.getElementById('newAssetTableBody');
+      tbody.innerHTML = newAssetsData.map(n => `
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+          <td class="py-2.5 px-3 font-mono">${n.sno}</td>
+          <td class="py-2.5 px-3 font-bold">${n.type}</td>
+          <td class="py-2.5 px-3 font-mono">${n.model}</td>
+          <td class="py-2.5 px-3 font-mono">${n.billDate}</td>
+          <td class="py-2.5 px-3 font-mono">${n.assignedDate}</td>
+          <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${n.status === 'Assinged' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'}">${n.status}</span></td>
+          <td class="py-2.5 px-3">${n.floor}</td>
+          <td class="py-2.5 px-3 font-medium">${n.user}</td>
+          <td class="py-2.5 px-3">${n.team}</td>
+          <td class="py-2.5 px-3">${n.tl}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Render Antivirus
+    function renderAntivirusTable() {
+      const tbody = document.getElementById('antivirusTableBody');
+      tbody.innerHTML = antivirusData.map(a => `
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+          <td class="py-2.5 px-3 font-mono">${a.sno}</td>
+          <td class="py-2.5 px-3 font-bold">${a.user}</td>
+          <td class="py-2.5 px-3">${a.team}</td>
+          <td class="py-2.5 px-3">${a.asset}</td>
+          <td class="py-2.5 px-3 font-mono">${a.model}</td>
+          <td class="py-2.5 px-3 font-semibold text-blue-600">${a.os}</td>
+          <td class="py-2.5 px-3 font-bold text-emerald-600">${a.software}</td>
+          <td class="py-2.5 px-3 font-mono">${a.purchaseDate}</td>
+          <td class="py-2.5 px-3 font-mono font-bold">${a.expireDate}</td>
+          <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-bold">${a.status}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    // Render SAM Names
+    function renderSAMNames() {
+      const container = document.getElementById('samGrid');
+      document.getElementById('samCount').textContent = samNames.length + ' Staff Names';
+      container.innerHTML = samNames.map((name, i) => `
+        <div class="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center space-x-2">
+          <span class="text-[10px] font-mono text-slate-400 w-5">${i + 1}.</span>
+          <span class="font-medium text-slate-800 dark:text-slate-200 truncate" title="${name}">${name}</span>
+        </div>
+      `).join('');
+    }
+
+    // CSV Export
+    function exportToCSV() {
+      const headers = ["S.NO", "Staff Name", "TEAM", "IP", "CPU", "RAM", "SSD", "HDD", "Monitor Model", "Moniter Size", "OS", "Mac Address", "ASSET NAME", "BAY", "Monitor Asset Name", "KEYBOARD", "MOUSE"];
+      const rows = masterAssets.map(a => [
+        a.sno,
+        `"${a.name}"`,
+        `"${a.team}"`,
+        `"${a.ip}"`,
+        `"${a.cpu}"`,
+        `"${a.ram}"`,
+        `"${a.ssd}"`,
+        `"${a.hdd}"`,
+        `"${a.model}"`,
+        `"${a.size}"`,
+        `"${a.os}"`,
+        `"${a.mac}"`,
+        `"${a.asset}"`,
+        `"${a.bay}"`,
+        `"${a.monAsset}"`,
+        `"${a.kb}"`,
+        `"${a.mouse}"`
+      ]);
+
+      const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `Pixel_Asset_Maintenance_Verified.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>

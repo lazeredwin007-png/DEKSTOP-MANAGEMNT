@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixel Web Solutions - IT Asset Management Portal (ITAM)</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2'><rect x='2' y='3' width='20' height='14' rx='2'/><line x1='8' y1='21' x2='16' y2='21'/><line x1='12' y1='17' x2='12' y2='21'/></svg>">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="src/styles/portal.css">
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
+
+  <!-- ========================================================================= -->
+  <!-- TOP APP HEADER -->
+  <!-- ========================================================================= -->
+  <header id="appHeader" class="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm no-print">
+    <div class="max-w-[1700px] mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
+      
+      <!-- Brand & Breadcrumb -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20 shrink-0">
+          <i data-lucide="cpu" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-base font-bold text-slate-900 dark:text-white tracking-tight leading-none">Pixel Web Solutions</h1>
+            <span id="currentRoleBadge" class="px-2 py-0.5 text-[11px] font-bold rounded-full bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800">Admin</span>
+            <span id="backendBadge" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center space-x-1" title="Backend: Next.js API | Database: SQLite">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Next.js + SQLite</span>
+            </span>
+          </div>
+          <p id="headerBreadcrumb" class="text-xs text-slate-500 dark:text-slate-400 font-medium">Dashboard & KPI Metrics</p>
+        </div>
+      </div>
+
+      <!-- Center Global Search -->
+      <div class="relative hidden lg:block w-96">
+        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+        <input type="text" id="globalSearchInput" oninput="window.PixelApp.handleGlobalSearch(this.value)" placeholder="Global search employee, asset ID, serial, IP, bay..." class="w-full pl-9 pr-4 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-slate-200">
+      </div>
+
+      <!-- Right Header Actions -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        
+        <!-- Role Selector (RBAC) -->
+        <div class="hidden sm:flex items-center space-x-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs">
+          <span class="text-[10px] text-slate-400 font-semibold uppercase px-1">Role:</span>
+          <select id="headerRoleSelect" onchange="window.PixelApp.changeRole(this.value)" class="bg-transparent font-bold text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer">
+            <option value="Admin">Admin</option>
+            <option value="IT Staff">IT Staff</option>
+            <option value="Viewer">Viewer</option>
+          </select>
+        </div>
+
+        <!-- Quick Add Asset -->
+        <button onclick="window.PixelApp.openAddAssetModal()" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-1.5 shadow-sm shadow-blue-500/20 transition">
+          <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+          <span class="hidden md:inline">Add Asset</span>
+        </button>
+
+        <!-- Quick Import -->
+        <button onclick="window.PixelApp.openImportModal()" title="Import CSV / Excel" class="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition">
+          <i data-lucide="upload" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Quick Export CSV -->
+        <button onclick="window.PixelExcel.exportAssetsToCSV(window.PixelApp.getAssets())" title="Export CSV" class="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition">
+          <i data-lucide="download" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Dark Mode Toggle -->
+        <button onclick="window.PixelApp.toggleDarkMode()" id="themeToggleBtn" title="Toggle Theme" class="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition">
+          <i data-lucide="moon" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- MAIN APP CONTAINER (SIDEBAR + VIEWS) -->
+  <!-- ========================================================================= -->
+  <div class="flex-1 flex max-w-[1700px] w-full mx-auto">
+
+    <!-- SIDEBAR NAVIGATION (COLLAPSED BY DEFAULT: LOGOS ONLY; EXPANDS ON HOVER) -->
+    <aside id="appSidebar" class="w-16 hover:w-64 transition-all duration-300 ease-in-out border-r border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-2.5 space-y-6 shrink-0 hidden md:flex flex-col no-print hover:shadow-xl hover:shadow-slate-500/10 z-30 overflow-hidden">
+      <div class="space-y-1 text-xs">
+        <span class="nav-header text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">Fleet Overview</span>
+        <button onclick="window.PixelApp.switchTab('dashboard')" id="nav-dashboard" title="Dashboard & KPIs" class="nav-link w-full flex items-center px-2 py-2 rounded-xl text-left font-medium transition">
+          <div class="w-6 h-6 flex items-center justify-center shrink-0">
+            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+          </div>
+          <span class="nav-label ml-2.5">Dashboard & KPIs</span>
+        </button>
+        <button onclick="window.PixelApp.switchTab('inventory')" id="nav-inventory" title="Asset Inventory" class="nav-link w-full flex items-center px-2 py-2 rounded-xl text-left font-medium transition">
+          <div class="w-6 h-6 flex items-center justify-center shrink-0">
+            <i data-lucide="monitor" class="w-4 h-4"></i>
+          </div>
+          <span class="nav-label ml-2.5">Asset Inventory</span>
+        </button>
+      </div>
+
+      <div class="space-y-1 text-xs">
+        <span class="nav-header text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">Lifecycle & Support</span>
+        <button onclick="window.PixelApp.switchTab('maintenance')" id="nav-maintenance" title="Maintenance & Repairs" class="nav-link w-full flex items-center px-2 py-2 rounded-xl text-left font-medium transition">
+          <div class="w-6 h-6 flex items-center justify-center shrink-0">
+            <i data-lucide="wrench" class="w-4 h-4"></i>
+          </div>
+          <span class="nav-label ml-2.5">Maintenance & Repairs</span>
+        </button>
+        <button onclick="window.PixelApp.switchTab('assignments')" id="nav-assignments" title="Assignments & Transfers" class="nav-link w-full flex items-center px-2 py-2 rounded-xl text-left font-medium transition">
+          <div class="w-6 h-6 flex items-center justify-center shrink-0">
+            <i data-lucide="user-check" class="w-4 h-4"></i>
+          </div>
+          <span class="nav-label ml-2.5">Assignments & Transfers</span>
+        </button>
+        <button onclick="window.PixelApp.switchTab('warranty')" id="nav-warranty" title="Warranty Tracking" class="nav-link w-full flex items-center px-2 py-2 rounded-xl text-left font-medium transition">
+          <div class="w-6 h-6 flex items-center justify-center shrink-0">
+            <i data-lucide="shield-check" class="w-4 h-4"></i>
+          </div>
+          <span class="nav-label ml-2.5">Warranty Tracking</span>
+        </button>
+        <button onclick="window.PixelApp.switchTab('licenses')" id="nav-licenses" title="Software & Licenses" class="nav-link w-full flex items-center px-2 py-2 rounded-xl text-left font-medium transition">
+          <div class="w-6 h-6 flex items-center justify-center shrink-0">
+            <i data-lucide="key" class="w-4 h-4"></i>
+          </div>
+          <span class="nav-label ml-2.5">Software & Licenses</span>
+        </button>
+      </div>
+
+      <div class="space-y-1 text-xs">
+        <span class="nav-header text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">Governance & Data</span>
+        <button onclick="window.PixelApp.switchTab('reports')" id="nav-reports" title="Reports & Analytics" class="nav-link w-full flex items-center px-2 py-2 rounded-xl text-left font-medium transition">
+          <div class="w-6 h-6 flex items-center justify-center shrink-0">
+            <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+          </div>
+          <span class="nav-label ml-2.5">Reports & Analytics</span>
+        </button>
+        <button onclick="window.PixelApp.switchTab('validation')" id="nav-validation" title="Data Quality & Cleanup" class="nav-link w-full flex items-center px-2 py-2 rounded-xl text-left font-medium transition">
+          <div class="w-6 h-6 flex items-center justify-center shrink-0">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+          </div>
+          <span class="nav-label ml-2.5">Data Quality & Cleanup</span>
+        </button>
+        <button onclick="window.PixelApp.switchTab('activity')" id="nav-activity" title="Audit Log / History" class="nav-link w-full flex items-center px-2 py-2 rounded-xl text-left font-medium transition">
+          <div class="w-6 h-6 flex items-center justify-center shrink-0">
+            <i data-lucide="clock" class="w-4 h-4"></i>
+          </div>
+          <span class="nav-label ml-2.5">Audit Log / History</span>
+        </button>
+        <button onclick="window.PixelApp.switchTab('settings')" id="nav-settings" title="IT Admin Settings" class="nav-link w-full flex items-center px-2 py-2 rounded-xl text-left font-medium transition">
+          <div class="w-6 h-6 flex items-center justify-center shrink-0">
+            <i data-lucide="sliders" class="w-4 h-4"></i>
+          </div>
+          <span class="nav-label ml-2.5">IT Admin Settings</span>
+        </button>
+      </div>
+
+      <!-- Quick Dataset Info (Expands on Hover) -->
+      <div class="nav-bottom-card mt-auto pt-2">
+        <div class="p-3 bg-blue-50/70 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900 rounded-xl text-xs space-y-1">
+          <div class="flex items-center space-x-1.5 font-bold text-blue-700 dark:text-blue-300">
+            <i data-lucide="database" class="w-3.5 h-3.5 shrink-0"></i>
+            <span class="truncate">Preserved Fleet</span>
+          </div>
+          <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-tight">70 Verified Systems + 47 Floor Entries loaded.</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN VIEW AREA -->
+    <main class="flex-1 p-4 sm:p-6 overflow-x-hidden print-container">
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 1: DASHBOARD -->
+      <!-- ===================================================================== -->
+      <section id="view-dashboard" class="portal-view space-y-6">
+        
+        <!-- Warranty Alert Banner (Conditional) -->
+        <div id="dashWarrantyAlert" class="hidden p-4 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 border border-amber-200 dark:border-amber-800 text-xs flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="p-2 rounded-lg bg-amber-500 text-white font-bold">
+              <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-amber-900 dark:text-amber-200 text-sm">Upcoming Warranty Expirations Detected</h4>
+              <p class="text-slate-600 dark:text-slate-300"><span id="dashWarrantyAlertCount" class="font-bold text-amber-600">0</span> assets have warranties expiring within the configured warning threshold (60 days).</p>
+            </div>
+          </div>
+          <button onclick="window.PixelApp.switchTab('warranty')" class="px-3 py-1.5 font-semibold text-xs rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition">
+            View Expirations
+          </button>
+        </div>
+
+        <!-- 8 KPI Cards Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+          
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
+            <span class="text-[11px] font-semibold text-slate-500 uppercase">Total Assets</span>
+            <p id="kpiTotalAssets" class="text-2xl font-black text-slate-900 dark:text-white mt-1">70</p>
+            <span class="text-[10px] text-blue-600 font-semibold">Active Inventory</span>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
+            <span class="text-[11px] font-semibold text-slate-500 uppercase">Assigned</span>
+            <p id="kpiAssignedAssets" class="text-2xl font-black text-slate-900 dark:text-white mt-1">54</p>
+            <span id="kpiAssignedPct" class="text-[10px] text-emerald-600 font-semibold">77% fleet</span>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
+            <span class="text-[11px] font-semibold text-slate-500 uppercase">Available</span>
+            <p id="kpiAvailableAssets" class="text-2xl font-black text-slate-900 dark:text-white mt-1">8</p>
+            <span id="kpiAvailablePct" class="text-[10px] text-blue-600 font-semibold">11% buffer</span>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
+            <span class="text-[11px] font-semibold text-slate-500 uppercase">Maintenance</span>
+            <p id="kpiMaintenanceAssets" class="text-2xl font-black text-amber-600 mt-1">2</p>
+            <span class="text-[10px] text-amber-600 font-semibold">In workshop</span>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
+            <span class="text-[11px] font-semibold text-slate-500 uppercase">Repair Issue</span>
+            <p id="kpiRepairAssets" class="text-2xl font-black text-rose-600 mt-1">1</p>
+            <span class="text-[10px] text-rose-600 font-semibold">Reported broken</span>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
+            <span class="text-[11px] font-semibold text-slate-500 uppercase">Spare Pool</span>
+            <p id="kpiSpareAssets" class="text-2xl font-black text-indigo-600 mt-1">1</p>
+            <span class="text-[10px] text-indigo-600 font-semibold">Emergency backup</span>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
+            <span class="text-[11px] font-semibold text-slate-500 uppercase">WFH Remote</span>
+            <p id="kpiWfhAssets" class="text-2xl font-black text-purple-600 mt-1">4</p>
+            <span id="kpiWfhPct" class="text-[10px] text-purple-600 font-semibold">6% remote</span>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
+            <span class="text-[11px] font-semibold text-slate-500 uppercase">Retired</span>
+            <p id="kpiRetiredAssets" class="text-2xl font-black text-slate-400 mt-1">0</p>
+            <span class="text-[10px] text-slate-400 font-semibold">Scrapped / Decom</span>
+          </div>
+        </div>
+
+        <!-- 7 Interactive Charts & Activities -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          
+          <!-- Chart 1: Status Distribution -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">1. Asset Status Distribution</h3>
+            <div class="h-52 relative">
+              <canvas id="chartAssetStatus"></canvas>
+            </div>
+          </div>
+
+          <!-- Chart 2: OS Distribution -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">2. Operating System Fleet</h3>
+            <div class="h-52 relative">
+              <canvas id="chartOS"></canvas>
+            </div>
+          </div>
+
+          <!-- Chart 3: Department Distribution -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">3. Department & Team Fleet</h3>
+            <div class="h-52 relative">
+              <canvas id="chartDepartment"></canvas>
+            </div>
+          </div>
+
+          <!-- Chart 4: Asset Type Distribution -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">4. Asset Type Distribution</h3>
+            <div class="h-52 relative">
+              <canvas id="chartAssetType"></canvas>
+            </div>
+          </div>
+
+          <!-- Chart 5: Location / Floor Distribution -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">5. Floor & Location Distribution</h3>
+            <div class="h-52 relative">
+              <canvas id="chartLocation"></canvas>
+            </div>
+          </div>
+
+          <!-- Chart 6: Maintenance Health -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">6. Maintenance Status Ratio</h3>
+            <div class="h-52 relative">
+              <canvas id="chartMaintenance"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3: Age Chart + Recent Activities -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <!-- Chart 7: Purchase Year / Fleet Age -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm lg:col-span-1">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">7. Purchase Year / Asset Age</h3>
+            <div class="h-56 relative">
+              <canvas id="chartYear"></canvas>
+            </div>
+          </div>
+
+          <!-- Recent Activities Feed -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm lg:col-span-2">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Recent IT Asset Activities</h3>
+              <button onclick="window.PixelApp.switchTab('activity')" class="text-xs text-blue-600 hover:underline font-semibold">View Full Audit Log ➔</button>
+            </div>
+            <div id="dashRecentActivities" class="space-y-1 divide-y divide-slate-100 dark:divide-slate-800">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 2: ASSET INVENTORY -->
+      <!-- ===================================================================== -->
+      <section id="view-inventory" class="portal-view hidden space-y-4">
+        
+        <!-- Filter Toolbar -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
+          
+          <!-- Top Row: Search & Action Buttons -->
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="relative flex-1">
+              <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="text" id="inventorySearchInput" oninput="window.PixelApp.handleSearch(this.value)" placeholder="Search employee name, asset ID, serial, model, IP, bay..." class="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <button onclick="window.PixelApp.toggleColumnVisibilityModal()" class="px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center space-x-1.5 transition">
+                <i data-lucide="columns" class="w-3.5 h-3.5"></i>
+                <span>Columns</span>
+              </button>
+              <button onclick="window.PixelApp.resetFilters()" class="px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition">
+                Reset
+              </button>
+              <button onclick="window.PixelExcel.exportAssetsToCSV(window.PixelApp.getAssets())" class="px-3 py-2 text-xs font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center space-x-1.5 transition">
+                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                <span>Export CSV</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Advanced Filters Row -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Department</label>
+              <select id="filterDept" onchange="window.PixelApp.handleFilterChange('department', this.value)" class="w-full py-1.5 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                <option value="">All Departments</option>
+                <option value="Engineering">Engineering</option>
+                <option value="Product Design">Product Design</option>
+                <option value="Growth & Marketing">Growth & Marketing</option>
+                <option value="Quality Assurance">Quality Assurance</option>
+                <option value="HR & Admin">HR & Admin</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Team</label>
+              <select id="filterTeam" onchange="window.PixelApp.handleFilterChange('team', this.value)" class="w-full py-1.5 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                <option value="">All Teams</option>
+                <option value="BD">BD</option>
+                <option value="PHP 1">PHP 1</option>
+                <option value="PHP 2">PHP 2</option>
+                <option value="Tech Team">Tech Team</option>
+                <option value="Testing">Testing</option>
+                <option value="HR">HR & Admin</option>
+                <option value="SEO">SEO</option>
+                <option value="UI">UI</option>
+                <option value="Lead Generation">Lead Generation</option>
+                <option value="BA">BA</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Asset Type</label>
+              <select id="filterType" onchange="window.PixelApp.handleFilterChange('assetType', this.value)" class="w-full py-1.5 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                <option value="">All Types</option>
+                <option value="Laptop">Laptop</option>
+                <option value="Desktop">Desktop</option>
+                <option value="Workstation">Workstation (Mac)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">OS</label>
+              <select id="filterOS" onchange="window.PixelApp.handleFilterChange('os', this.value)" class="w-full py-1.5 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                <option value="">All OS</option>
+                <option value="Ubuntu">Ubuntu</option>
+                <option value="Windows 11">Windows 11</option>
+                <option value="Windows 10">Windows 10</option>
+                <option value="Windows 7">Windows 7</option>
+                <option value="macOS">macOS</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Status</label>
+              <select id="filterStatus" onchange="window.PixelApp.handleFilterChange('status', this.value)" class="w-full py-1.5 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                <option value="">All Statuses</option>
+                <option value="Assigned">Assigned</option>
+                <option value="Available">Available</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Repair">Repair</option>
+                <option value="WFH">WFH Remote</option>
+                <option value="Spare">Spare</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Warranty</label>
+              <select id="filterWarranty" onchange="window.PixelApp.handleFilterChange('warrantyStatus', this.value)" class="w-full py-1.5 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                <option value="">All Warranties</option>
+                <option value="active">Active</option>
+                <option value="expiring">Expiring Soon (≤60d)</option>
+                <option value="expired">Expired</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inventory Table Card -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
+          
+          <!-- Table Summary Bar -->
+          <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+            <div class="text-slate-500">
+              Showing <span id="inventoryFilterCount" class="font-bold text-slate-900 dark:text-white">70</span> of <span id="inventoryTotalCount" class="font-bold text-slate-900 dark:text-white">70</span> assets
+            </div>
+            
+            <!-- Rows per page selector -->
+            <div class="flex items-center space-x-2">
+              <span class="text-slate-400">Rows per page:</span>
+              <select onchange="window.PixelApp.changePageSize(this.value)" class="py-1 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-semibold">
+                <option value="15">15</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Table Container -->
+          <div class="overflow-x-auto custom-scrollbar table-responsive">
+            <table class="w-full text-left text-xs whitespace-nowrap">
+              <thead id="inventoryTableHead" class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800 sticky-header">
+                <!-- Dynamically Rendered Header -->
+              </thead>
+              <tbody id="inventoryTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                <!-- Dynamically Rendered Assets -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Table Footer Pagination -->
+          <div id="inventoryPagination" class="px-4 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+            <!-- Populated -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 3: MAINTENANCE & REPAIRS -->
+      <!-- ===================================================================== -->
+      <section id="view-maintenance" class="portal-view hidden space-y-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+          
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div>
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white">Maintenance & Hardware Repair Board</h3>
+              <p class="text-xs text-slate-500">Track open tickets, repairs, component swaps, and technician work orders.</p>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <button onclick="window.PixelApp.openCreateTicketModal()" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-1.5 shadow-sm transition">
+                <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                <span>Open Maintenance Ticket</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Maintenance Status Tabs -->
+          <div class="flex space-x-1 border-b border-slate-200 dark:border-slate-800 pb-2 mb-4 text-xs font-medium overflow-x-auto">
+            <button onclick="window.PixelApp.setMaintenanceFilter('all')" id="maintTab-all" class="maint-tab-btn px-3 py-1.5 rounded-lg bg-blue-600 text-white">All Tickets</button>
+            <button onclick="window.PixelApp.setMaintenanceFilter('Open Issues')" id="maintTab-Open Issues" class="maint-tab-btn px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Open Issues</button>
+            <button onclick="window.PixelApp.setMaintenanceFilter('In Progress')" id="maintTab-In Progress" class="maint-tab-btn px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">In Progress</button>
+            <button onclick="window.PixelApp.setMaintenanceFilter('Waiting for Parts')" id="maintTab-Waiting for Parts" class="maint-tab-btn px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Waiting for Parts</button>
+            <button onclick="window.PixelApp.setMaintenanceFilter('Completed')" id="maintTab-Completed" class="maint-tab-btn px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Completed</button>
+          </div>
+
+          <!-- Maintenance Table -->
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left text-xs whitespace-nowrap">
+              <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+                <tr>
+                  <th class="py-2.5 px-3">Ticket ID</th>
+                  <th class="py-2.5 px-3">Asset ID</th>
+                  <th class="py-2.5 px-3">Reported By</th>
+                  <th class="py-2.5 px-3">Issue Type</th>
+                  <th class="py-2.5 px-3">Problem Description</th>
+                  <th class="py-2.5 px-3">Priority</th>
+                  <th class="py-2.5 px-3">Issue Date</th>
+                  <th class="py-2.5 px-3">Status</th>
+                  <th class="py-2.5 px-3">Repair Cost</th>
+                  <th class="py-2.5 px-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="maintTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                <!-- Dynamically rendered -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 4: ASSIGNMENTS & TRANSFERS -->
+      <!-- ===================================================================== -->
+      <section id="view-assignments" class="portal-view hidden space-y-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white">Workstation Assignment & Transfer Ledger</h3>
+              <p class="text-xs text-slate-500">Historical trail of hardware custody from initial inventory allocation through team swaps.</p>
+            </div>
+            <button onclick="window.PixelExcel.exportAssignmentsToCSV(window.PixelApp.getAssets())" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center space-x-1.5 transition">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              <span>Export Assignment History</span>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left text-xs whitespace-nowrap">
+              <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+                <tr>
+                  <th class="py-2.5 px-3">Asset ID</th>
+                  <th class="py-2.5 px-3">Current Employee</th>
+                  <th class="py-2.5 px-3">Team</th>
+                  <th class="py-2.5 px-3">Device Spec</th>
+                  <th class="py-2.5 px-3">Assigned Date</th>
+                  <th class="py-2.5 px-3">Previous Source / User</th>
+                  <th class="py-2.5 px-3">Reason</th>
+                  <th class="py-2.5 px-3 text-right">Transfer</th>
+                </tr>
+              </thead>
+              <tbody id="assignmentsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 5: WARRANTY MANAGEMENT -->
+      <!-- ===================================================================== -->
+      <section id="view-warranty" class="portal-view hidden space-y-4">
+        
+        <!-- Warranty KPI Counters -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold text-emerald-600 uppercase">Active Warranties</span>
+              <p id="warrantyActiveCount" class="text-3xl font-black text-slate-900 dark:text-white mt-1">0</p>
+              <span class="text-[11px] text-slate-400">Under manufacturer coverage</span>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center">
+              <i data-lucide="shield-check" class="w-6 h-6"></i>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold text-amber-600 uppercase">Expiring Soon (≤60 Days)</span>
+              <p id="warrantySoonCount" class="text-3xl font-black text-amber-600 mt-1">0</p>
+              <span class="text-[11px] text-slate-400">Action needed for renewal</span>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-600 flex items-center justify-center">
+              <i data-lucide="alert-circle" class="w-6 h-6"></i>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold text-rose-600 uppercase">Expired Warranties</span>
+              <p id="warrantyExpiredCount" class="text-3xl font-black text-rose-600 mt-1">0</p>
+              <span class="text-[11px] text-slate-400">Coverage elapsed</span>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-rose-50 dark:bg-rose-950 text-rose-600 flex items-center justify-center">
+              <i data-lucide="shield-alert" class="w-6 h-6"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Comprehensive Asset Warranty Registry</h3>
+            <button onclick="window.PixelExcel.exportWarrantyToCSV(window.PixelApp.getAssets())" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center space-x-1.5 transition">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              <span>Export Warranty Report</span>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left text-xs whitespace-nowrap">
+              <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+                <tr>
+                  <th class="py-2.5 px-3">Asset ID</th>
+                  <th class="py-2.5 px-3">Employee</th>
+                  <th class="py-2.5 px-3">Team</th>
+                  <th class="py-2.5 px-3">Model</th>
+                  <th class="py-2.5 px-3">Purchase Date</th>
+                  <th class="py-2.5 px-3">Warranty Expiry</th>
+                  <th class="py-2.5 px-3">Countdown</th>
+                  <th class="py-2.5 px-3">Status</th>
+                  <th class="py-2.5 px-3">Vendor</th>
+                </tr>
+              </thead>
+              <tbody id="warrantyTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 6: SOFTWARE & LICENSES -->
+      <!-- ===================================================================== -->
+      <section id="view-licenses" class="portal-view hidden space-y-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white">Software License Inventory & Compliance</h3>
+              <p class="text-xs text-slate-500">Track Windows 11 OEM, McAfee Antivirus, IDEs, and office suites.</p>
+            </div>
+            <button onclick="window.PixelExcel.exportLicensesToCSV(window.PixelStorage.getLicenses())" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center space-x-1.5 transition">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              <span>Export Licenses</span>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left text-xs whitespace-nowrap">
+              <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+                <tr>
+                  <th class="py-2.5 px-3">License ID</th>
+                  <th class="py-2.5 px-3">Software Suite</th>
+                  <th class="py-2.5 px-3">Type</th>
+                  <th class="py-2.5 px-3">License Reference</th>
+                  <th class="py-2.5 px-3">Assigned User / Group</th>
+                  <th class="py-2.5 px-3">Seat Utilization</th>
+                  <th class="py-2.5 px-3">Available Seats</th>
+                  <th class="py-2.5 px-3">Renewal / Expiry</th>
+                  <th class="py-2.5 px-3">Status</th>
+                </tr>
+              </thead>
+              <tbody id="licensesTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 7: DATA VALIDATION & CLEANUP CENTER -->
+      <!-- ===================================================================== -->
+      <section id="view-validation" class="portal-view hidden space-y-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+          
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div>
+              <div class="flex items-center space-x-2">
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">Data Quality & Normalization Center</h3>
+                <span id="validationIssueCount" class="px-2 py-0.5 text-xs font-bold rounded-full bg-amber-100 text-amber-800">0</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-1">Review typographic defects from raw Excel imports ("UBNTHU", "Assinged", "Netwrok issue") and normalize with one click.</p>
+            </div>
+
+            <button onclick="window.PixelApp.fixAllDataIssues()" class="px-4 py-2 text-xs font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-1.5 shadow-sm transition">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              <span>Normalize All Flagged Records</span>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left text-xs whitespace-nowrap">
+              <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+                <tr>
+                  <th class="py-2.5 px-3">Asset ID</th>
+                  <th class="py-2.5 px-3">Field</th>
+                  <th class="py-2.5 px-3">Raw Excel Value</th>
+                  <th class="py-2.5 px-3">Normalized Standard</th>
+                  <th class="py-2.5 px-3">Issue Category</th>
+                  <th class="py-2.5 px-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="validationTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 8: REPORTS & ANALYTICS -->
+      <!-- ===================================================================== -->
+      <section id="view-reports" class="portal-view hidden space-y-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+          
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-2">Executive Asset Management Reports</h3>
+          <p class="text-xs text-slate-500 mb-4">Select an audit report to preview live analytics or generate a formatted PDF / Excel download.</p>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
+            <button onclick="window.PixelApp.selectReport('inventory')" id="repBtn-inventory" class="report-type-btn p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-left bg-blue-50 text-blue-700 font-bold transition">
+              <div class="text-xs">Asset Inventory</div>
+              <div class="text-[10px] opacity-75">Full fleet hardware registry</div>
+            </button>
+            <button onclick="window.PixelApp.selectReport('maintenance')" id="repBtn-maintenance" class="report-type-btn p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-left text-slate-600 transition">
+              <div class="text-xs">Maintenance & Cost</div>
+              <div class="text-[10px] opacity-75">Ticket costs & repair stats</div>
+            </button>
+            <button onclick="window.PixelApp.selectReport('warranty')" id="repBtn-warranty" class="report-type-btn p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-left text-slate-600 transition">
+              <div class="text-xs">Warranty Expirations</div>
+              <div class="text-[10px] opacity-75">Upcoming 30/60/90 days</div>
+            </button>
+            <button onclick="window.PixelExcel.exportLicensesToCSV(window.PixelStorage.getLicenses())" class="p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-left text-slate-600 hover:bg-slate-50 transition">
+              <div class="text-xs">License Compliance</div>
+              <div class="text-[10px] opacity-75">Direct CSV download</div>
+            </button>
+          </div>
+
+          <!-- Report Output Container -->
+          <div id="reportOutputContainer" class="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 9: AUDIT LOG / ACTIVITY -->
+      <!-- ===================================================================== -->
+      <section id="view-activity" class="portal-view hidden space-y-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white">Audit Trail & Security Activity Log</h3>
+              <p class="text-xs text-slate-500">Immutable record of registrations, assignments, maintenance updates, and role modifications.</p>
+            </div>
+            <span class="px-2.5 py-1 text-xs font-mono font-bold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Strict ITAM Audit</span>
+          </div>
+
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left text-xs whitespace-nowrap">
+              <thead class="bg-slate-50 dark:bg-slate-800 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+                <tr>
+                  <th class="py-2.5 px-3">Timestamp</th>
+                  <th class="py-2.5 px-3">Actor / Role</th>
+                  <th class="py-2.5 px-3">Action</th>
+                  <th class="py-2.5 px-3">Target Asset ID</th>
+                  <th class="py-2.5 px-3">Audit Details</th>
+                </tr>
+              </thead>
+              <tbody id="activityTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- VIEW 10: SETTINGS -->
+      <!-- ===================================================================== -->
+      <section id="view-settings" class="portal-view hidden space-y-6">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm max-w-3xl">
+          <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1">IT Admin & System Configuration</h3>
+          <p class="text-xs text-slate-500 mb-6">Manage enterprise portal preferences, defaults, and backup restorations.</p>
+
+          <form onsubmit="window.PixelApp.handleSettingsSubmit(event)" class="space-y-4 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Company Name</label>
+                <input type="text" id="settingCompanyName" class="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Default Asset ID Prefix</label>
+                <input type="text" id="settingAssetPrefix" class="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+            </div>
+
+            <div>
+              <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Warranty Alert Threshold (Days)</label>
+              <input type="number" id="settingWarrantyDays" class="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <span class="text-[10px] text-slate-400">Assets expiring within this number of days will show an alert banner on the dashboard.</span>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition">
+                Save Portal Settings
+              </button>
+
+              <button type="button" onclick="window.PixelApp.factoryResetData()" class="px-4 py-2.5 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 font-semibold hover:bg-rose-100 transition">
+                Reset to Original Excel Dataset
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: ASSET DETAILS (SPECS, NETWORK, ASSIGNMENT, QR CODE) -->
+  <!-- ========================================================================= -->
+  <div id="assetDetailsModal" class="portal-modal fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-fade-in">
+      
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between no-print">
+        <div class="flex items-center space-x-3">
+          <span id="detailsModalAssetId" class="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 font-mono font-bold text-xs">PIX-01</span>
+          <div>
+            <h3 id="detailsModalTitle" class="font-bold text-base text-slate-900 dark:text-white">Asset Details</h3>
+            <p class="text-xs text-slate-500">Assigned to: <span id="detailsModalEmployee" class="font-bold text-slate-800 dark:text-slate-200">Employee</span> • Status: <span id="detailsModalStatus" class="font-semibold text-emerald-600">Assigned</span></p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button onclick="window.PixelApp.printAssetDetails()" title="Print Asset Tag" class="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+          </button>
+          <button onclick="window.PixelApp.closeAssetDetails()" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 overflow-y-auto custom-scrollbar space-y-6">
+        
+        <!-- Top Banner: Specs Grid + QR Code Sticker -->
+        <div class="flex flex-col md:flex-row gap-6 items-start">
+          <div id="specGridContainer" class="flex-1 w-full">
+            <!-- Populated dynamically -->
+          </div>
+          <div id="detailsModalQRContainer" class="shrink-0 w-full md:w-auto flex justify-center">
+            <!-- QR code sticker -->
+          </div>
+        </div>
+
+        <!-- Assignment History -->
+        <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Assignment & Custody History</h4>
+          <div id="detailsAssignmentHistory" class="space-y-2">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Maintenance History -->
+        <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Maintenance & Issue Records</h4>
+          <div id="detailsMaintenanceHistory" class="space-y-2">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex items-center justify-between no-print text-xs">
+        <button onclick="window.PixelApp.closeAssetDetails()" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 font-semibold hover:bg-slate-100">
+          Close
+        </button>
+        <div class="flex items-center space-x-2">
+          <button onclick="window.PixelApp.openTransferModal(window.PixelApp.selectedAssetId || '')" class="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold shadow-sm transition">
+            Transfer Asset
+          </button>
+          <button onclick="window.PixelApp.openEditAssetModal(window.PixelApp.selectedAssetId || '')" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm transition">
+            Edit Asset
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: ADD / EDIT ASSET FORM (9 GROUPED SECTIONS) -->
+  <!-- ========================================================================= -->
+  <div id="assetFormModal" class="portal-modal fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-fade-in">
+      
+      <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <h3 id="assetFormModalTitle" class="font-bold text-base text-slate-900 dark:text-white">Register New Asset</h3>
+        <button onclick="window.PixelApp.closeAssetFormModal()" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="assetUpsertForm" onsubmit="window.PixelApp.handleAssetFormSubmit(event)" class="overflow-y-auto custom-scrollbar p-6 space-y-6 text-xs">
+        
+        <!-- 1. Employee Information -->
+        <div class="space-y-3">
+          <h4 class="font-bold text-xs uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-blue-100 dark:border-blue-900 pb-1">1. Employee Information</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block font-semibold mb-1">Employee Name *</label>
+              <input type="text" name="employeeName" required placeholder="e.g. Santhosh Kumar" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Employee ID</label>
+              <input type="text" name="employeeId" placeholder="e.g. EMP-1045" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Department</label>
+              <select name="department" id="inputDepartment" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"></select>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Team</label>
+              <select name="team" id="inputTeam" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"></select>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Work Location</label>
+              <select name="location" id="inputLocation" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"></select>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Floor & Bay</label>
+              <div class="flex space-x-1">
+                <select name="floor" id="inputFloor" class="w-1/2 p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"></select>
+                <input type="text" name="bay" placeholder="Bay B01-05" class="w-1/2 p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Asset Identification -->
+        <div class="space-y-3">
+          <h4 class="font-bold text-xs uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-blue-100 dark:border-blue-900 pb-1">2. Asset Information</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <div>
+              <label class="block font-semibold mb-1">Asset ID (Tag) *</label>
+              <input type="text" id="inputAssetId" name="assetId" required placeholder="PIXCPU-05 / Pixlap-02" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono font-bold">
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Asset Type</label>
+              <select name="assetType" id="inputAssetType" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"></select>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Brand</label>
+              <input type="text" name="brand" placeholder="Dell, Lenovo, Asus" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Model Spec</label>
+              <input type="text" name="model" placeholder="OptiPlex 3080 / VivoBook 15" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block font-semibold mb-1">Serial Number *</label>
+              <input type="text" name="serialNumber" required placeholder="e.g. PF2K3XJ5" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block font-semibold mb-1">Status</label>
+              <select name="status" id="inputStatus" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-bold"></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Hardware & Network -->
+        <div class="space-y-3">
+          <h4 class="font-bold text-xs uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-blue-100 dark:border-blue-900 pb-1">3. Hardware & Network Specifications</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <div>
+              <label class="block font-semibold mb-1">CPU Processor</label>
+              <input type="text" name="cpu" placeholder="i5 11th Gen" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">RAM Memory</label>
+              <input type="text" name="ram" placeholder="16 GB DDR4" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Storage Disks</label>
+              <input type="text" name="storage" placeholder="256GB SSD + 1TB HDD" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Operating System</label>
+              <input type="text" name="os" placeholder="Ubuntu 24.04 / Win 11 Pro" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block font-semibold mb-1">IP Address</label>
+              <input type="text" name="ipAddress" placeholder="192.168.1.55 or WIFI" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block font-semibold mb-1">MAC Address</label>
+              <input type="text" name="macAddress" placeholder="00:E0:4C:D4:7F:6F" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono">
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Purchase, Warranty & Remarks -->
+        <div class="space-y-3">
+          <h4 class="font-bold text-xs uppercase tracking-wider text-blue-600 dark:text-blue-400 border-b border-blue-100 dark:border-blue-900 pb-1">4. Purchase, Warranty & Maintenance</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block font-semibold mb-1">Purchase Date</label>
+              <input type="date" name="purchaseDate" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Purchase Cost (INR)</label>
+              <input type="number" name="purchaseCost" placeholder="45000" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono">
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Warranty Expiry Date</label>
+              <input type="date" name="warrantyExpiry" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Maintenance Status</label>
+              <select name="maintenanceStatus" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                <option value="Normal">Normal</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Needs Parts">Needs Parts</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Antivirus Software</label>
+              <input type="text" name="antivirus" placeholder="McAfee Endpoint Active" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Remarks / Peripherals</label>
+              <input type="text" name="remarks" placeholder="KB: Logitech, Mouse: Dell" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end space-x-2">
+          <button type="button" onclick="window.PixelApp.closeAssetFormModal()" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 font-semibold hover:bg-slate-100">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition">Save Asset Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: ASSET TRANSFER / ASSIGNMENT -->
+  <!-- ========================================================================= -->
+  <div id="transferModal" class="portal-modal fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 animate-fade-in text-xs">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 class="font-bold text-sm text-slate-900 dark:text-white">Transfer Workstation Asset</h3>
+        <button onclick="window.PixelApp.closeTransferModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <form onsubmit="window.PixelApp.handleTransferSubmit(event)" class="space-y-3">
+        <div>
+          <span class="text-slate-400 block mb-0.5">Asset ID:</span>
+          <p id="transferAssetId" class="font-mono font-bold text-blue-600 text-sm">PIX-01</p>
+        </div>
+        <div>
+          <span class="text-slate-400 block mb-0.5">Current Custodian:</span>
+          <p id="transferCurrentEmployee" class="font-semibold text-slate-800 dark:text-slate-200">Employee</p>
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">New Recipient Employee *</label>
+          <input type="text" id="transferNewEmployee" list="transferEmployeeSuggestions" required placeholder="Type or select staff name" class="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+          <datalist id="transferEmployeeSuggestions"></datalist>
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Reallocation Reason</label>
+          <input type="text" id="transferReason" value="Department Reassignment" class="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end space-x-2">
+          <button type="button" onclick="window.PixelApp.closeTransferModal()" class="px-3.5 py-2 rounded-xl border border-slate-200 text-slate-600 font-semibold">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold transition">Complete Transfer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: CREATE MAINTENANCE TICKET -->
+  <!-- ========================================================================= -->
+  <div id="newTicketModal" class="portal-modal fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 animate-fade-in text-xs">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 class="font-bold text-sm text-slate-900 dark:text-white">Open Maintenance Ticket</h3>
+        <button onclick="window.PixelApp.closeCreateTicketModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <form id="newTicketForm" onsubmit="window.PixelApp.handleCreateTicketSubmit(event)" class="space-y-3">
+        <div>
+          <label class="block font-semibold mb-1">Asset ID *</label>
+          <input type="text" name="assetId" required placeholder="PIXCPU-01" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono">
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Reported By (Employee)</label>
+          <input type="text" name="employee" placeholder="Staff Name" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold mb-1">Issue Type</label>
+            <select name="issueType" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+              <option value="Hardware Failure">Hardware Failure</option>
+              <option value="RAM Upgrade">RAM Upgrade</option>
+              <option value="SMPS / Power">SMPS / Power</option>
+              <option value="Display / Screen">Display / Screen</option>
+              <option value="OS / Software">OS / Software</option>
+              <option value="Network Port">Network Port</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Priority</label>
+            <select name="priority" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-bold">
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+              <option value="Urgent">Urgent</option>
+              <option value="Low">Low</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Problem Description *</label>
+          <textarea name="problemDescription" required rows="2" placeholder="System auto restart / slowness / screen crack..." class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold mb-1">Assigned Technician</label>
+            <input type="text" name="technician" value="Gomez Edwin" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Estimated Cost (INR)</label>
+            <input type="number" name="repairCost" value="0" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono">
+          </div>
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Vendor / Service Center</label>
+          <input type="text" name="vendor" placeholder="Local IT Spares / OEM" class="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end space-x-2">
+          <button type="button" onclick="window.PixelApp.closeCreateTicketModal()" class="px-3.5 py-2 rounded-xl border border-slate-200 text-slate-600 font-semibold">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition">Submit Ticket</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: EXCEL & CSV IMPORT -->
+  <!-- ========================================================================= -->
+  <div id="importModal" class="portal-modal fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-4 animate-fade-in text-xs">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div>
+          <h3 class="font-bold text-sm text-slate-900 dark:text-white">Import Assets from Excel / CSV</h3>
+          <p class="text-slate-500">Safely validates schema, detects duplicates, and previews records prior to committing.</p>
+        </div>
+        <button onclick="window.PixelApp.closeImportModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <div class="space-y-4">
+        <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-6 text-center hover:border-blue-500 transition">
+          <i data-lucide="file-up" class="w-8 h-8 text-blue-500 mx-auto mb-2"></i>
+          <p class="font-semibold text-slate-700 dark:text-slate-200 mb-1">Choose CSV or Excel text file to upload</p>
+          <p class="text-slate-400 text-[11px] mb-3">Accepts standard ITAM CSV with Asset ID, Name, Model, IP columns</p>
+          <input type="file" id="importFileSelect" accept=".csv,.txt" onchange="window.PixelApp.handleFileSelected(event)" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+        </div>
+
+        <!-- Validation Summary (Hidden by default) -->
+        <div id="importFileSummary" class="hidden space-y-3">
+          <div class="grid grid-cols-3 gap-3">
+            <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 text-center">
+              <span id="importReadyCount" class="text-xl font-black text-emerald-600">0</span>
+              <p class="text-[10px] text-emerald-800 font-bold uppercase mt-0.5">Ready to Import</p>
+            </div>
+            <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 text-center">
+              <span id="importDuplicateCount" class="text-xl font-black text-amber-600">0</span>
+              <p class="text-[10px] text-amber-800 font-bold uppercase mt-0.5">Duplicates Skipped</p>
+            </div>
+            <div class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 text-center">
+              <span id="importInvalidCount" class="text-xl font-black text-rose-600">0</span>
+              <p class="text-[10px] text-rose-800 font-bold uppercase mt-0.5">Invalid Rows</p>
+            </div>
+          </div>
+
+          <!-- Preview rows -->
+          <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+            <div class="px-3 py-1.5 bg-slate-50 dark:bg-slate-800 font-bold text-slate-500 text-[11px]">Preview (First 5 records):</div>
+            <div class="overflow-x-auto max-h-36 custom-scrollbar">
+              <table class="w-full text-left">
+                <tbody id="importPreviewTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                  <!-- Populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <span class="text-slate-400 text-[11px]">Existing records are never overwritten without explicit permission.</span>
+        <div class="flex items-center space-x-2">
+          <button type="button" onclick="window.PixelApp.closeImportModal()" class="px-3.5 py-2 rounded-xl border border-slate-200 text-slate-600 font-semibold">Cancel</button>
+          <button type="button" id="importConfirmBtn" disabled onclick="window.PixelApp.commitImport()" class="px-4 py-2 rounded-xl bg-emerald-600 disabled:opacity-40 hover:bg-emerald-700 text-white font-semibold transition">
+            Confirm & Import Records
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: COLUMN VISIBILITY TOGGLE -->
+  <!-- ========================================================================= -->
+  <div id="columnVisibilityModal" class="portal-modal fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 animate-fade-in text-xs">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 class="font-bold text-sm text-slate-900 dark:text-white">Configure Table Columns</h3>
+        <button onclick="window.PixelApp.toggleColumnVisibilityModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <div id="columnCheckboxContainer" class="grid grid-cols-2 gap-1.5 max-h-72 overflow-y-auto custom-scrollbar p-1">
+        <!-- Populated dynamically -->
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+        <button onclick="window.PixelApp.toggleColumnVisibilityModal()" class="px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: CONFIRMATION DIALOG -->
+  <!-- ========================================================================= -->
+  <div id="confirmModal" class="portal-modal fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 animate-fade-in text-xs">
+      <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+        <i data-lucide="alert-circle" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <h3 id="confirmModalTitle" class="font-bold text-sm text-slate-900 dark:text-white">Confirmation</h3>
+        <p id="confirmModalMessage" class="text-slate-600 dark:text-slate-300 mt-1">Are you sure you want to proceed?</p>
+      </div>
+      <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end space-x-2">
+        <button onclick="window.PixelApp.closeConfirmModal(false)" class="px-3.5 py-2 rounded-xl border border-slate-200 text-slate-600 font-semibold">Cancel</button>
+        <button onclick="window.PixelApp.closeConfirmModal(true)" class="px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none max-w-sm w-full"></div>
+
+  <!-- ========================================================================= -->
+  <!-- APPLICATION SCRIPTS (MODULAR ENTERPRISE ARCHITECTURE) -->
+  <!-- ========================================================================= -->
+  <script src="src/utils/security.js"></script>
+  <script src="src/utils/qrcode.js"></script>
+  <script src="src/utils/excel.js"></script>
+  <script src="src/data/defaultData.js"></script>
+  <script src="src/services/storage.js"></script>
+  <script src="src/app.js"></script>
+</body>
+</html>
