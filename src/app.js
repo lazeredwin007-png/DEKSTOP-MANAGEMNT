@@ -2005,11 +2005,19 @@ window.PixelApp = (function () {
     renderTotalAssetsBreakdown: renderTotalAssetsBreakdown,
     filterInventoryByFloor: filterInventoryByFloor,
     filterInventoryByTeam: filterInventoryByTeam,
+    showToast: showToast,
     getAssets: () => state.assets
   };
 })();
 
 // Auto-run on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
-  window.PixelApp.init();
+  if (window.PixelAuth) {
+    window.PixelAuth.init();
+    if (window.PixelAuth.isAuthenticated()) {
+      window.PixelApp.init();
+    }
+  } else {
+    window.PixelApp.init();
+  }
 });
