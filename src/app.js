@@ -250,8 +250,208 @@ window.PixelApp = (function () {
     document.getElementById('kpiWfhPct').textContent = `${total ? Math.round((wfh / total) * 100) : 0}% remote`;
     document.getElementById('kpiRetiredAssets').textContent = retired;
 
+    // If breakdown section is currently open, refresh its data
+    const breakdownSection = document.getElementById('totalAssetsBreakdownSection');
+    if (breakdownSection && !breakdownSection.classList.contains('hidden')) {
+      renderTotalAssetsBreakdown();
+    }
+
     renderDashboardCharts();
     renderRecentActivitiesFeed();
+  }
+
+  function toggleTotalAssetsBreakdown(forceState) {
+    const section = document.getElementById('totalAssetsBreakdownSection');
+    const chevron = document.getElementById('totalAssetsChevron');
+    if (!section) return;
+
+    const isCurrentlyHidden = section.classList.contains('hidden');
+    const shouldShow = forceState !== undefined ? forceState : isCurrentlyHidden;
+
+    if (shouldShow) {
+      renderTotalAssetsBreakdown();
+      section.classList.remove('hidden');
+      if (chevron) chevron.classList.add('rotate-180');
+      section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      lucide.createIcons();
+    } else {
+      section.classList.add('hidden');
+      if (chevron) chevron.classList.remove('rotate-180');
+    }
+  }
+
+  function renderTotalAssetsBreakdown() {
+    const assets = state.assets;
+    const total = assets.length;
+
+    const totalBadge = document.getElementById('breakdownTotalBadge');
+    if (totalBadge) totalBadge.textContent = `${total} Systems Preserved`;
+
+    // 1. Group by Floor
+    const floorMap = {};
+    assets.forEach(a => {
+      const f = (a.floor || 'Unspecified Floor').trim();
+      if (!floorMap[f]) {
+        floorMap[f] = {
+          count: 0,
+          location: a.location || 'Pixel HQ Campus',
+          systems: []
+        };
+      }
+      floorMap[f].count++;
+      floorMap[f].systems.push(a);
+    });
+
+    const floorKeys = Object.keys(floorMap).sort((a, b) => floorMap[b].count - floorMap[a].count);
+    const floorCountEl = document.getElementById('breakdownFloorCount');
+    if (floorCountEl) floorCountEl.textContent = `${floorKeys.length} Locations`;
+
+    const floorListContainer = document.getElementById('breakdownFloorList');
+    if (floorListContainer) {
+      floorListContainer.innerHTML = floorKeys.map((floor, idx) => {
+        const item = floorMap[floor];
+        const pct = total ? Math.round((item.count / total) * 100) : 0;
+        const previewSystems = item.systems.slice(0, 6);
+        const remainingCount = item.systems.length - previewSystems.length;
+
+        return `
+          <div class="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 transition space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span class="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold text-xs flex items-center justify-center">
+                  ${idx + 1}
+                </span>
+                <div>
+                  <h5 class="font-bold text-xs text-slate-800 dark:text-slate-100">${esc(floor)}</h5>
+                  <p class="text-[10px] text-slate-500">${esc(item.location)}</p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="px-2 py-0.5 text-xs font-bold rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  ${item.count} Systems (${pct}%)
+                </span>
+                <button onclick="window.PixelApp.filterInventoryByFloor('${esc(floor)}')" title="Filter Master Inventory by this Floor" class="px-2 py-1 text-[10px] font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition flex items-center space-x-1">
+                  <span>Filter</span>
+                  <i data-lucide="arrow-right" class="w-2.5 h-2.5"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+              <div class="bg-gradient-to-r from-emerald-500 to-teal-500 h-1.5 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+            </div>
+
+            <!-- Systems Preview Tag List -->
+            <div class="pt-1 flex flex-wrap gap-1.5">
+              ${previewSystems.map(sys => `
+                <span onclick="window.PixelApp.openAssetDetails('${esc(sys.id)}')" class="inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 cursor-pointer hover:border-blue-500 hover:text-blue-600 transition" title="${esc(sys.brand)} ${esc(sys.model)} - Assigned to ${esc(sys.employeeName)} (${esc(sys.team)})">
+                  <span class="font-bold text-blue-600 dark:text-blue-400 mr-1">${esc(sys.id)}</span>
+                  <span class="truncate max-w-[90px] text-slate-500">${esc(sys.employeeName)}</span>
+                </span>
+              `).join('')}
+              ${remainingCount > 0 ? `
+                <button onclick="window.PixelApp.filterInventoryByFloor('${esc(floor)}')" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-md bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900 hover:bg-blue-100 transition">
+                  +${remainingCount} more in ${esc(floor)}
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 2. Group by Team
+    const teamMap = {};
+    assets.forEach(a => {
+      const t = (a.team || 'Unassigned').trim();
+      if (!teamMap[t]) {
+        teamMap[t] = {
+          count: 0,
+          department: a.department || 'Operations',
+          systems: []
+        };
+      }
+      teamMap[t].count++;
+      teamMap[t].systems.push(a);
+    });
+
+    const teamKeys = Object.keys(teamMap).sort((a, b) => teamMap[b].count - teamMap[a].count);
+    const teamCountEl = document.getElementById('breakdownTeamCount');
+    if (teamCountEl) teamCountEl.textContent = `${teamKeys.length} Teams`;
+
+    const teamListContainer = document.getElementById('breakdownTeamList');
+    if (teamListContainer) {
+      teamListContainer.innerHTML = teamKeys.map((team, idx) => {
+        const item = teamMap[team];
+        const pct = total ? Math.round((item.count / total) * 100) : 0;
+        const previewSystems = item.systems.slice(0, 6);
+        const remainingCount = item.systems.length - previewSystems.length;
+
+        return `
+          <div class="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 transition space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span class="w-6 h-6 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-bold text-xs flex items-center justify-center">
+                  ${idx + 1}
+                </span>
+                <div>
+                  <h5 class="font-bold text-xs text-slate-800 dark:text-slate-100">${esc(team)}</h5>
+                  <p class="text-[10px] text-slate-500">${esc(item.department)}</p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="px-2 py-0.5 text-xs font-bold rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                  ${item.count} Systems (${pct}%)
+                </span>
+                <button onclick="window.PixelApp.filterInventoryByTeam('${esc(team)}')" title="Filter Master Inventory by this Team" class="px-2 py-1 text-[10px] font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition flex items-center space-x-1">
+                  <span>Filter</span>
+                  <i data-lucide="arrow-right" class="w-2.5 h-2.5"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+              <div class="bg-gradient-to-r from-indigo-500 to-purple-500 h-1.5 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+            </div>
+
+            <!-- Systems Preview Tag List -->
+            <div class="pt-1 flex flex-wrap gap-1.5">
+              ${previewSystems.map(sys => `
+                <span onclick="window.PixelApp.openAssetDetails('${esc(sys.id)}')" class="inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 cursor-pointer hover:border-blue-500 hover:text-blue-600 transition" title="${esc(sys.brand)} ${esc(sys.model)} - ${esc(sys.employeeName)} (${esc(sys.floor || 'Floor')})">
+                  <span class="font-bold text-blue-600 dark:text-blue-400 mr-1">${esc(sys.id)}</span>
+                  <span class="truncate max-w-[90px] text-slate-500">${esc(sys.employeeName)}</span>
+                </span>
+              `).join('')}
+              ${remainingCount > 0 ? `
+                <button onclick="window.PixelApp.filterInventoryByTeam('${esc(team)}')" class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-md bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900 hover:bg-indigo-100 transition">
+                  +${remainingCount} more in ${esc(team)}
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    lucide.createIcons();
+  }
+
+  function filterInventoryByFloor(floorName) {
+    state.filters.floor = floorName;
+    const floorSelect = document.getElementById('filterFloor');
+    if (floorSelect) floorSelect.value = floorName;
+    switchTab('inventory');
+    showToast(`Filtered Inventory by Floor: ${floorName}`, "info");
+  }
+
+  function filterInventoryByTeam(teamName) {
+    state.filters.team = teamName;
+    const teamSelect = document.getElementById('filterTeam');
+    if (teamSelect) teamSelect.value = teamName;
+    switchTab('inventory');
+    showToast(`Filtered Inventory by Team: ${teamName}`, "info");
   }
 
   function renderDashboardCharts() {
@@ -1801,6 +2001,10 @@ window.PixelApp = (function () {
     fixSingleDataIssue: fixSingleDataIssue,
     fixAllDataIssues: fixAllDataIssues,
     closeConfirmModal: closeConfirmModal,
+    toggleTotalAssetsBreakdown: toggleTotalAssetsBreakdown,
+    renderTotalAssetsBreakdown: renderTotalAssetsBreakdown,
+    filterInventoryByFloor: filterInventoryByFloor,
+    filterInventoryByTeam: filterInventoryByTeam,
     getAssets: () => state.assets
   };
 })();

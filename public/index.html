@@ -223,10 +223,24 @@
         <!-- 8 KPI Cards Grid -->
         <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
           
-          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
-            <span class="text-[11px] font-semibold text-slate-500 uppercase">Total Assets</span>
-            <p id="kpiTotalAssets" class="text-2xl font-black text-slate-900 dark:text-white mt-1">70</p>
-            <span class="text-[10px] text-blue-600 font-semibold">Active Inventory</span>
+          <!-- Total Assets (Clickable to reveal Floor & Team breakdown cards) -->
+          <div onclick="window.PixelApp.toggleTotalAssetsBreakdown()" 
+               id="cardKpiTotalAssets"
+               title="Click to view Floor-wise & Team-wise breakdown"
+               class="bg-white dark:bg-slate-900 border-2 border-blue-500/40 dark:border-blue-500/50 rounded-xl p-3.5 shadow-sm hover:shadow-md hover:border-blue-600 hover:ring-2 hover:ring-blue-500/20 cursor-pointer transition-all transform hover:-translate-y-0.5 group relative overflow-hidden">
+            <div class="absolute top-2 right-2 text-blue-500 opacity-60 group-hover:opacity-100 transition-opacity">
+              <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+            </div>
+            <span class="text-[11px] font-semibold text-slate-500 uppercase flex items-center justify-between">
+              Total Assets
+            </span>
+            <p id="kpiTotalAssets" class="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">70</p>
+            <div class="flex items-center justify-between text-[10px] text-blue-600 font-semibold mt-0.5">
+              <span>Active Fleet</span>
+              <span class="flex items-center text-[10px] text-blue-600 bg-blue-50 dark:bg-blue-950 px-1.5 py-0.5 rounded-full font-bold">
+                View <i data-lucide="chevron-down" id="totalAssetsChevron" class="w-3 h-3 ml-0.5 transition-transform duration-200"></i>
+              </span>
+            </div>
           </div>
 
           <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
@@ -269,6 +283,86 @@
             <span class="text-[11px] font-semibold text-slate-500 uppercase">Retired</span>
             <p id="kpiRetiredAssets" class="text-2xl font-black text-slate-400 mt-1">0</p>
             <span class="text-[10px] text-slate-400 font-semibold">Scrapped / Decom</span>
+          </div>
+        </div>
+
+        <!-- ===================================================================== -->
+        <!-- TOTAL ASSETS BREAKDOWN: 2 CARDS (FLOOR-WISE & TEAM-WISE) -->
+        <!-- ===================================================================== -->
+        <div id="totalAssetsBreakdownSection" class="hidden transition-all duration-300 ease-in-out">
+          <div class="bg-gradient-to-b from-blue-50/70 to-slate-50 dark:from-slate-900/90 dark:to-slate-950 border border-blue-200 dark:border-blue-900/60 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
+            
+            <!-- Section Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-3 border-b border-blue-100 dark:border-slate-800 gap-2">
+              <div class="flex items-center space-x-2.5">
+                <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm shadow-blue-500/30 shrink-0">
+                  <i data-lucide="layout-grid" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                    <span>Total Assets Fleet Breakdown</span>
+                    <span id="breakdownTotalBadge" class="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">70 Systems</span>
+                  </h3>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Detailed Floor-wise and Team-wise breakdown with individual system lists.</p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <button onclick="window.PixelApp.switchTab('inventory')" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-1.5 shadow-sm shadow-blue-500/20 transition">
+                  <i data-lucide="table" class="w-3.5 h-3.5"></i>
+                  <span>Open Full Inventory</span>
+                </button>
+                <button onclick="window.PixelApp.toggleTotalAssetsBreakdown(false)" title="Close Breakdown" class="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-700 transition">
+                  <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- 2 CARDS GRID -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+              <!-- CARD 1: FLOOR-WISE SYSTEMS BREAKDOWN -->
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex flex-col">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                  <div class="flex items-center space-x-2">
+                    <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                      <i data-lucide="building" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                      <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Floor / Location Distribution</h4>
+                      <p class="text-[11px] text-slate-500">Systems deployed by floor & remote location</p>
+                    </div>
+                  </div>
+                  <span id="breakdownFloorCount" class="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">3 Locations</span>
+                </div>
+
+                <!-- Floor List Container -->
+                <div id="breakdownFloorList" class="mt-3 space-y-2.5 max-h-[420px] overflow-y-auto pr-1 custom-scrollbar">
+                  <!-- Dynamically rendered floor items -->
+                </div>
+              </div>
+
+              <!-- CARD 2: TEAM-WISE SYSTEMS BREAKDOWN -->
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex flex-col">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                  <div class="flex items-center space-x-2">
+                    <div class="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
+                      <i data-lucide="users" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                      <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Team / Department Distribution</h4>
+                      <p class="text-[11px] text-slate-500">Systems assigned per operational team</p>
+                    </div>
+                  </div>
+                  <span id="breakdownTeamCount" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800">12 Teams</span>
+                </div>
+
+                <!-- Team List Container -->
+                <div id="breakdownTeamList" class="mt-3 space-y-2.5 max-h-[420px] overflow-y-auto pr-1 custom-scrollbar">
+                  <!-- Dynamically rendered team items -->
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
 
