@@ -34,10 +34,13 @@ window.PixelStorage = (function () {
   function getAssets() {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.ASSETS);
-      if (data) return JSON.parse(data);
+      if (data !== null) return JSON.parse(data);
     } catch (e) {
       console.warn("Could not read assets from localStorage, falling back to defaults", e);
     }
+    const isCleared = localStorage.getItem('pixel_cleared') === 'true';
+    if (isCleared) return [];
+
     const defaults = window.PixelDefaultData.getInitialAssets();
     saveAssets(defaults, false);
     return defaults;
@@ -46,6 +49,9 @@ window.PixelStorage = (function () {
   function saveAssets(assets, shouldNotify = true) {
     try {
       localStorage.setItem(STORAGE_KEYS.ASSETS, JSON.stringify(assets));
+      if (assets && assets.length > 0) {
+        localStorage.removeItem('pixel_cleared');
+      }
       if (shouldNotify) notify('assets_changed', assets);
     } catch (e) {
       console.error("Failed to save assets to localStorage", e);
@@ -316,8 +322,9 @@ window.PixelStorage = (function () {
     }
   }
 
-  // Factory Reset
+  // Factory Reset (Restores default demo dataset)
   function resetAllData() {
+    localStorage.removeItem('pixel_cleared');
     localStorage.removeItem(STORAGE_KEYS.ASSETS);
     localStorage.removeItem(STORAGE_KEYS.MAINTENANCE);
     localStorage.removeItem(STORAGE_KEYS.LICENSES);
@@ -330,49 +337,75 @@ window.PixelStorage = (function () {
     notify('data_reset', {});
   }
 
+  // Clear All Data (Wipes clean for custom Excel import)
+  async function clearAllData() {
+    localStorage.setItem('pixel_cleared', 'true');
+    localStorage.setItem(STORAGE_KEYS.ASSETS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.MAINTENANCE, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.LICENSES, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.ACTIVITY_LOG, JSON.stringify([]));
+
+    try {
+      await fetch('/api/clear', { method: 'POST' });
+    } catch (e) {
+      console.warn("Backend clear failed:", e);
+    }
+
+    notify('assets_changed', []);
+    notify('data_reset', {});
+  }
+
   // Asynchronous sync with SQLite Backend
   async function syncWithSQLite() {
     try {
       const res = await fetch('/api/assets');
       if (res.ok) {
         const json = await res.json();
-        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        if (json.success && Array.isArray(json.data)) {
           isBackendOnline = true;
-          // Map snake_case SQLite fields to camelCase client models if necessary
-          const mapped = json.data.map(row => ({
-            id: row.id,
-            employeeName: row.employee_name || row.employeeName || 'Unassigned',
-            employeeId: row.employee_id || row.employeeId || 'N/A',
-            team: row.team || 'Unassigned',
-            department: row.department || 'Operations',
-            assetType: row.asset_type || row.assetType || 'Desktop',
-            brand: row.brand || 'Dell',
-            model: row.model || 'OptiPlex',
-            serialNumber: row.serial_number || row.serialNumber || 'N/A',
-            cpu: row.cpu || 'Core i5',
-            ram: row.ram || '16GB',
-            storage: row.storage || '512GB SSD',
-            os: row.os || 'Windows 11 Pro',
-            officeVersion: row.office_version || row.officeVersion || 'MS Office 2021',
-            antivirus: row.antivirus || 'Windows Defender',
-            ipAddress: row.ip_address || row.ipAddress || 'DHCP',
-            macAddress: row.mac_address || row.macAddress || 'N/A',
-            location: row.location || 'Pixel HQ - Floor 2',
-            floor: row.floor || '2nd Floor',
-            bay: row.bay || 'General Bay',
-            purchaseDate: row.purchase_date || row.purchaseDate || '2023-01-15',
-            purchaseCost: row.purchase_cost || row.purchaseCost || 45000,
-            warrantyExpiry: row.warranty_expiry || row.warrantyExpiry || '2026-01-15',
-            vendor: row.vendor || 'Dell Technologies',
-            status: row.status || 'Assigned',
-            maintenanceStatus: row.maintenance_status || row.maintenanceStatus || 'Normal',
-            condition: row.condition || 'Good',
-            remarks: row.remarks || '',
-            lastUpdated: row.last_updated || row.lastUpdated || '2026-10-03 12:00'
-          }));
+          if (json.data.length === 0) {
+            const isCleared = localStorage.getItem('pixel_cleared') === 'true';
+            if (isCleared) {
+              saveAssets([], true);
+              return;
+            }
+          } else {
+            // Map snake_case SQLite fields to camelCase client models if necessary
+            const mapped = json.data.map(row => ({
+              id: row.id,
+              employeeName: row.employee_name || row.employeeName || 'Unassigned',
+              employeeId: row.employee_id || row.employeeId || 'N/A',
+              team: row.team || 'Unassigned',
+              department: row.department || 'Operations',
+              assetType: row.asset_type || row.assetType || 'Desktop',
+              brand: row.brand || 'Dell',
+              model: row.model || 'OptiPlex',
+              serialNumber: row.serial_number || row.serialNumber || 'N/A',
+              cpu: row.cpu || 'Core i5',
+              ram: row.ram || '16GB',
+              storage: row.storage || '512GB SSD',
+              os: row.os || 'Windows 11 Pro',
+              officeVersion: row.office_version || row.officeVersion || 'MS Office 2021',
+              antivirus: row.antivirus || 'Windows Defender',
+              ipAddress: row.ip_address || row.ipAddress || 'DHCP',
+              macAddress: row.mac_address || row.macAddress || 'N/A',
+              location: row.location || 'Pixel HQ - Floor 2',
+              floor: row.floor || '2nd Floor',
+              bay: row.bay || 'General Bay',
+              purchaseDate: row.purchase_date || row.purchaseDate || '2023-01-15',
+              purchaseCost: row.purchase_cost || row.purchaseCost || 45000,
+              warrantyExpiry: row.warranty_expiry || row.warrantyExpiry || '2026-01-15',
+              vendor: row.vendor || 'Dell Technologies',
+              status: row.status || 'Assigned',
+              maintenanceStatus: row.maintenance_status || row.maintenanceStatus || 'Normal',
+              condition: row.condition || 'Good',
+              remarks: row.remarks || '',
+              lastUpdated: row.last_updated || row.lastUpdated || '2026-10-03 12:00'
+            }));
 
-          saveAssets(mapped, true);
-          console.info(`[Pixel ITAM] SQLite Database synced: ${mapped.length} assets loaded.`);
+            saveAssets(mapped, true);
+            console.info(`[Pixel ITAM] SQLite Database synced: ${mapped.length} assets loaded.`);
+          }
         }
       }
     } catch (e) {
@@ -404,6 +437,7 @@ window.PixelStorage = (function () {
     getSettings: getSettings,
     saveSettings: saveSettings,
     resetAllData: resetAllData,
+    clearAllData: clearAllData,
     subscribe: subscribe,
     syncWithSQLite: syncWithSQLite,
     isBackendOnline: () => isBackendOnline

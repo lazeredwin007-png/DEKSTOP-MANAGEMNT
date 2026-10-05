@@ -1,6 +1,6 @@
 /**
  * Pixel ITAM - Excel & CSV Import/Export Engine
- * Supports parsing CSV/Excel text, schema validation, duplicate detection, and formula-injection-safe export.
+ * Supports parsing CSV and binary Excel (.xlsx/.xls) via SheetJS, schema validation, duplicate detection, and formula-injection-safe export.
  */
 
 window.PixelExcel = (function () {
@@ -126,7 +126,7 @@ window.PixelExcel = (function () {
       if (char === '"') {
         if (insideQuotes && nextChar === '"') {
           currentCell += '"';
-          i++; // skip next quote
+          i++;
         } else {
           insideQuotes = !insideQuotes;
         }
@@ -134,7 +134,7 @@ window.PixelExcel = (function () {
         currentRow.push(currentCell.trim());
         currentCell = '';
       } else if ((char === '\r' || char === '\n') && !insideQuotes) {
-        if (char === '\r' && nextChar === '\n') i++; // Skip \n
+        if (char === '\r' && nextChar === '\n') i++;
         currentRow.push(currentCell.trim());
         if (currentRow.some(c => c.length > 0)) {
           lines.push(currentRow);
@@ -154,53 +154,106 @@ window.PixelExcel = (function () {
     return lines;
   }
 
-  // Validate and parse imported records
-  function validateImportRecords(rawRows, existingAssets) {
-    if (rawRows.length < 2) {
+  // Unified parser supporting both binary Excel (.xlsx, .xls) and text (.csv)
+  function parseExcelOrCSV(file, callback) {
+    const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+
+    if (isExcel && window.XLSX) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+          const cleanRows = rawRows
+            .map(row => Array.isArray(row) ? row.map(val => val !== null && val !== undefined ? String(val).trim() : '') : [])
+            .filter(row => row.some(cell => cell.length > 0));
+          callback(null, cleanRows);
+        } catch (err) {
+          callback(err);
+        }
+      };
+      reader.onerror = () => callback(new Error("Failed to read Excel workbook"));
+      reader.readAsArrayBuffer(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const text = e.target.result;
+          const rows = parseCSVText(text);
+          callback(null, rows);
+        } catch (err) {
+          callback(err);
+        }
+      };
+      reader.onerror = () => callback(new Error("Failed to read CSV text file"));
+      reader.readAsText(file);
+    }
+  }
+
+  // Validate and map imported records with smart header detection
+  function validateImportRecords(rawRows, existingAssets = []) {
+    if (!rawRows || rawRows.length < 2) {
       return { valid: false, message: "File has no data rows" };
     }
 
-    const headers = rawRows[0].map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
+    const headers = rawRows[0].map(h => (h || '').toLowerCase().replace(/[^a-z0-9]/g, ''));
     const rows = rawRows.slice(1);
 
-    const existingIds = new Set(existingAssets.map(a => (a.id || '').toUpperCase().trim()));
-    const existingSerials = new Set(existingAssets.map(a => (a.serialNumber || '').toUpperCase().trim()).filter(s => s && s !== 'NA'));
+    const existingIds = new Set((existingAssets || []).map(a => (a.id || '').toUpperCase().trim()));
+    const existingSerials = new Set((existingAssets || []).map(a => (a.serialNumber || '').toUpperCase().trim()).filter(s => s && s !== 'NA'));
 
     const readyRecords = [];
     const duplicateRecords = [];
     const invalidRecords = [];
+    const seenInBatch = new Set();
 
     rows.forEach((row, idx) => {
       const rowNum = idx + 2;
-      // Map row columns by header position or default indexes
+
       const getVal = (possibleNames, fallbackIndex) => {
         for (const name of possibleNames) {
           const colIdx = headers.findIndex(h => h.includes(name));
-          if (colIdx !== -1 && row[colIdx] !== undefined) return row[colIdx].trim();
+          if (colIdx !== -1 && row[colIdx] !== undefined && row[colIdx] !== '') {
+            return String(row[colIdx]).trim();
+          }
         }
-        return (row[fallbackIndex] || '').trim();
+        return (row[fallbackIndex] !== undefined ? String(row[fallbackIndex]).trim() : '');
       };
 
-      const assetId = getVal(['assetid', 'assetname', 'asset', 'tag'], 0) || `PIX-IMP-${1000 + idx}`;
-      const name = getVal(['staffname', 'employeename', 'name', 'user'], 1) || "Unassigned";
-      const team = getVal(['team', 'dept', 'department'], 2) || "General";
-      const model = getVal(['model', 'sizemodel', 'size'], 8) || "Desktop Standard";
-      const serial = getVal(['serial', 'macserial', 'monasset', 'sn'], 7) || `SN-IMP-${idx + 1}`;
-      const cpu = getVal(['cpu', 'processor'], 4) || "Intel Core i5";
-      const ram = getVal(['ram', 'memory'], 5) || "8 GB DDR4";
-      const storage = getVal(['ssd', 'hdd', 'storage', 'disk'], 6) || "256 GB SSD";
-      const os = getVal(['os', 'operatingsystem'], 9) || "Windows 10 Pro";
-      const ip = getVal(['ip', 'ipaddress'], 3) || "192.168.1.100";
-      const mac = getVal(['mac', 'macaddress'], 15) || "";
-      const bay = getVal(['bay', 'seat', 'location'], 11) || "Floating";
+      let assetId = getVal(['assetid', 'systemid', 'sysid', 'assetname', 'asset', 'cpuid', 'tag', 'id'], 0);
+      if (!assetId) {
+        assetId = `PIX-${1000 + idx}`;
+      }
+
+      const name = getVal(['staffname', 'employeename', 'employee', 'username', 'user', 'assignedto', 'name'], 1) || "Unassigned";
+      const team = getVal(['team', 'dept', 'department', 'division'], 2) || "General IT";
+      const department = getVal(['department', 'dept'], 3) || (team.toLowerCase().includes('php') || team.toLowerCase().includes('tech') ? 'Engineering' : 'Operations');
+      const model = getVal(['model', 'sizemodel', 'machine', 'systemmodel', 'specification'], 8) || "Desktop Workstation";
+      const serial = getVal(['serial', 'macserial', 'monasset', 'sn', 'servicetag'], 7) || `SN-PIX-${1000 + idx}`;
+      const cpu = getVal(['cpu', 'processor', 'chip'], 4) || "Intel Core i5";
+      const ram = getVal(['ram', 'memory', 'ddr'], 5) || "8 GB DDR4";
+      const storage = getVal(['ssd', 'hdd', 'storage', 'disk', 'capacity'], 6) || "256 GB SSD";
+      const os = getVal(['os', 'operatingsystem', 'platform'], 9) || "Windows 11 Pro";
+      const ip = getVal(['ip', 'ipaddress', 'lanip'], 3) || "DHCP";
+      const mac = getVal(['mac', 'macaddress', 'ethernet'], 15) || "N/A";
+      const floor = getVal(['floor', 'level', 'tower'], 12) || "2nd Floor";
+      const bay = getVal(['bay', 'seat', 'cubicle', 'desk'], 11) || "General Bay";
+      const location = getVal(['location', 'campus', 'branch', 'office'], 10) || "Pixel HQ Campus";
+      const vendor = getVal(['vendor', 'supplier', 'seller'], 13) || "OEM Enterprise";
+      const cost = parseFloat(getVal(['cost', 'price', 'purchasecost', 'amount'], 14)) || 45000;
+      const status = getVal(['status', 'state', 'assetstatus'], 16) || (name.toLowerCase().includes('unassigned') ? 'Available' : 'Assigned');
+      const remarks = getVal(['remarks', 'comment', 'notes'], 17) || "Imported via Excel";
 
       const normId = assetId.toUpperCase();
       const normSerial = serial.toUpperCase();
 
-      if (!assetId || assetId.length < 2) {
-        invalidRecords.push({ rowNum, assetId, error: "Missing or invalid Asset ID", data: row });
-        return;
+      if (seenInBatch.has(normId)) {
+        assetId = `${assetId}-D${idx + 1}`;
       }
+      seenInBatch.add(normId);
 
       if (existingIds.has(normId)) {
         duplicateRecords.push({ rowNum, assetId, serial, reason: `Asset ID "${assetId}" already exists in system`, data: row });
@@ -212,43 +265,45 @@ window.PixelExcel = (function () {
         return;
       }
 
+      const today = new Date().toISOString().split('T')[0];
+      const expiry = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000 * 3).toISOString().split('T')[0];
+
       readyRecords.push({
         id: assetId,
         employeeName: name,
-        employeeId: `EMP-${2000 + idx}`,
+        employeeId: `EMP-${1000 + idx}`,
         team: team,
-        department: "General IT",
-        assetType: model.toLowerCase().includes("lap") ? "Laptop" : "Desktop",
-        brand: "Dell",
+        department: department,
+        assetType: model.toLowerCase().includes('lap') ? 'Laptop' : 'Desktop',
+        brand: model.toLowerCase().includes('lenovo') ? 'Lenovo' : model.toLowerCase().includes('dell') ? 'Dell' : model.toLowerCase().includes('hp') ? 'HP' : 'Dell',
         model: model,
         serialNumber: serial,
         cpu: cpu,
         ram: ram,
         storage: storage,
         os: os,
-        officeVersion: "Microsoft 365",
-        antivirus: "Windows Defender",
+        officeVersion: "Microsoft 365 Enterprise",
+        antivirus: "Windows Defender (Active)",
         ipAddress: ip,
         macAddress: mac,
-        location: "Main Office Campus",
-        floor: "1st Floor",
+        location: location,
+        floor: floor,
         bay: bay,
-        purchaseDate: new Date().toISOString().split('T')[0],
-        purchaseCost: 40000,
-        warrantyStart: new Date().toISOString().split('T')[0],
-        warrantyExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        vendor: "Enterprise Distributor",
-        status: name.toLowerCase().includes("unassigned") ? "Available" : "Assigned",
+        purchaseDate: today,
+        purchaseCost: cost,
+        warrantyExpiry: expiry,
+        vendor: vendor,
+        status: status,
         maintenanceStatus: "Normal",
         condition: "Good",
-        remarks: "Imported via CSV/Excel",
+        remarks: remarks,
         lastUpdated: new Date().toISOString().replace('T', ' ').slice(0, 16),
         assignmentHistory: [{
-          date: new Date().toISOString().split('T')[0],
-          fromEmployee: "CSV Import Batch",
+          date: today,
+          fromEmployee: "IT Master Pool",
           toEmployee: name,
           assignedBy: "System Administrator",
-          reason: "Batch asset onboarding"
+          reason: "Batch Excel onboarding"
         }],
         maintenanceHistory: []
       });
@@ -270,6 +325,7 @@ window.PixelExcel = (function () {
     exportWarrantyToCSV: exportWarrantyToCSV,
     exportLicensesToCSV: exportLicensesToCSV,
     parseCSVText: parseCSVText,
+    parseExcelOrCSV: parseExcelOrCSV,
     validateImportRecords: validateImportRecords
   };
 })();

@@ -657,6 +657,26 @@ async function getDashboardStats() {
   };
 }
 
+async function clearDatabase() {
+  const db = await getDB();
+  db.run(`DELETE FROM assets`);
+  db.run(`DELETE FROM assignments`);
+  db.run(`DELETE FROM maintenance`);
+  db.run(`DELETE FROM licenses`);
+  db.run(`DELETE FROM activity_log`);
+  saveDB();
+  return true;
+}
+
+async function importBatchAssets(assetList) {
+  const db = await getDB();
+  for (const a of assetList) {
+    await upsertAsset(a);
+  }
+  saveDB();
+  return { success: true, count: assetList.length };
+}
+
 module.exports = {
   getDB,
   getAllAssets,
@@ -671,5 +691,8 @@ module.exports = {
   getActivityLog,
   logActivity,
   getDashboardStats,
+  clearDatabase,
+  importBatchAssets,
   saveDB
 };
+

@@ -1830,10 +1830,12 @@ window.PixelApp = (function () {
     const file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = function (evt) {
-      const text = evt.target.result;
-      const rows = window.PixelExcel.parseCSVText(text);
+    window.PixelExcel.parseExcelOrCSV(file, function (err, rows) {
+      if (err) {
+        showToast("Error reading file: " + err.message, "error");
+        return;
+      }
+
       parsedImportPayload = window.PixelExcel.validateImportRecords(rows, state.assets);
 
       document.getElementById('importReadyCount').textContent = parsedImportPayload.readyRecords.length;
@@ -1847,31 +1849,38 @@ window.PixelApp = (function () {
       // Preview Table
       const previewTbody = document.getElementById('importPreviewTableBody');
       if (previewTbody) {
-        const previewRows = [...parsedImportPayload.readyRecords.slice(0, 5)];
+        const previewRows = [...parsedImportPayload.readyRecords.slice(0, 10)];
         previewTbody.innerHTML = previewRows.map(r => `
-          <tr class="hover:bg-slate-50 text-[11px]">
-            <td class="py-1 px-2 font-mono font-bold">${esc(r.id)}</td>
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 text-[11px]">
+            <td class="py-1 px-2 font-mono font-bold text-blue-600 dark:text-blue-400">${esc(r.id)}</td>
             <td class="py-1 px-2 font-bold">${esc(r.employeeName)}</td>
             <td class="py-1 px-2">${esc(r.team)}</td>
             <td class="py-1 px-2">${esc(r.model)}</td>
             <td class="py-1 px-2 font-mono">${esc(r.ipAddress)}</td>
-            <td class="py-1 px-2"><span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">Valid</span></td>
+            <td class="py-1 px-2"><span class="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold">Ready</span></td>
           </tr>
         `).join('');
       }
-    };
-    reader.readAsText(file);
+    });
   }
 
   function commitImport() {
     if (!parsedImportPayload || parsedImportPayload.readyRecords.length === 0) return;
 
     const newRecords = parsedImportPayload.readyRecords;
+
+    // Send batch to SQLite backend
+    fetch('/api/assets/batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newRecords)
+    }).catch(err => console.debug("SQLite batch import note:", err));
+
     const current = window.PixelStorage.getAssets();
     const updated = [...newRecords, ...current];
-    window.PixelStorage.saveAssets(updated);
+    window.PixelStorage.saveAssets(updated, true);
 
-    showToast(`Successfully imported ${newRecords.length} asset records!`, "success");
+    showToast(`Successfully imported ${newRecords.length} assets into SQLite!`, "success");
     closeImportModal();
     if (state.currentTab === 'inventory') renderInventoryTable();
     else if (state.currentTab === 'dashboard') renderDashboard();
@@ -1906,6 +1915,22 @@ window.PixelApp = (function () {
         window.PixelStorage.resetAllData();
         showToast("System restored to original verified dataset.", "info");
         switchTab('dashboard');
+      }
+    );
+  }
+
+  function clearDatabase() {
+    confirmAction(
+      "Clear Entire Database Confirmation",
+      "WARNING: This will completely erase all assets, tickets, and logs from SQLite database and local memory. You will have a clean slate (0 assets) to upload your custom Excel file. Are you sure you want to proceed?",
+      async () => {
+        await window.PixelStorage.clearAllData();
+        state.assets = [];
+        state.maintenance = [];
+        state.licenses = [];
+        state.activityLog = [];
+        showToast("Database cleared successfully. Ready for custom Excel upload!", "success");
+        switchTab('inventory');
       }
     );
   }
@@ -1998,6 +2023,7 @@ window.PixelApp = (function () {
     commitImport: commitImport,
     handleSettingsSubmit: handleSettingsSubmit,
     factoryResetData: factoryResetData,
+    clearDatabase: clearDatabase,
     fixSingleDataIssue: fixSingleDataIssue,
     fixAllDataIssues: fixAllDataIssues,
     closeConfirmModal: closeConfirmModal,
