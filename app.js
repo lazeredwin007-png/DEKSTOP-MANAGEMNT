@@ -2486,11 +2486,52 @@
       const asset = store.data.assets.find(a => a.id === assetId);
       if (!asset) return;
 
-      const currentUser = asset.user || 'Assigned User';
-      if (!confirm(`Return system ${asset.id} (${currentUser}) back to IT Stock / Non-Assigned inventory?`)) {
-        return;
-      }
+      this.pendingReturnAssetId = assetId;
 
+      const modal = document.getElementById('modalConfirmReturnStock');
+      if (modal) {
+        const idEl = document.getElementById('confirmReturnAssetId');
+        const userEl = document.getElementById('confirmReturnUserName');
+        const teamEl = document.getElementById('confirmReturnTeam');
+        const specsEl = document.getElementById('confirmReturnAssetSpecs');
+
+        if (idEl) idEl.textContent = asset.id;
+        if (userEl) userEl.textContent = asset.user || 'Assigned User';
+        if (teamEl) teamEl.textContent = asset.team || '—';
+        if (specsEl) {
+          const parts = [
+            asset.type || 'Hardware',
+            asset.cpu,
+            asset.ram,
+            asset.ssd || asset.hdd
+          ].filter(Boolean);
+          specsEl.textContent = parts.join(' • ');
+        }
+        modal.classList.add('active');
+      } else {
+        // Fallback directly proceed
+        this.confirmProceedReturnStock();
+      }
+    }
+
+    cancelReturnSystemToStock() {
+      const modal = document.getElementById('modalConfirmReturnStock');
+      if (modal) modal.classList.remove('active');
+      this.pendingReturnAssetId = null;
+    }
+
+    confirmProceedReturnStock() {
+      const modal = document.getElementById('modalConfirmReturnStock');
+      if (modal) modal.classList.remove('active');
+
+      const assetId = this.pendingReturnAssetId;
+      this.pendingReturnAssetId = null;
+      if (!assetId) return;
+
+      const asset = store.data.assets.find(a => a.id === assetId);
+      if (!asset) return;
+
+      const currentUser = asset.user || 'Assigned User';
       const returnDate = new Date().toISOString().substring(0, 10);
 
       // 1. Current user becomes Previous User
@@ -5002,6 +5043,9 @@ Remarks: ${r.remark || 'None'}`);
             if (overlay.id === 'modalConfirmSaveAsset') {
               this.pendingEditFormData = null;
             }
+            if (overlay.id === 'modalConfirmReturnStock') {
+              this.pendingReturnAssetId = null;
+            }
           }
         });
       });
@@ -5984,6 +6028,12 @@ Remarks: ${r.remark || 'None'}`);
     returnSystemToStock(assetId) {
       app.returnSystemToStock(assetId);
     },
+    confirmProceedReturnStock() {
+      app.confirmProceedReturnStock();
+    },
+    cancelReturnSystemToStock() {
+      app.cancelReturnSystemToStock();
+    },
     filterAssignedSystems(type) {
       app.filterAssignedSystems(type);
     },
@@ -6503,30 +6553,7 @@ Remarks: ${r.remark || 'None'}`);
     },
 
     unassignSystem(assetId) {
-      const asset = store.data.assets.find(a => a.id === assetId);
-      if (!asset) return;
-
-      if (confirm(`Unassign system ${assetId} from ${asset.user}? System will return to Non-Assigned inventory.`)) {
-        const oldUser = asset.user;
-        asset.oldUsername = oldUser;
-        asset.user = '';
-        asset.status = 'Non-Assigned';
-        asset.remark = `Unassigned from ${oldUser} on ${new Date().toISOString().substring(0, 10)}`;
-
-        // Update user record
-        const userObj = store.data.users.find(u => u.name === oldUser);
-        if (userObj) {
-          userObj.status = 'Pending';
-          userObj.assetId = '';
-        }
-
-        store.addActivity(`Unassigned System from ${oldUser}`, asset.id, 'Sundar Pichai (SysAdmin)', 'Success');
-        store.save();
-
-        Utils.showToast('System Unassigned', `${asset.id} is now available in the Non-Assigned pool.`);
-        app.updateDashboardMetrics();
-        app.renderCurrentView();
-      }
+      app.returnSystemToStock(assetId);
     },
 
     initiateSwapForAsset(assetId) {
