@@ -1323,9 +1323,10 @@
         return;
       }
       const matchAsset = store.data.assets.find(
-        a => a.id.toLowerCase().includes(query) ||
-          a.user.toLowerCase().includes(query) ||
-          a.serialNumber.toLowerCase().includes(query)
+        a => (a.id && a.id.toLowerCase().includes(query)) ||
+          (a.user && a.user.toLowerCase().includes(query)) ||
+          (a.oldUsername && a.oldUsername.toLowerCase().includes(query)) ||
+          (a.serialNumber && a.serialNumber.toLowerCase().includes(query))
       );
 
       if (matchAsset && this.currentView !== 'all-assets') {
@@ -1926,6 +1927,7 @@
         const matchesSearch = !search ||
           (item.id && item.id.toLowerCase().includes(search)) ||
           (item.user && item.user.toLowerCase().includes(search)) ||
+          (item.oldUsername && item.oldUsername.toLowerCase().includes(search)) ||
           (item.serialNumber && item.serialNumber.toLowerCase().includes(search)) ||
           (item.cpu && item.cpu.toLowerCase().includes(search)) ||
           (item.ram && item.ram.toLowerCase().includes(search)) ||
@@ -2065,7 +2067,11 @@
             <td><strong>${Utils.escapeHtml(a.id)}</strong></td>
             <td><span class="status-pill status-available">${Utils.escapeHtml(a.type)}</span></td>
             <td>
-              ${a.user ? `<strong>${Utils.escapeHtml(a.user)}</strong>` : '<em style="color:var(--text-faint);">Unassigned</em>'}
+              ${(a.user && a.user.trim() !== '' && a.user !== 'None' && a.user !== '—' && a.user !== 'Unassigned')
+                ? `<strong>${Utils.escapeHtml(a.user)}</strong>`
+                : (a.oldUsername && a.oldUsername.trim() !== '' && a.oldUsername !== 'None' && a.oldUsername !== '—' && a.oldUsername !== 'NEW SYSTEM')
+                  ? `<strong title="Previous User: ${Utils.escapeHtml(a.oldUsername)}">${Utils.escapeHtml(a.oldUsername)}</strong>`
+                  : '<em style="color:var(--text-faint);">Unassigned</em>'}
             </td>
             <td class="cell-work-status">
               ${a.user ? this.getWorkStatusButton(a.id, a.workStatus) : '<span style="color:var(--text-faint); font-size:0.85rem;">-</span>'}
@@ -6796,7 +6802,11 @@ Remarks: ${r.remark || 'None'}`);
         ...store.data.assets.map(a => [
           a.id,
           a.type,
-          a.user || 'Unassigned',
+          (a.user && a.user.trim() !== '' && a.user !== 'None' && a.user !== '—' && a.user !== 'Unassigned')
+            ? a.user
+            : (a.oldUsername && a.oldUsername.trim() !== '' && a.oldUsername !== 'None' && a.oldUsername !== '—' && a.oldUsername !== 'NEW SYSTEM')
+              ? a.oldUsername
+              : 'Unassigned',
           a.workStatus || 'Currently Working',
           a.team || 'None',
           a.tl || '-',
