@@ -1375,6 +1375,12 @@
           e.preventDefault();
           const target = elem.getAttribute('data-target-view');
           if (target) {
+            if (target === 'all-assets') {
+              const typeFilter = document.getElementById('assetsTypeFilter');
+              if (typeFilter) typeFilter.value = 'all';
+              const statusFilter = document.getElementById('assetsStatusFilter');
+              if (statusFilter) statusFilter.value = 'all';
+            }
             this.navigateTo(target);
 
             // On mobile, close sidebar after clicking
@@ -1386,6 +1392,7 @@
     }
 
     navigateTo(viewId, pushHistory = true) {
+      this.previousView = this.currentView;
       this.currentView = viewId;
 
       // Sync browser history so clicking browser Back button returns to Dashboard
@@ -1483,6 +1490,12 @@
           this.renderWorkplaceMode();
           break;
         case 'all-assets':
+          if (this.previousView === 'desktop' || this.previousView === 'laptop') {
+            const typeFilter = document.getElementById('assetsTypeFilter');
+            if (typeFilter) typeFilter.value = 'all';
+            const statusFilter = document.getElementById('assetsStatusFilter');
+            if (statusFilter) statusFilter.value = 'all';
+          }
           this.renderAllAssetsTable();
           break;
         case 'desktop':
@@ -1907,6 +1920,8 @@
       const statusFilter = document.getElementById('assetsStatusFilter')?.value || 'all';
       const workStatusFilter = document.getElementById('assetsWorkStatusFilter')?.value || 'all';
 
+      const isDesktopOrLaptop = (typeFilter.toLowerCase() === 'desktop' || typeFilter.toLowerCase() === 'laptop' || this.currentView === 'desktop' || this.currentView === 'laptop');
+
       let list = store.data.assets.filter(item => {
         const matchesSearch = !search ||
           (item.id && item.id.toLowerCase().includes(search)) ||
@@ -1925,6 +1940,16 @@
         const matchesType = typeFilter === 'all' || (item.type && item.type.toLowerCase() === typeFilter.toLowerCase());
         const matchesCpu = cpuFilter === 'all' || (item.cpu && item.cpu.trim().toLowerCase() === cpuFilter.trim().toLowerCase());
         const matchesTeam = teamFilter === 'all' || (item.team && item.team.toLowerCase() === teamFilter.toLowerCase());
+
+        // Requirement:
+        // - All Assets: Non-Assigned assets SHOW
+        // - Desktop: Non-Assigned assets MUST NOT SHOW (only assigned desktops show)
+        // - Laptop: Non-Assigned assets MUST NOT SHOW (only assigned laptops show)
+        const isNonAssigned = (item.status === 'Non-Assigned' || item.status === 'Available');
+        if (isDesktopOrLaptop && isNonAssigned) {
+          return false;
+        }
+
         const matchesStatus = statusFilter === 'all' || (item.status && item.status.toLowerCase() === statusFilter.toLowerCase());
         const matchesWorkStatus = workStatusFilter === 'all' ||
           (item.workStatus && item.workStatus.toLowerCase() === workStatusFilter.toLowerCase()) ||
@@ -2082,6 +2107,10 @@
       const typeFilter = document.getElementById('assetsTypeFilter');
       if (typeFilter) {
         typeFilter.value = type;
+      }
+      const statusFilter = document.getElementById('assetsStatusFilter');
+      if (statusFilter) {
+        statusFilter.value = 'all';
       }
       this.renderAllAssetsTable();
     }
