@@ -6,6 +6,7 @@
  * ==========================================================================
  */
 
+
 (function () {
   'use strict';
 
@@ -37,7 +38,7 @@
     assignmentHistory: []
   };
 
-  
+
   const defaultAssignmentHistory = [
     {
       id: 'HIST_101',
@@ -791,7 +792,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action, asset, user, status, date: dateStr })
-        }).catch(() => {});
+        }).catch(() => { });
       }
     }
   }
@@ -969,7 +970,7 @@
 
     isAuthenticated() {
       return localStorage.getItem(this.AUTH_TOKEN_KEY) === 'true' ||
-             sessionStorage.getItem(this.AUTH_TOKEN_KEY) === 'true';
+        sessionStorage.getItem(this.AUTH_TOKEN_KEY) === 'true';
     },
 
     getCurrentUser() {
@@ -977,7 +978,7 @@
       if (stored) {
         try {
           return JSON.parse(stored);
-        } catch (e) {}
+        } catch (e) { }
       }
       return null;
     },
@@ -1323,8 +1324,8 @@
       }
       const matchAsset = store.data.assets.find(
         a => a.id.toLowerCase().includes(query) ||
-             a.user.toLowerCase().includes(query) ||
-             a.serialNumber.toLowerCase().includes(query)
+          a.user.toLowerCase().includes(query) ||
+          a.serialNumber.toLowerCase().includes(query)
       );
 
       if (matchAsset && this.currentView !== 'all-assets') {
@@ -1550,7 +1551,7 @@
     populateOldUsernamesList() {
       const datalist = document.getElementById('oldUsernamesList');
       if (!datalist) return;
-      
+
       const exitUsersMap = new Map();
 
       // Collect ONLY users whose status is 'User Exit'
@@ -1612,7 +1613,7 @@
       const totalUsers = users.length;
       const pendingReqs = reqs.filter(r => r.status === 'Pending' || r.status === 'Purchase Required' || r.status === 'New').length;
       const repairCount = repairs.filter(r => r.status !== 'Completed' && r.status !== 'Repaired & Returned').length;
-      
+
       // Calculate warranty expiring soon (< 30 days)
       const warrantyExpiring = assets.filter(a => {
         const days = Utils.getDaysRemaining(a.warrantyEnd);
@@ -1925,7 +1926,7 @@
         const matchesCpu = cpuFilter === 'all' || (item.cpu && item.cpu.trim().toLowerCase() === cpuFilter.trim().toLowerCase());
         const matchesTeam = teamFilter === 'all' || (item.team && item.team.toLowerCase() === teamFilter.toLowerCase());
         const matchesStatus = statusFilter === 'all' || (item.status && item.status.toLowerCase() === statusFilter.toLowerCase());
-        const matchesWorkStatus = workStatusFilter === 'all' || 
+        const matchesWorkStatus = workStatusFilter === 'all' ||
           (item.workStatus && item.workStatus.toLowerCase() === workStatusFilter.toLowerCase()) ||
           (!item.workStatus && workStatusFilter === 'Currently Working' && item.status === 'Assigned');
 
@@ -1987,9 +1988,9 @@
 
       tbody.innerHTML = list.map(a => {
         const statusClass = a.status === 'Assigned' ? 'status-assigned' :
-                            (a.status === 'Non-Assigned' || a.status === 'Available') ? 'status-non-assigned' :
-                            a.status === 'Swap' ? 'status-swap' :
-                            a.status === 'Repair' ? 'status-repair' : 'status-warranty';
+          (a.status === 'Non-Assigned' || a.status === 'Available') ? 'status-non-assigned' :
+            a.status === 'Swap' ? 'status-swap' :
+              a.status === 'Repair' ? 'status-repair' : 'status-warranty';
 
         // HDD: display only HDD information or "-" if none
         const isNoHdd = !a.hdd || a.hdd === '-' || a.hdd === '—' || a.hdd.toLowerCase() === 'none' || a.hdd.toLowerCase() === 'nil';
@@ -2108,7 +2109,7 @@
 
         const matchesTeam = teamFilter === 'all' || item.team === teamFilter;
         const matchesType = typeFilter === 'all' || item.type === typeFilter;
-        const matchesWorkStatus = workStatusFilter === 'all' || 
+        const matchesWorkStatus = workStatusFilter === 'all' ||
           (item.workStatus && item.workStatus.toLowerCase() === workStatusFilter.toLowerCase()) ||
           (!item.workStatus && workStatusFilter === 'Currently Working');
 
@@ -2182,9 +2183,9 @@
           <td><span class="status-pill ${u.status === 'Assigned' ? 'status-assigned' : 'status-pending'}">${Utils.escapeHtml(u.status)}</span></td>
           <td>
             <div class="action-btn-group">
-              ${u.status === 'Pending' 
-                ? `<button class="btn btn-primary btn-sm" onclick="window.ITApp.assignPendingUser('${u.name}', '${u.team}')">+ Assign System</button>` 
-                : `<button class="action-icon-btn btn-action-view" title="View User Details" onclick="window.ITApp.viewUser('${u.id}')">👁️</button>
+              ${u.status === 'Pending'
+          ? `<button class="btn btn-primary btn-sm" onclick="window.ITApp.assignPendingUser('${u.name}', '${u.team}')">+ Assign System</button>`
+          : `<button class="action-icon-btn btn-action-view" title="View User Details" onclick="window.ITApp.viewUser('${u.id}')">👁️</button>
                    ${u.assetId ? `<button class="action-icon-btn btn-action-edit" title="Edit Assigned Asset (${Utils.escapeHtml(u.assetId)})" onclick="window.ITApp.editAsset('${u.assetId}')">✏️</button>` : ''}`}
             </div>
           </td>
@@ -2243,13 +2244,13 @@
 
       const filterType = this.nonAssignedTypeFilter || 'all';
       const searchVal = (document.getElementById('nonAssignedSearchInput')?.value || '').toLowerCase().trim();
-      
+
       let nonAssigned = filterType === 'all'
         ? allNonAssigned
         : allNonAssigned.filter(a => a.type === filterType);
 
       if (searchVal) {
-        nonAssigned = nonAssigned.filter(a => 
+        nonAssigned = nonAssigned.filter(a =>
           (a.id && a.id.toLowerCase().includes(searchVal)) ||
           (a.oldUsername && a.oldUsername.toLowerCase().includes(searchVal)) ||
           (a.serialNumber && a.serialNumber.toLowerCase().includes(searchVal)) ||
@@ -2324,7 +2325,7 @@
     /* ==========================================================================
        SWAP SYSTEM OPERATIONS
        ========================================================================== */
-    
+
     /* ==========================================================================
        SYSTEM ASSIGNMENT & RETURN WORKFLOW METHODS
        ========================================================================== */
@@ -2550,7 +2551,7 @@
             assignedDate: asset.assignedDate,
             remark: asset.remark
           })
-        }).catch(() => {});
+        }).catch(() => { });
       }
 
       Utils.showToast('System Returned', `${asset.id} returned to Stock. Previous User: ${currentUser}`, 'info');
@@ -2834,12 +2835,12 @@
 
       tbody.innerHTML = list.map(r => {
         const prioClass = r.priority === 'Urgent' ? 'priority-urgent' :
-                          r.priority === 'High' ? 'priority-high' :
-                          r.priority === 'Medium' ? 'priority-medium' : 'priority-low';
+          r.priority === 'High' ? 'priority-high' :
+            r.priority === 'Medium' ? 'priority-medium' : 'priority-low';
 
         const statusClass = r.status === 'Completed' ? 'status-assigned' :
-                            r.status === 'Purchase Required' ? 'status-repair' :
-                            r.status === 'Approved' ? 'status-info' : 'status-warning';
+          r.status === 'Purchase Required' ? 'status-repair' :
+            r.status === 'Approved' ? 'status-info' : 'status-warning';
 
         return `
           <tr>
@@ -5031,12 +5032,11 @@ Remarks: ${r.remark || 'None'}`);
       const statusBadge = document.getElementById('editAssetStatusBadge');
       if (statusBadge) {
         statusBadge.textContent = asset.status || 'Assigned';
-        statusBadge.className = `status-pill ${
-          asset.status === 'Assigned' ? 'status-assigned' :
-          asset.status === 'Non-Assigned' ? 'status-non-assigned' :
-          asset.status === 'Swap' ? 'status-swap' :
-          asset.status === 'Repair' ? 'status-repair' : 'status-warranty'
-        }`;
+        statusBadge.className = `status-pill ${asset.status === 'Assigned' ? 'status-assigned' :
+            asset.status === 'Non-Assigned' ? 'status-non-assigned' :
+              asset.status === 'Swap' ? 'status-swap' :
+                asset.status === 'Repair' ? 'status-repair' : 'status-warranty'
+          }`;
       }
 
       // 3. Hardware Specs
@@ -5121,8 +5121,8 @@ Remarks: ${r.remark || 'None'}`);
         for (let i = 0; i < osSelect.options.length; i++) {
           const optVal = osSelect.options[i].value.trim();
           if (optVal.toLowerCase() === rawOs.toLowerCase() ||
-              optVal.replace(/\s*lts/i, '').trim().toLowerCase() === rawOs.replace(/\s*lts/i, '').trim().toLowerCase() ||
-              optVal.replace(/\s*pro/i, '').trim().toLowerCase() === rawOs.replace(/\s*pro/i, '').trim().toLowerCase()) {
+            optVal.replace(/\s*lts/i, '').trim().toLowerCase() === rawOs.replace(/\s*lts/i, '').trim().toLowerCase() ||
+            optVal.replace(/\s*pro/i, '').trim().toLowerCase() === rawOs.replace(/\s*pro/i, '').trim().toLowerCase()) {
             osSelect.selectedIndex = i;
             matched = true;
             break;
@@ -5266,7 +5266,7 @@ Remarks: ${r.remark || 'None'}`);
       this.pendingEditFormData = null;
     }
 
-        handleWorkStatusChange(workStatus) {
+    handleWorkStatusChange(workStatus) {
       const statusSelect = document.getElementById('editAssetStatus');
       const statusBadge = document.getElementById('editAssetStatusBadge');
       if (!statusSelect) return;
@@ -5299,229 +5299,229 @@ Remarks: ${r.remark || 'None'}`);
         statusBadge.textContent = systemStatus;
         statusBadge.className = 'status-pill ' + (
           systemStatus === 'Assigned' ? 'status-assigned' :
-          systemStatus === 'Non-Assigned' ? 'status-non-assigned' :
-          systemStatus === 'Swap' ? 'status-swap' :
-          systemStatus === 'Repair' ? 'status-repair' : 'status-warranty'
+            systemStatus === 'Non-Assigned' ? 'status-non-assigned' :
+              systemStatus === 'Swap' ? 'status-swap' :
+                systemStatus === 'Repair' ? 'status-repair' : 'status-warranty'
         );
       }
     }
 
     executeSaveAssetEdit(formData) {
       try {
-      const originalId = formData.get('editOriginalAssetId')?.trim();
-      const newId = formData.get('editAssetId')?.trim();
-      const cpu = formData.get('editCpu')?.trim();
-      const ram = formData.get('editRam')?.trim();
-      const ssd = formData.get('editSsd')?.trim() || 'None';
-      const hdd = formData.get('editHdd')?.trim() || 'None';
-      const monitor = formData.get('editMonitor')?.trim() || 'None';
-      const type = formData.get('editType');
-      const user = formData.get('editUser')?.trim() || '';
-      const team = formData.get('editTeam');
-      const tl = formData.get('editTl')?.trim() || '-';
-      let status = formData.get('editStatus');
-      const workStatus = formData.get('editWorkStatus') || 'Currently Working';
-      if (workStatus === 'User Exit') {
-        status = 'Non-Assigned';
-      }
-      const rawExitDate = formData.get('editExitDate')?.trim();
-      const userExitDate = rawExitDate || (workStatus === 'User Exit' ? (asset.userExitDate || new Date().toISOString().substring(0, 10)) : '');
-      const location = formData.get('editLocation')?.trim() || '';
-      const condition = formData.get('editCondition');
-      const oldUsername = formData.get('editOldUsername')?.trim() || 'None';
-      const serialNumber = formData.get('editSerialNumber')?.trim() || '';
-      const hostname = '';
-      const ipAddress = formData.get('editIpAddress')?.trim() || '';
-      const os = formData.get('editOs');
-      const assignedDate = formData.get('editAssignedDate') || new Date().toISOString().substring(0, 10);
-      const warrantyType = formData.get('editWarrantyType') || 'Full System';
-      const warrantyMode = document.getElementById('editAssetWarrantyStatus')?.value || 'date';
-      const isNonWarranty = (warrantyMode === 'non-warranty' || warrantyType === 'Non-Warranty');
-      const rawWarrantyEnd = formData.get('editWarrantyEnd') || '';
-      const warrantyEnd = (isNonWarranty || !rawWarrantyEnd) ? 'Non-Warranty' : rawWarrantyEnd;
-      const remark = formData.get('editRemark')?.trim() || '';
+        const originalId = formData.get('editOriginalAssetId')?.trim();
+        const newId = formData.get('editAssetId')?.trim();
+        const cpu = formData.get('editCpu')?.trim();
+        const ram = formData.get('editRam')?.trim();
+        const ssd = formData.get('editSsd')?.trim() || 'None';
+        const hdd = formData.get('editHdd')?.trim() || 'None';
+        const monitor = formData.get('editMonitor')?.trim() || 'None';
+        const type = formData.get('editType');
+        const user = formData.get('editUser')?.trim() || '';
+        const team = formData.get('editTeam');
+        const tl = formData.get('editTl')?.trim() || '-';
+        let status = formData.get('editStatus');
+        const workStatus = formData.get('editWorkStatus') || 'Currently Working';
+        if (workStatus === 'User Exit') {
+          status = 'Non-Assigned';
+        }
+        const rawExitDate = formData.get('editExitDate')?.trim();
+        const userExitDate = rawExitDate || (workStatus === 'User Exit' ? (asset.userExitDate || new Date().toISOString().substring(0, 10)) : '');
+        const location = formData.get('editLocation')?.trim() || '';
+        const condition = formData.get('editCondition');
+        const oldUsername = formData.get('editOldUsername')?.trim() || 'None';
+        const serialNumber = formData.get('editSerialNumber')?.trim() || '';
+        const hostname = '';
+        const ipAddress = formData.get('editIpAddress')?.trim() || '';
+        const os = formData.get('editOs');
+        const assignedDate = formData.get('editAssignedDate') || new Date().toISOString().substring(0, 10);
+        const warrantyType = formData.get('editWarrantyType') || 'Full System';
+        const warrantyMode = document.getElementById('editAssetWarrantyStatus')?.value || 'date';
+        const isNonWarranty = (warrantyMode === 'non-warranty' || warrantyType === 'Non-Warranty');
+        const rawWarrantyEnd = formData.get('editWarrantyEnd') || '';
+        const warrantyEnd = (isNonWarranty || !rawWarrantyEnd) ? 'Non-Warranty' : rawWarrantyEnd;
+        const remark = formData.get('editRemark')?.trim() || '';
 
-      if (!newId || !cpu || !ram) {
-        Utils.showToast('Validation Error', 'Please fill in Asset ID, CPU and RAM specifications.', 'error');
-        return;
-      }
-
-      // Check for ID collision if ID was renamed
-      if (newId.toLowerCase() !== originalId.toLowerCase()) {
-        const exists = store.data.assets.some(a => a.id.toLowerCase() === newId.toLowerCase());
-        if (exists) {
-          Utils.showToast('Duplicate Asset ID', `An asset with ID "${newId}" already exists.`, 'error');
+        if (!newId || !cpu || !ram) {
+          Utils.showToast('Validation Error', 'Please fill in Asset ID, CPU and RAM specifications.', 'error');
           return;
         }
-      }
 
-      const asset = store.data.assets.find(a => a.id === originalId);
-      if (!asset) {
-        Utils.showToast('Error', 'Original asset not found in database.', 'error');
-        return;
-      }
+        // Check for ID collision if ID was renamed
+        if (newId.toLowerCase() !== originalId.toLowerCase()) {
+          const exists = store.data.assets.some(a => a.id.toLowerCase() === newId.toLowerCase());
+          if (exists) {
+            Utils.showToast('Duplicate Asset ID', `An asset with ID "${newId}" already exists.`, 'error');
+            return;
+          }
+        }
 
-      // Visual button saving state
-      const headerBtn = document.getElementById('btnHeaderSaveAsset');
-      const footerBtn = document.getElementById('btnSaveAssetEdit');
-      if (headerBtn) headerBtn.innerHTML = '⏳ Saving...';
-      if (footerBtn) footerBtn.innerHTML = '⏳ Saving...';
+        const asset = store.data.assets.find(a => a.id === originalId);
+        if (!asset) {
+          Utils.showToast('Error', 'Original asset not found in database.', 'error');
+          return;
+        }
 
-      const prevUser = asset.user;
-      const prevCpu = asset.cpu;
-      const prevRam = asset.ram;
-      const prevHdd = asset.hdd;
-      const prevMonitor = asset.monitor;
+        // Visual button saving state
+        const headerBtn = document.getElementById('btnHeaderSaveAsset');
+        const footerBtn = document.getElementById('btnSaveAssetEdit');
+        if (headerBtn) headerBtn.innerHTML = '⏳ Saving...';
+        if (footerBtn) footerBtn.innerHTML = '⏳ Saving...';
 
-      // Update asset properties
-      asset.id = newId;
-      asset.type = type;
-      asset.cpu = cpu;
-      asset.ram = ram;
-      asset.ssd = ssd;
-      asset.hdd = hdd;
-      asset.monitor = monitor;
-      asset.team = team;
-      asset.tl = tl;
+        const prevUser = asset.user;
+        const prevCpu = asset.cpu;
+        const prevRam = asset.ram;
+        const prevHdd = asset.hdd;
+        const prevMonitor = asset.monitor;
 
-      const isMarkedNonAssigned = (status === 'Non-Assigned' || workStatus === 'User Exit');
-      if (isMarkedNonAssigned) {
-        asset.status = 'Non-Assigned';
-        asset.workStatus = (workStatus === 'User Exit') ? 'User Exit' : 'In Stock';
-        const exitDate = userExitDate || rawExitDate || new Date().toISOString().substring(0, 10);
-        asset.userExitDate = exitDate;
-        asset.availableDate = exitDate;
-        const departingUser = prevUser || user;
-        if (departingUser && departingUser !== 'None' && departingUser !== 'NEW SYSTEM' && departingUser !== 'Unassigned') {
-          asset.oldUsername = departingUser;
-        } else if (oldUsername && oldUsername !== 'None') {
+        // Update asset properties
+        asset.id = newId;
+        asset.type = type;
+        asset.cpu = cpu;
+        asset.ram = ram;
+        asset.ssd = ssd;
+        asset.hdd = hdd;
+        asset.monitor = monitor;
+        asset.team = team;
+        asset.tl = tl;
+
+        const isMarkedNonAssigned = (status === 'Non-Assigned' || workStatus === 'User Exit');
+        if (isMarkedNonAssigned) {
+          asset.status = 'Non-Assigned';
+          asset.workStatus = (workStatus === 'User Exit') ? 'User Exit' : 'In Stock';
+          const exitDate = userExitDate || rawExitDate || new Date().toISOString().substring(0, 10);
+          asset.userExitDate = exitDate;
+          asset.availableDate = exitDate;
+          const departingUser = prevUser || user;
+          if (departingUser && departingUser !== 'None' && departingUser !== 'NEW SYSTEM' && departingUser !== 'Unassigned') {
+            asset.oldUsername = departingUser;
+          } else if (oldUsername && oldUsername !== 'None') {
+            asset.oldUsername = oldUsername;
+          }
+          asset.user = ''; // System is unassigned, moved out of Assigned pool into Non-Assigned stock
+        } else {
+          asset.status = status || 'Assigned';
+          asset.workStatus = workStatus;
+          asset.user = user;
           asset.oldUsername = oldUsername;
         }
-        asset.user = ''; // System is unassigned, moved out of Assigned pool into Non-Assigned stock
-      } else {
-        asset.status = status || 'Assigned';
-        asset.workStatus = workStatus;
-        asset.user = user;
-        asset.oldUsername = oldUsername;
-      }
-      asset.serialNumber = serialNumber;
-      asset.hostname = hostname;
-      asset.ipAddress = ipAddress;
-      asset.os = os;
-      asset.assignedDate = assignedDate;
-      asset.warrantyType = warrantyType;
-      asset.warrantyEnd = warrantyEnd;
-      asset.remark = remark;
-      asset.isRecentlySaved = true;
-      asset.lastSavedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      asset.savedStatus = 'Saved Data';
+        asset.serialNumber = serialNumber;
+        asset.hostname = hostname;
+        asset.ipAddress = ipAddress;
+        asset.os = os;
+        asset.assignedDate = assignedDate;
+        asset.warrantyType = warrantyType;
+        asset.warrantyEnd = warrantyEnd;
+        asset.remark = remark;
+        asset.isRecentlySaved = true;
+        asset.lastSavedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        asset.savedStatus = 'Saved Data';
 
-      // Sync with users list
-      if (user && user !== prevUser) {
-        const existingUser = store.data.users.find(u => u.name.toLowerCase() === user.toLowerCase());
-        if (existingUser) {
-          existingUser.assetId = newId;
-          existingUser.assetType = type;
-          existingUser.team = team;
-          existingUser.status = 'Assigned';
-        } else {
-          store.data.users.unshift({
-            id: `USR-${Math.floor(100 + Math.random() * 900)}`,
-            name: user,
-            email: `${user.toLowerCase().replace(/\s+/g, '.')}@apextech.com`,
-            team,
-            assetId: newId,
-            assetType: type,
-            status: 'Assigned',
-            joinDate: assignedDate
+        // Sync with users list
+        if (user && user !== prevUser) {
+          const existingUser = store.data.users.find(u => u.name.toLowerCase() === user.toLowerCase());
+          if (existingUser) {
+            existingUser.assetId = newId;
+            existingUser.assetType = type;
+            existingUser.team = team;
+            existingUser.status = 'Assigned';
+          } else {
+            store.data.users.unshift({
+              id: `USR-${Math.floor(100 + Math.random() * 900)}`,
+              name: user,
+              email: `${user.toLowerCase().replace(/\s+/g, '.')}@apextech.com`,
+              team,
+              assetId: newId,
+              assetType: type,
+              status: 'Assigned',
+              joinDate: assignedDate
+            });
+          }
+        }
+
+        // If asset was reassigned away from prevUser
+        if (prevUser && prevUser !== user) {
+          const oldUserObj = store.data.users.find(u => u.name.toLowerCase() === prevUser.toLowerCase());
+          if (oldUserObj && oldUserObj.assetId === originalId) {
+            oldUserObj.assetId = '';
+            oldUserObj.status = 'Pending';
+          }
+        }
+
+        // Sync with antivirus table if asset ID changed
+        if (originalId !== newId) {
+          store.data.antivirus.forEach(av => {
+            if (av.assetId === originalId) av.assetId = newId;
           });
         }
-      }
 
-      // If asset was reassigned away from prevUser
-      if (prevUser && prevUser !== user) {
-        const oldUserObj = store.data.users.find(u => u.name.toLowerCase() === prevUser.toLowerCase());
-        if (oldUserObj && oldUserObj.assetId === originalId) {
-          oldUserObj.assetId = '';
-          oldUserObj.status = 'Pending';
+        // Log activity
+        const specDiff = [];
+        if (prevCpu !== cpu) specDiff.push(`CPU: ${cpu}`);
+        if (prevRam !== ram) specDiff.push(`RAM: ${ram}`);
+        if (prevHdd !== hdd) specDiff.push(`HDD: ${hdd}`);
+        if (prevMonitor !== monitor) specDiff.push(`Monitor: ${monitor}`);
+        const changeSummary = specDiff.length > 0 ? specDiff.join(', ') : 'Specifications Updated';
+
+        store.addActivity(`Saved Data for ${newId} (${changeSummary})`, newId, 'Sundar Pichai (SysAdmin)', 'Success');
+
+        // Persist to store
+        store.save();
+
+        // Async push to backend server if connected
+        if (store.isServerConnected) {
+          fetch(`/api/assets/${encodeURIComponent(originalId)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(asset)
+          }).catch(() => { });
         }
-      }
 
-      // Sync with antivirus table if asset ID changed
-      if (originalId !== newId) {
-        store.data.antivirus.forEach(av => {
-          if (av.assetId === originalId) av.assetId = newId;
-        });
-      }
+        // Update feedback elements in the modal
+        if (headerBtn) {
+          headerBtn.innerHTML = '✅ Saved Data!';
+          headerBtn.classList.add('btn-saved-success');
+        }
+        if (footerBtn) {
+          footerBtn.innerHTML = '✅ Saved Data!';
+          footerBtn.classList.add('btn-saved-success');
+        }
+        const savedTag = document.getElementById('editAssetSavedTag');
+        if (savedTag) {
+          savedTag.textContent = '✓ Saved Data';
+          savedTag.style.display = 'inline-flex';
+        }
+        const stateBadge = document.getElementById('editAssetSaveStateBadge');
+        if (stateBadge) {
+          stateBadge.textContent = '✅ Saved Data';
+          stateBadge.className = 'save-state-pill saved';
+          stateBadge.style.display = 'inline-flex';
+        }
+        const feedbackEl = document.getElementById('editModalSavedFeedback');
+        if (feedbackEl) {
+          feedbackEl.textContent = '✓ Saved Data Successfully!';
+          feedbackEl.style.display = 'inline-flex';
+        }
 
-      // Log activity
-      const specDiff = [];
-      if (prevCpu !== cpu) specDiff.push(`CPU: ${cpu}`);
-      if (prevRam !== ram) specDiff.push(`RAM: ${ram}`);
-      if (prevHdd !== hdd) specDiff.push(`HDD: ${hdd}`);
-      if (prevMonitor !== monitor) specDiff.push(`Monitor: ${monitor}`);
-      const changeSummary = specDiff.length > 0 ? specDiff.join(', ') : 'Specifications Updated';
+        // Show Toast Notification: "Saved Data"
+        Utils.showToast('Saved Data', `Saved data successfully for asset ${newId}.`);
 
-      store.addActivity(`Saved Data for ${newId} (${changeSummary})`, newId, 'Sundar Pichai (SysAdmin)', 'Success');
-
-      // Persist to store
-      store.save();
-
-      // Async push to backend server if connected
-      if (store.isServerConnected) {
-        fetch(`/api/assets/${encodeURIComponent(originalId)}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(asset)
-        }).catch(() => {});
-      }
-
-      // Update feedback elements in the modal
-      if (headerBtn) {
-        headerBtn.innerHTML = '✅ Saved Data!';
-        headerBtn.classList.add('btn-saved-success');
-      }
-      if (footerBtn) {
-        footerBtn.innerHTML = '✅ Saved Data!';
-        footerBtn.classList.add('btn-saved-success');
-      }
-      const savedTag = document.getElementById('editAssetSavedTag');
-      if (savedTag) {
-        savedTag.textContent = '✓ Saved Data';
-        savedTag.style.display = 'inline-flex';
-      }
-      const stateBadge = document.getElementById('editAssetSaveStateBadge');
-      if (stateBadge) {
-        stateBadge.textContent = '✅ Saved Data';
-        stateBadge.className = 'save-state-pill saved';
-        stateBadge.style.display = 'inline-flex';
-      }
-      const feedbackEl = document.getElementById('editModalSavedFeedback');
-      if (feedbackEl) {
-        feedbackEl.textContent = '✓ Saved Data Successfully!';
-        feedbackEl.style.display = 'inline-flex';
-      }
-
-      // Show Toast Notification: "Saved Data"
-      Utils.showToast('Saved Data', `Saved data successfully for asset ${newId}.`);
-
-      // Briefly wait so user sees the "Saved Data" state before closing modal
-      setTimeout(() => {
-        this.closeModal('modalEditAsset');
-        this.updateDashboardMetrics();
-        this.renderNonAssignedView();
-        this.renderAssignedSystemsTable();
-        this.renderCurrentView();
-
-        // Highlight newly saved row and scroll to it
+        // Briefly wait so user sees the "Saved Data" state before closing modal
         setTimeout(() => {
-          const row = document.querySelector(`tr[data-asset-id="${newId}"]`);
-          if (row) {
-            row.classList.add('row-saved-highlight');
-            row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          }
-        }, 80);
-      }, 400);
+          this.closeModal('modalEditAsset');
+          this.updateDashboardMetrics();
+          this.renderNonAssignedView();
+          this.renderAssignedSystemsTable();
+          this.renderCurrentView();
+
+          // Highlight newly saved row and scroll to it
+          setTimeout(() => {
+            const row = document.querySelector(`tr[data-asset-id="${newId}"]`);
+            if (row) {
+              row.classList.add('row-saved-highlight');
+              row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          }, 80);
+        }, 400);
       } catch (err) {
         console.error('Error during asset save:', err);
         Utils.showToast('Save Error', 'Error saving asset: ' + (err.message || err), 'error');
@@ -5971,7 +5971,7 @@ Remarks: ${r.remark || 'None'}`);
       this.navToAssignedFleet(type);
     },
 
-    
+
     openQuickAssignModal(assetId) {
       app.openQuickAssignModal(assetId);
     },
@@ -6187,9 +6187,9 @@ Remarks: ${r.remark || 'None'}`);
 
       // Status class calculation
       const statusClass = asset.status === 'Assigned' ? 'status-assigned' :
-                          (asset.status === 'Non-Assigned' || asset.status === 'Available') ? 'status-non-assigned' :
-                          asset.status === 'Swap' ? 'status-swap' :
-                          asset.status === 'Repair' ? 'status-repair' : 'status-warranty';
+        (asset.status === 'Non-Assigned' || asset.status === 'Available') ? 'status-non-assigned' :
+          asset.status === 'Swap' ? 'status-swap' :
+            asset.status === 'Repair' ? 'status-repair' : 'status-warranty';
 
       // 1. HEADER META (Asset ID, Device Type badge, Status badge)
       const metaContainer = document.getElementById('viewAssetModalMeta');
@@ -6421,10 +6421,10 @@ Remarks: ${r.remark || 'None'}`);
                 <span>Previous User &amp; Allocation History</span>
               </div>
               <div>
-                ${(hasPreviousUser || (swapRecord && swapRecord.oldUserId)) ? 
-                  `<span class="badge" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; font-size:0.75rem; padding:3px 10px; border-radius:12px; font-weight:600;">Reallocated Asset</span>` :
-                  `<span class="badge" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-size:0.75rem; padding:3px 10px; border-radius:12px; font-weight:600;">First Allocation</span>`
-                }
+                ${(hasPreviousUser || (swapRecord && swapRecord.oldUserId)) ?
+            `<span class="badge" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; font-size:0.75rem; padding:3px 10px; border-radius:12px; font-weight:600;">Reallocated Asset</span>` :
+            `<span class="badge" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-size:0.75rem; padding:3px 10px; border-radius:12px; font-weight:600;">First Allocation</span>`
+          }
               </div>
             </div>
             <div class="spec-card-body">
@@ -6921,7 +6921,7 @@ Remarks: ${r.remark || 'None'}`);
       }
       try {
         await fetch('/api/database/fresh', { method: 'POST' });
-      } catch (e) {}
+      } catch (e) { }
       store.clearAllFresh();
       Utils.showToast('Fresh Start', 'All existing data cleared! The portal is now 100% clean and fresh.', 'success');
       setTimeout(() => location.reload(), 800);
@@ -6933,7 +6933,7 @@ Remarks: ${r.remark || 'None'}`);
       }
       try {
         await fetch('/api/database/restore', { method: 'POST' });
-      } catch (e) {}
+      } catch (e) { }
       store.reset();
       Utils.showToast('Database Reset', 'Demo data loaded successfully.', 'success');
       setTimeout(() => location.reload(), 800);
