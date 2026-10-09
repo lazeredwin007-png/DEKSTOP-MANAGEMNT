@@ -1221,6 +1221,24 @@ select.filter-input {
   border: 1px solid #fecaca !important;
 }
 
+.status-wfh {
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  border: 1px solid #bfdbfe !important;
+}
+
+.status-spare {
+  background: #f8fafc !important;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.status-maintenance {
+  background: #fffbeb !important;
+  color: #d97706 !important;
+  border: 1px solid #fde68a !important;
+}
+
 .status-swap {
   background: var(--status-warning-bg);
   color: var(--status-warning-text);
@@ -2286,19 +2304,14 @@ th.sortable-th:hover {
   border: 1px solid transparent;
   padding: 0;
   border-radius: 50%;
-  cursor: pointer;
+  cursor: default;
   outline: none;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   vertical-align: middle;
   user-select: none;
   box-sizing: border-box;
 }
 .workstatus-light-btn:hover {
-  transform: scale(1.25);
-  background: rgba(0, 0, 0, 0.05);
-}
-.workstatus-light-btn:active {
-  transform: scale(0.92);
+  background: transparent;
 }
 
 /* Glowing LED lighting dot */
@@ -2363,6 +2376,23 @@ th.sortable-th:hover {
   }
 }
 
+/* 4. Amber/Orange Lighting: In Stock */
+.workstatus-light-amber .workstatus-led {
+  background: radial-gradient(circle at 35% 35%, #fde68a 0%, #f59e0b 60%, #b45309 100%);
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25), 
+              0 0 8px rgba(245, 158, 11, 0.8), 
+              0 0 14px rgba(245, 158, 11, 0.45);
+  animation: led-pulse-amber 2s infinite ease-in-out;
+}
+@keyframes led-pulse-amber {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25), 0 0 6px rgba(245, 158, 11, 0.75), 0 0 12px rgba(245, 158, 11, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.45), 0 0 12px rgba(245, 158, 11, 0.95), 0 0 18px rgba(245, 158, 11, 0.6);
+  }
+}
+
 /* Modal / Detailed pill with light */
 .workstatus-light-pill {
   display: inline-flex;
@@ -2399,6 +2429,11 @@ th.sortable-th:hover {
   background: #fef2f2 !important;
   color: #991b1b !important;
   border-color: #fecaca !important;
+}
+.workstatus-light-pill.workstatus-light-amber {
+  background: #fffbeb !important;
+  color: #b45309 !important;
+  border-color: #fde68a !important;
 }
 
 /* Fallback legacy .btn-workstatus */
@@ -2443,12 +2478,7 @@ td.cell-work-status {
   justify-content: center;
   padding: 3px 6px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.02);
-  transition: all 0.2s ease;
-}
-
-.workstatus-light-wrapper:hover {
-  background: rgba(0, 0, 0, 0.05);
+  cursor: default;
 }
 
 /* ==========================================================================
@@ -2709,3 +2739,310 @@ td.cell-work-status {
   flex-direction: column;
   gap: 14px;
 }
+
+/* ==========================================================================
+   DYNAMIC WARRANTY COMPONENT / TYPE TRACKER & SMART STATUS BADGES
+   ========================================================================== */
+.warranty-component-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-top: 16px;
+  margin-bottom: 6px;
+  transition: all 0.2s ease;
+}
+
+.warranty-component-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+}
+
+.warranty-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.warranty-section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.warranty-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.warranty-count-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.warranty-subtitle {
+  font-size: 0.79rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.btn-add-component {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 7px;
+  background: #2563eb;
+  color: #ffffff;
+  border: 1px solid #1d4ed8;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+  white-space: nowrap;
+}
+
+.btn-add-component:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+}
+
+.btn-add-component:active {
+  transform: translateY(0);
+}
+
+.warranty-components-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Individual Component Row / Card */
+.warranty-component-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.warranty-component-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.warranty-card-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1.05fr 1.05fr 1.3fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.warranty-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.warranty-field-label {
+  font-size: 0.73rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+}
+
+.warranty-field-group .form-control {
+  font-size: 0.85rem;
+  padding: 7px 10px;
+  height: 38px;
+}
+
+.wc-date-invalid {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+/* Smart Status Badges */
+.smart-warranty-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  height: 38px;
+  box-sizing: border-box;
+  width: 100%;
+  justify-content: flex-start;
+  transition: all 0.2s ease;
+}
+
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* 🟢 Green: Under Warranty */
+.badge-status-active {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+.badge-status-active .badge-dot {
+  background: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+}
+
+/* 🟠 Orange: Expiring Soon */
+.badge-status-expiring {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+.badge-status-expiring .badge-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+}
+
+/* 🔴 Red: Warranty Expired */
+.badge-status-expired {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+.badge-status-expired .badge-dot {
+  background: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
+}
+
+/* ⚪ Gray: Non-Warranty */
+.badge-status-nonwarranty {
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+}
+.badge-status-nonwarranty .badge-dot {
+  background: #9ca3af;
+}
+
+/* ⚠️ Warning: Invalid Date Range (Expiry < Assigned) */
+.badge-status-invalid {
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fda4af;
+}
+.badge-status-invalid .badge-dot {
+  background: #e11d48;
+}
+
+/* Delete Row Action Button */
+.btn-delete-component-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  border: 1px solid #fee2e2;
+  background: #fff5f5;
+  color: #dc2626;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.btn-delete-component-row:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+  transform: scale(1.05);
+}
+
+.btn-delete-component-row:active {
+  transform: scale(0.96);
+}
+
+/* Empty State inside warranty tracker */
+.warranty-empty-state {
+  text-align: center;
+  padding: 24px 18px;
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.warranty-empty-icon {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.warranty-empty-text {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* Mobile & Tablet Responsive */
+@media (max-width: 960px) {
+  .warranty-card-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .warranty-card-grid .warranty-field-group:first-child {
+    grid-column: 1 / -1;
+  }
+  .warranty-card-grid .warranty-field-group:nth-child(4) {
+    grid-column: 1;
+  }
+  .warranty-card-grid .btn-delete-component-row {
+    grid-column: 2;
+    justify-self: end;
+  }
+}
+
+@media (max-width: 580px) {
+  .warranty-card-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .warranty-card-grid .warranty-field-group {
+    grid-column: 1 / -1 !important;
+  }
+  .warranty-card-grid .btn-delete-component-row {
+    grid-column: 1 / -1 !important;
+    justify-self: stretch;
+    width: 100%;
+  }
+}
+

@@ -1880,30 +1880,29 @@
         label = 'Work From Home';
         colorName = 'Blue';
         dot = '🔵';
+      } else if (lower === 'in stock' || lower === 'stock' || lower === 'available') {
+        lightClass = 'workstatus-light-amber';
+        label = 'In Stock';
+        colorName = 'Amber';
+        dot = '📦';
       }
 
-      const nextLabel = label === 'Currently Working' ? 'Work From Home (Blue)' : (label === 'Work From Home' ? 'User Exit (Red)' : 'Currently Working (Green)');
-      const title = `${dot} ${label} (${colorName} Light) — Click to switch to ${nextLabel}`;
+      const title = `${dot} ${label} (${colorName} Light Indicator)`;
 
       if (showLabel) {
         return `
-          <button type="button" class="workstatus-light-pill ${lightClass}" 
-            onclick="event.stopPropagation(); window.ITApp.cycleWorkStatus('${Utils.escapeHtml(assetId)}')" 
-            title="${Utils.escapeHtml(title)}">
+          <div class="workstatus-light-pill ${lightClass}" style="cursor: default;" title="${Utils.escapeHtml(title)}">
             <span class="workstatus-led"></span>
             <span>${label}</span>
-          </button>
+          </div>
         `;
       }
 
       return `
-        <div class="workstatus-light-wrapper">
-          <button type="button" class="workstatus-light-btn ${lightClass}" 
-            onclick="event.stopPropagation(); window.ITApp.cycleWorkStatus('${Utils.escapeHtml(assetId)}')" 
-            title="${Utils.escapeHtml(title)}"
-            aria-label="${Utils.escapeHtml(label)}">
+        <div class="workstatus-light-wrapper" style="cursor: default;" title="${Utils.escapeHtml(title)}">
+          <div class="workstatus-light-btn ${lightClass}" style="cursor: default; pointer-events: none;" aria-label="${Utils.escapeHtml(label)}">
             <span class="workstatus-led"></span>
-          </button>
+          </div>
         </div>
       `;
     }
@@ -2074,7 +2073,7 @@
                   : '<em style="color:var(--text-faint);">Unassigned</em>'}
             </td>
             <td class="cell-work-status">
-              ${a.user ? this.getWorkStatusButton(a.id, a.workStatus) : '<span style="color:var(--text-faint); font-size:0.85rem;">-</span>'}
+              ${this.getWorkStatusButton(a.id, a.workStatus)}
             </td>
             <td>
               <span style="font-weight:600; color:var(--text-main); font-size:0.82rem;">${Utils.escapeHtml(teamText)}</span>
@@ -2089,18 +2088,8 @@
             <td><span class="status-pill ${statusClass}">${Utils.escapeHtml(a.status)}</span></td>
             <td>
               <div class="action-btn-group">
-                ${a.status === 'Assigned' ? `
-                  <button class="btn btn-sm" onclick="window.ITApp.returnSystemToStock('${a.id}')" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-weight:700; font-size:0.72rem; padding:2px 8px; border-radius:6px; cursor:pointer;" title="Return system to Non-Assigned Stock Pool">
-                    ↩ Stock
-                  </button>
-                ` : `
-                  <button class="btn btn-primary btn-sm" onclick="window.ITApp.quickAssignAsset('${a.id}')" style="font-size:0.72rem; padding:2px 8px; border-radius:6px; cursor:pointer;" title="Assign to Employee">
-                    ⚡ Assign
-                  </button>
-                `}
                 <button class="action-icon-btn btn-action-view" title="View Full Specifications" onclick="window.ITApp.viewAsset('${a.id}')">👁️</button>
                 <button class="action-icon-btn btn-action-edit" title="Edit Specifications (CPU, RAM, HDD, Monitor, User, etc.)" onclick="window.ITApp.editAsset('${a.id}')">✏️</button>
-                <button class="action-icon-btn btn-action-delete" title="Delete Asset" onclick="window.ITApp.deleteAsset('${a.id}')">🗑️</button>
               </div>
             </td>
           </tr>
@@ -2193,7 +2182,6 @@
               <button class="action-icon-btn btn-action-edit" title="Edit Assignment &amp; Specs" onclick="window.ITApp.editAsset('${item.id}')">✏️</button>
               <button class="action-icon-btn btn-action-swap" title="Swap System" onclick="window.ITApp.initiateSwapForAsset('${item.id}')">🔄</button>
               <button class="action-icon-btn btn-action-unassign" title="Unassign System" onclick="window.ITApp.unassignSystem('${item.id}')">↩️</button>
-              <button class="action-icon-btn btn-action-delete" title="Delete Record" onclick="window.ITApp.deleteAsset('${item.id}')">🗑️</button>
             </div>
           </td>
         </tr>
@@ -2349,7 +2337,6 @@
               <button class="action-icon-btn btn-action-edit" title="Edit Hardware Specs (CPU, RAM, HDD, Monitor)" onclick="window.ITApp.editAsset('${a.id}')">
                 ✏️
               </button>
-              <button class="action-icon-btn btn-action-delete" title="Delete Asset" onclick="window.ITApp.deleteAsset('${a.id}')">🗑️</button>
             </div>
           </td>
         </tr>
@@ -3866,8 +3853,8 @@
       const remark = formData.get('userRemark')?.trim() || 'Newly provisioned asset';
 
       // Validation
-      if (!name || !cpu || !ram) {
-        Utils.showToast('Validation Error', 'Please fill in all required fields (Name, CPU, RAM).', 'error');
+      if (!name || !cpu || !ram || !status || !workStatus) {
+        Utils.showToast('Validation Error', 'Please fill in all required fields (Name, CPU, RAM, Status, Work Status).', 'error');
         return;
       }
 
@@ -5139,7 +5126,7 @@ Remarks: ${r.remark || 'None'}`);
 
       // 4. User Assignment & Team
       const userInput = document.getElementById('editAssetUser');
-      if (userInput) userInput.value = asset.user || '';
+      if (userInput) userInput.value = asset.user || (asset.status !== 'Non-Assigned' && asset.oldUsername && asset.oldUsername !== 'None' ? asset.oldUsername : '');
 
       const tlInput = document.getElementById('editAssetTl');
       if (tlInput) tlInput.value = asset.tl || '-';
@@ -5158,14 +5145,48 @@ Remarks: ${r.remark || 'None'}`);
       }
 
       const statusSelect = document.getElementById('editAssetStatus');
+      const workStatusSelect = document.getElementById('editAssetWorkStatus');
+
+      // 1. Populate System Status
       if (statusSelect) {
-        statusSelect.value = asset.status || 'Assigned';
+        const rawStatus = (asset.status || '').trim();
+        statusSelect.value = rawStatus || 'Assigned';
+        if (!statusSelect.value && rawStatus) {
+          const opt = document.createElement('option');
+          opt.value = rawStatus;
+          opt.textContent = rawStatus;
+          statusSelect.appendChild(opt);
+          statusSelect.value = rawStatus;
+        }
         statusSelect.onchange = (e) => this.handleSystemStatusChange(e.target.value);
+        this.updateSystemStatusBadge(statusSelect.value);
       }
 
-      const workStatusSelect = document.getElementById('editAssetWorkStatus');
+      // 2. Populate Employee Work Status
       if (workStatusSelect) {
-        workStatusSelect.value = asset.workStatus || 'Currently Working';
+        let rawWorkStatus = (asset.workStatus || '').trim();
+        // Fallback if empty so the box is never blank
+        if (!rawWorkStatus) {
+          if (asset.status === 'Non-Assigned') rawWorkStatus = 'In Stock';
+          else if (asset.status === 'WFH') rawWorkStatus = 'Work From Home';
+          else rawWorkStatus = 'Currently Working';
+        }
+        workStatusSelect.value = rawWorkStatus;
+        if (!workStatusSelect.value && rawWorkStatus) {
+          for (let i = 0; i < workStatusSelect.options.length; i++) {
+            if (workStatusSelect.options[i].value.toLowerCase() === rawWorkStatus.toLowerCase()) {
+              workStatusSelect.selectedIndex = i;
+              break;
+            }
+          }
+          if (!workStatusSelect.value) {
+            const opt = document.createElement('option');
+            opt.value = rawWorkStatus;
+            opt.textContent = rawWorkStatus;
+            workStatusSelect.appendChild(opt);
+            workStatusSelect.value = rawWorkStatus;
+          }
+        }
         workStatusSelect.onchange = (e) => this.handleWorkStatusChange(e.target.value);
       }
 
@@ -5242,6 +5263,28 @@ Remarks: ${r.remark || 'None'}`);
       const remarkInput = document.getElementById('editAssetRemark');
       if (remarkInput) remarkInput.value = asset.remark || '';
 
+      // Initialize dynamic repeatable warranty component tracker
+      let components = [];
+      if (Array.isArray(asset.warrantyComponents) && asset.warrantyComponents.length > 0) {
+        components = asset.warrantyComponents;
+      } else if (typeof asset.warrantyComponents === 'string' && asset.warrantyComponents.trim()) {
+        try {
+          const parsed = JSON.parse(asset.warrantyComponents);
+          if (Array.isArray(parsed) && parsed.length > 0) components = parsed;
+        } catch (e) {}
+      }
+
+      if (components.length === 0) {
+        components.push({
+          id: 'wc-init-' + Date.now(),
+          type: asset.warrantyType || (isNonWarranty ? 'Non-Warranty' : 'Full System'),
+          assignedDate: asset.assignedDate || new Date().toISOString().substring(0, 10),
+          expiryDate: isNonWarranty ? '' : (asset.warrantyEnd && asset.warrantyEnd !== 'Non-Warranty' ? asset.warrantyEnd : '')
+        });
+      }
+
+      this.renderWarrantyComponentRows(components);
+
       // Reset Save Data Buttons & Badges
       const headerBtn = document.getElementById('btnHeaderSaveAsset');
       const footerBtn = document.getElementById('btnSaveAssetEdit');
@@ -5290,25 +5333,94 @@ Remarks: ${r.remark || 'None'}`);
       }
     }
 
-    promptConfirmSaveAsset(formData) {
+    validateEditAssetForm(formData) {
       const originalId = formData.get('editOriginalAssetId')?.trim();
       const newId = formData.get('editAssetId')?.trim();
       const cpu = formData.get('editCpu')?.trim();
       const ram = formData.get('editRam')?.trim();
+      const type = formData.get('editType')?.trim();
+      const team = formData.get('editTeam')?.trim();
+      const status = formData.get('editStatus')?.trim();
+      const workStatus = formData.get('editWorkStatus')?.trim();
 
-      if (!newId || !cpu || !ram) {
-        Utils.showToast('Validation Error', 'Please fill in Asset ID, CPU and RAM specifications.', 'error');
-        return;
+      const requiredFields = [
+        { id: 'editAssetId', val: newId, label: 'Asset ID / Tag' },
+        { id: 'editCpu', val: cpu, label: 'CPU Configuration' },
+        { id: 'editRam', val: ram, label: 'RAM Memory' },
+        { id: 'editType', val: type, label: 'Asset Type' },
+        { id: 'editTeam', val: team, label: 'Department / Team' },
+        { id: 'editAssetStatus', val: status, label: 'System Status' },
+        { id: 'editAssetWorkStatus', val: workStatus, label: 'Employee Work Status' }
+      ];
+
+      const emptyFields = [];
+      requiredFields.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (el) el.classList.remove('is-invalid');
+        if (!f.val || !f.val.toString().trim()) {
+          emptyFields.push(f);
+          if (el) {
+            el.classList.add('is-invalid');
+            const clearInvalid = () => el.classList.remove('is-invalid');
+            el.addEventListener('input', clearInvalid, { once: true });
+            el.addEventListener('change', clearInvalid, { once: true });
+          }
+        }
+      });
+
+      if (emptyFields.length > 0) {
+        const headerBtn = document.getElementById('btnHeaderSaveAsset');
+        const footerBtn = document.getElementById('btnSaveAssetEdit');
+        if (headerBtn) headerBtn.innerHTML = '💾 Save Data';
+        if (footerBtn) footerBtn.innerHTML = '💾 Save Data';
+
+        const firstEl = document.getElementById(emptyFields[0].id);
+        if (firstEl) {
+          firstEl.focus();
+          if (firstEl.scrollIntoView) {
+            firstEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }
+
+        const isStatusEmpty = emptyFields.some(f => f.id === 'editAssetStatus');
+        const isWorkStatusEmpty = emptyFields.some(f => f.id === 'editAssetWorkStatus');
+
+        if (isStatusEmpty && isWorkStatusEmpty) {
+          Utils.showToast('Validation Error', 'System Status & Employee Work Status boxes are empty! Fill both before saving.', 'error');
+        } else if (isStatusEmpty) {
+          Utils.showToast('Validation Error', 'System Status column cannot be empty! Please select a valid System Status.', 'error');
+        } else if (isWorkStatusEmpty) {
+          Utils.showToast('Validation Error', 'Employee Work Status column cannot be empty! Please select an Employee Work Status.', 'error');
+        } else {
+          Utils.showToast('Validation Error', `Please fill in all required boxes: ${emptyFields.map(f => f.label).join(', ')}.`, 'error');
+        }
+
+        return false;
       }
 
       // Check for ID collision if ID was renamed
-      if (newId.toLowerCase() !== originalId.toLowerCase()) {
+      if (newId && originalId && newId.toLowerCase() !== originalId.toLowerCase()) {
         const exists = store.data.assets.some(a => a.id.toLowerCase() === newId.toLowerCase());
         if (exists) {
           Utils.showToast('Duplicate Asset ID', `An asset with ID "${newId}" already exists.`, 'error');
-          return;
+          const idEl = document.getElementById('editAssetId');
+          if (idEl) {
+            idEl.classList.add('is-invalid');
+            idEl.focus();
+          }
+          return false;
         }
       }
+
+      return true;
+    }
+
+    promptConfirmSaveAsset(formData) {
+      if (!this.validateEditAssetForm(formData)) {
+        return;
+      }
+
+      const newId = formData.get('editAssetId')?.trim();
 
       // Store pending formData
       this.pendingEditFormData = formData;
@@ -5345,48 +5457,75 @@ Remarks: ${r.remark || 'None'}`);
       this.pendingEditFormData = null;
     }
 
+    updateSystemStatusBadge(systemStatus) {
+      const statusBadge = document.getElementById('editAssetStatusBadge');
+      if (statusBadge) {
+        statusBadge.textContent = systemStatus || 'Status';
+        statusBadge.className = 'status-pill ' + (
+          systemStatus === 'Assigned' ? 'status-assigned' :
+            systemStatus === 'Non-Assigned' ? 'status-non-assigned' :
+              systemStatus === 'WFH' ? 'status-wfh' :
+                systemStatus === 'Spare' ? 'status-spare' :
+                  systemStatus === 'Maintenance' ? 'status-maintenance' :
+                    systemStatus === 'Swap' ? 'status-swap' :
+                      systemStatus === 'Repair' ? 'status-repair' : 'status-warranty'
+        );
+      }
+    }
+
     handleWorkStatusChange(workStatus) {
       const statusSelect = document.getElementById('editAssetStatus');
-      const statusBadge = document.getElementById('editAssetStatusBadge');
       if (!statusSelect) return;
 
       if (workStatus === 'User Exit') {
         statusSelect.value = 'Non-Assigned';
-        if (statusBadge) {
-          statusBadge.textContent = 'Non-Assigned';
-          statusBadge.className = 'status-pill status-non-assigned';
-        }
+        this.updateSystemStatusBadge('Non-Assigned');
         const exitDateEl = document.getElementById('editAssetExitDate');
         if (exitDateEl && !exitDateEl.value) {
           exitDateEl.value = new Date().toISOString().substring(0, 10);
         }
         Utils.showToast('Status Auto-Updated', 'Employee Work Status is User Exit: System Status automatically changed to Non-Assigned (Available Pool).', 'info');
-      } else if (workStatus === 'Currently Working' || workStatus === 'Work From Home') {
+      } else if (workStatus === 'In Stock') {
+        statusSelect.value = 'Non-Assigned';
+        this.updateSystemStatusBadge('Non-Assigned');
+      } else if (workStatus === 'Work From Home') {
+        if (statusSelect.value === 'Non-Assigned') {
+          statusSelect.value = 'WFH';
+          this.updateSystemStatusBadge('WFH');
+        }
+      } else if (workStatus === 'Currently Working') {
         if (statusSelect.value === 'Non-Assigned') {
           statusSelect.value = 'Assigned';
-          if (statusBadge) {
-            statusBadge.textContent = 'Assigned';
-            statusBadge.className = 'status-pill status-assigned';
-          }
+          this.updateSystemStatusBadge('Assigned');
         }
       }
     }
 
     handleSystemStatusChange(systemStatus) {
-      const statusBadge = document.getElementById('editAssetStatusBadge');
-      if (statusBadge) {
-        statusBadge.textContent = systemStatus;
-        statusBadge.className = 'status-pill ' + (
-          systemStatus === 'Assigned' ? 'status-assigned' :
-            systemStatus === 'Non-Assigned' ? 'status-non-assigned' :
-              systemStatus === 'Swap' ? 'status-swap' :
-                systemStatus === 'Repair' ? 'status-repair' : 'status-warranty'
-        );
+      this.updateSystemStatusBadge(systemStatus);
+
+      const workStatusSelect = document.getElementById('editAssetWorkStatus');
+      if (workStatusSelect) {
+        if (systemStatus === 'Non-Assigned') {
+          if (workStatusSelect.value !== 'User Exit') {
+            workStatusSelect.value = 'In Stock';
+          }
+        } else if (systemStatus === 'WFH') {
+          workStatusSelect.value = 'Work From Home';
+        } else if (systemStatus === 'Assigned') {
+          if (workStatusSelect.value === 'In Stock' || !workStatusSelect.value) {
+            workStatusSelect.value = 'Currently Working';
+          }
+        }
       }
     }
 
     executeSaveAssetEdit(formData) {
       try {
+        if (!this.validateEditAssetForm(formData)) {
+          return;
+        }
+
         const originalId = formData.get('editOriginalAssetId')?.trim();
         const newId = formData.get('editAssetId')?.trim();
         const cpu = formData.get('editCpu')?.trim();
@@ -5394,17 +5533,16 @@ Remarks: ${r.remark || 'None'}`);
         const ssd = formData.get('editSsd')?.trim() || 'None';
         const hdd = formData.get('editHdd')?.trim() || 'None';
         const monitor = formData.get('editMonitor')?.trim() || 'None';
-        const type = formData.get('editType');
+        const type = formData.get('editType')?.trim();
         const user = formData.get('editUser')?.trim() || '';
-        const team = formData.get('editTeam');
+        const team = formData.get('editTeam')?.trim();
         const tl = formData.get('editTl')?.trim() || '-';
-        let status = formData.get('editStatus');
-        const workStatus = formData.get('editWorkStatus') || 'Currently Working';
+        let status = formData.get('editStatus')?.trim();
+        let workStatus = formData.get('editWorkStatus')?.trim();
         if (workStatus === 'User Exit') {
           status = 'Non-Assigned';
         }
         const rawExitDate = formData.get('editExitDate')?.trim();
-        const userExitDate = rawExitDate || (workStatus === 'User Exit' ? (asset.userExitDate || new Date().toISOString().substring(0, 10)) : '');
         const location = formData.get('editLocation')?.trim() || '';
         const condition = formData.get('editCondition');
         const oldUsername = formData.get('editOldUsername')?.trim() || 'None';
@@ -5420,25 +5558,13 @@ Remarks: ${r.remark || 'None'}`);
         const warrantyEnd = (isNonWarranty || !rawWarrantyEnd) ? 'Non-Warranty' : rawWarrantyEnd;
         const remark = formData.get('editRemark')?.trim() || '';
 
-        if (!newId || !cpu || !ram) {
-          Utils.showToast('Validation Error', 'Please fill in Asset ID, CPU and RAM specifications.', 'error');
-          return;
-        }
-
-        // Check for ID collision if ID was renamed
-        if (newId.toLowerCase() !== originalId.toLowerCase()) {
-          const exists = store.data.assets.some(a => a.id.toLowerCase() === newId.toLowerCase());
-          if (exists) {
-            Utils.showToast('Duplicate Asset ID', `An asset with ID "${newId}" already exists.`, 'error');
-            return;
-          }
-        }
-
         const asset = store.data.assets.find(a => a.id === originalId);
         if (!asset) {
           Utils.showToast('Error', 'Original asset not found in database.', 'error');
           return;
         }
+
+        const userExitDate = rawExitDate || (workStatus === 'User Exit' ? (asset.userExitDate || new Date().toISOString().substring(0, 10)) : '');
 
         // Visual button saving state
         const headerBtn = document.getElementById('btnHeaderSaveAsset');
@@ -5463,7 +5589,7 @@ Remarks: ${r.remark || 'None'}`);
         asset.team = team;
         asset.tl = tl;
 
-        const isMarkedNonAssigned = (status === 'Non-Assigned' || workStatus === 'User Exit');
+        const isMarkedNonAssigned = (status === 'Non-Assigned' || workStatus === 'User Exit' || workStatus === 'In Stock');
         if (isMarkedNonAssigned) {
           asset.status = 'Non-Assigned';
           asset.workStatus = (workStatus === 'User Exit') ? 'User Exit' : 'In Stock';
@@ -5479,8 +5605,8 @@ Remarks: ${r.remark || 'None'}`);
           asset.user = ''; // System is unassigned, moved out of Assigned pool into Non-Assigned stock
         } else {
           asset.status = status || 'Assigned';
-          asset.workStatus = workStatus;
-          asset.user = user;
+          asset.workStatus = workStatus || 'Currently Working';
+          asset.user = user || prevUser || (oldUsername && oldUsername !== 'None' ? oldUsername : '');
           asset.oldUsername = oldUsername;
         }
         asset.serialNumber = serialNumber;
@@ -5488,8 +5614,29 @@ Remarks: ${r.remark || 'None'}`);
         asset.ipAddress = ipAddress;
         asset.os = os;
         asset.assignedDate = assignedDate;
-        asset.warrantyType = warrantyType;
-        asset.warrantyEnd = warrantyEnd;
+
+        // Collect dynamic warranty components
+        const warrantyComponents = this.collectWarrantyComponentsFromForm();
+        asset.warrantyComponents = warrantyComponents;
+
+        let finalWarrantyType = warrantyType;
+        let finalWarrantyEnd = warrantyEnd;
+
+        if (warrantyComponents.length > 0) {
+          const firstComp = warrantyComponents[0];
+          finalWarrantyType = firstComp.type || warrantyType;
+          const validExpiries = warrantyComponents
+            .filter(c => c.expiryDate && c.expiryDate !== 'Non-Warranty' && c.type !== 'Non-Warranty')
+            .map(c => c.expiryDate);
+          if (validExpiries.length > 0) {
+            finalWarrantyEnd = validExpiries[0];
+          } else {
+            finalWarrantyEnd = 'Non-Warranty';
+          }
+        }
+
+        asset.warrantyType = finalWarrantyType;
+        asset.warrantyEnd = finalWarrantyEnd;
         asset.remark = remark;
         asset.isRecentlySaved = true;
         asset.lastSavedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -5908,6 +6055,382 @@ Remarks: ${r.remark || 'None'}`);
       Utils.exportToCSV(`System_Swap_Transactions_Extract_${new Date().toISOString().substring(0, 10)}`, rows);
       Utils.showToast('Extract Exported', `Extracted ${list.length} swap records to CSV successfully.`);
     }
+
+    /* ==========================================================================
+       DYNAMIC REPEATABLE WARRANTY COMPONENTS & SMART STATUS ENGINE
+       ========================================================================== */
+    calculateWarrantyStatus(assignedDate, expiryDate, componentType) {
+      if (!componentType || componentType === 'Non-Warranty' || !expiryDate || expiryDate === 'Non-Warranty' || expiryDate === 'None' || expiryDate === '-') {
+        return {
+          status: 'nonwarranty',
+          badgeClass: 'badge-status-nonwarranty',
+          label: 'Non-Warranty Item',
+          text: 'Non-Warranty',
+          daysRemaining: null,
+          isValid: true
+        };
+      }
+
+      // Check date ordering: Expiry date cannot be earlier than Assigned date
+      if (assignedDate && expiryDate && expiryDate < assignedDate) {
+        return {
+          status: 'invalid',
+          badgeClass: 'badge-status-invalid',
+          label: 'Date Range Error: Expiry date is before assigned date',
+          text: '⚠️ Expiry < Assigned',
+          daysRemaining: null,
+          isValid: false
+        };
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const exp = new Date(expiryDate);
+      if (isNaN(exp.getTime())) {
+        return {
+          status: 'nonwarranty',
+          badgeClass: 'badge-status-nonwarranty',
+          label: 'Non-Warranty Item',
+          text: 'Non-Warranty',
+          daysRemaining: null,
+          isValid: true
+        };
+      }
+
+      exp.setHours(0, 0, 0, 0);
+      const diffMs = exp - today;
+      const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+      if (daysRemaining < 0) {
+        const absDays = Math.abs(daysRemaining);
+        return {
+          status: 'expired',
+          badgeClass: 'badge-status-expired',
+          label: `Warranty Expired ${absDays} days ago (${expiryDate})`,
+          text: `Warranty Expired (${absDays}d ago)`,
+          daysRemaining,
+          isValid: true
+        };
+      } else if (daysRemaining <= 30) {
+        return {
+          status: 'expiring',
+          badgeClass: 'badge-status-expiring',
+          label: `Warranty Expiring Soon: ${daysRemaining} days remaining (${expiryDate})`,
+          text: `Expiring Soon (${daysRemaining}d left)`,
+          daysRemaining,
+          isValid: true
+        };
+      } else {
+        return {
+          status: 'active',
+          badgeClass: 'badge-status-active',
+          label: `Under Active Warranty: ${daysRemaining} days remaining (${expiryDate})`,
+          text: `Under Warranty (${daysRemaining}d left)`,
+          daysRemaining,
+          isValid: true
+        };
+      }
+    }
+
+    renderWarrantyComponentRows(components = []) {
+      const container = document.getElementById('warrantyComponentsContainer');
+      const countBadge = document.getElementById('warrantyComponentsCountBadge');
+      if (!container) return;
+
+      container.innerHTML = '';
+
+      if (!components || components.length === 0) {
+        if (countBadge) countBadge.textContent = '0 Components';
+        container.innerHTML = `
+          <div class="warranty-empty-state" id="warrantyEmptyState">
+            <span class="warranty-empty-icon">🛡️</span>
+            <div class="warranty-empty-text">No hardware component warranty rows added yet.</div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.addWarrantyComponentRow()" style="margin-top:4px;">
+              + Add First Component
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      if (countBadge) {
+        countBadge.textContent = components.length === 1 ? '1 Component' : `${components.length} Components`;
+      }
+
+      components.forEach((comp) => {
+        this.appendWarrantyComponentCard(comp, container);
+      });
+    }
+
+    appendWarrantyComponentCard(comp, container) {
+      if (!container) container = document.getElementById('warrantyComponentsContainer');
+      if (!container) return;
+
+      const emptyState = document.getElementById('warrantyEmptyState');
+      if (emptyState) emptyState.remove();
+
+      const rowId = comp.id || ('wc-' + Date.now() + '-' + Math.floor(Math.random() * 10000));
+      const type = comp.type || 'Full System';
+      const assignedDate = comp.assignedDate || document.getElementById('editAssetAssignedDate')?.value || new Date().toISOString().substring(0, 10);
+      const rawExpiry = comp.expiryDate || (type === 'Non-Warranty' ? '' : document.getElementById('editAssetWarrantyEnd')?.value || '');
+      const expiryDate = (type === 'Non-Warranty' || rawExpiry === 'Non-Warranty') ? '' : rawExpiry;
+
+      const statusInfo = this.calculateWarrantyStatus(assignedDate, expiryDate, type);
+
+      const card = document.createElement('div');
+      card.className = 'warranty-component-card';
+      card.id = rowId;
+      card.dataset.rowId = rowId;
+
+      const typeOptions = [
+        'Full System',
+        'RAM',
+        'SSD',
+        'SMPS',
+        'Monitor',
+        'Motherboard',
+        'CPU / Processor',
+        'Graphics Card (GPU)',
+        'Keyboard / Mouse',
+        'Non-Warranty',
+        'Other'
+      ];
+
+      const optionsHtml = typeOptions.map(opt => {
+        const isSel = (opt.toLowerCase() === type.toLowerCase() || (opt === 'CPU / Processor' && type.toLowerCase().includes('cpu')));
+        return `<option value="${opt}" ${isSel ? 'selected' : ''}>${opt}</option>`;
+      }).join('');
+
+      card.innerHTML = `
+        <div class="warranty-card-grid">
+          <!-- 1. Component Type Dropdown -->
+          <div class="warranty-field-group">
+            <label class="warranty-field-label">Component / Type</label>
+            <select class="form-control wc-type-select" data-row-id="${rowId}">
+              ${optionsHtml}
+            </select>
+          </div>
+
+          <!-- 2. Assigned Date -->
+          <div class="warranty-field-group">
+            <label class="warranty-field-label">Assigned Date</label>
+            <input type="date" class="form-control wc-assigned-date" data-row-id="${rowId}" value="${assignedDate}">
+          </div>
+
+          <!-- 3. Expiry Date -->
+          <div class="warranty-field-group">
+            <label class="warranty-field-label">Warranty Expiry Date</label>
+            <input type="date" class="form-control wc-expiry-date ${statusInfo.isValid ? '' : 'wc-date-invalid'}" data-row-id="${rowId}" value="${expiryDate}" min="${assignedDate}" ${type === 'Non-Warranty' ? 'disabled style="opacity:0.45;"' : ''}>
+          </div>
+
+          <!-- 4. Smart Warranty Status Badge -->
+          <div class="warranty-field-group">
+            <label class="warranty-field-label">Smart Warranty Status</label>
+            <div class="wc-badge-slot" data-row-id="${rowId}">
+              <span class="smart-warranty-badge ${statusInfo.badgeClass}" title="${Utils.escapeHtml(statusInfo.label)}">
+                <span class="badge-dot"></span>
+                <span>${Utils.escapeHtml(statusInfo.text)}</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- 5. Delete Action Button -->
+          <button type="button" class="btn-delete-component-row" title="Delete this component row" onclick="window.ITApp.removeWarrantyComponentRow('${rowId}')" aria-label="Delete component row">
+            🗑️
+          </button>
+        </div>
+      `;
+
+      container.appendChild(card);
+
+      const typeSelect = card.querySelector('.wc-type-select');
+      const assignedInput = card.querySelector('.wc-assigned-date');
+      const expiryInput = card.querySelector('.wc-expiry-date');
+
+      const updateRowStatus = () => {
+        const currentType = typeSelect.value;
+        const curAssigned = assignedInput.value;
+        let curExpiry = expiryInput.value;
+
+        if (currentType === 'Non-Warranty') {
+          expiryInput.value = '';
+          expiryInput.disabled = true;
+          expiryInput.style.opacity = '0.45';
+          curExpiry = '';
+        } else {
+          expiryInput.disabled = false;
+          expiryInput.style.opacity = '1';
+        }
+
+        if (curAssigned) {
+          expiryInput.min = curAssigned;
+        }
+
+        const newStatus = this.calculateWarrantyStatus(curAssigned, curExpiry, currentType);
+        const badgeSlot = card.querySelector('.wc-badge-slot');
+        if (badgeSlot) {
+          badgeSlot.innerHTML = `
+            <span class="smart-warranty-badge ${newStatus.badgeClass}" title="${Utils.escapeHtml(newStatus.label)}">
+              <span class="badge-dot"></span>
+              <span>${Utils.escapeHtml(newStatus.text)}</span>
+            </span>
+          `;
+        }
+
+        if (!newStatus.isValid) {
+          expiryInput.classList.add('wc-date-invalid');
+        } else {
+          expiryInput.classList.remove('wc-date-invalid');
+        }
+
+        this.syncMasterWarrantyFields();
+      };
+
+      typeSelect.addEventListener('change', updateRowStatus);
+      assignedInput.addEventListener('change', updateRowStatus);
+      assignedInput.addEventListener('input', updateRowStatus);
+      expiryInput.addEventListener('change', updateRowStatus);
+      expiryInput.addEventListener('input', updateRowStatus);
+
+      this.updateWarrantyCountBadge();
+    }
+
+    addWarrantyComponentRow(compData = {}) {
+      const defaultAssigned = document.getElementById('editAssetAssignedDate')?.value || new Date().toISOString().substring(0, 10);
+      let defaultExpiry = document.getElementById('editAssetWarrantyEnd')?.value || '';
+      if (!defaultExpiry && compData.type !== 'Non-Warranty') {
+        const nextYr = new Date();
+        nextYr.setFullYear(nextYr.getFullYear() + 1);
+        defaultExpiry = nextYr.toISOString().substring(0, 10);
+      }
+
+      const rowData = {
+        id: 'wc-' + Date.now() + '-' + Math.floor(Math.random() * 10000),
+        type: compData.type || 'RAM',
+        assignedDate: compData.assignedDate || defaultAssigned,
+        expiryDate: (compData.type === 'Non-Warranty') ? '' : (compData.expiryDate || defaultExpiry)
+      };
+
+      this.appendWarrantyComponentCard(rowData);
+      this.syncMasterWarrantyFields();
+    }
+
+    removeWarrantyComponentRow(rowId) {
+      const card = document.getElementById(rowId);
+      if (card) {
+        card.remove();
+      }
+      this.updateWarrantyCountBadge();
+      this.syncMasterWarrantyFields();
+
+      const container = document.getElementById('warrantyComponentsContainer');
+      if (container && container.querySelectorAll('.warranty-component-card').length === 0) {
+        container.innerHTML = `
+          <div class="warranty-empty-state" id="warrantyEmptyState">
+            <span class="warranty-empty-icon">🛡️</span>
+            <div class="warranty-empty-text">No hardware component warranty rows added yet.</div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.addWarrantyComponentRow()" style="margin-top:4px;">
+              + Add First Component
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    updateWarrantyCountBadge() {
+      const countBadge = document.getElementById('warrantyComponentsCountBadge');
+      const container = document.getElementById('warrantyComponentsContainer');
+      if (!countBadge || !container) return;
+      const count = container.querySelectorAll('.warranty-component-card').length;
+      countBadge.textContent = count === 1 ? '1 Component' : `${count} Components`;
+    }
+
+    syncMasterWarrantyFields() {
+      const components = this.collectWarrantyComponentsFromForm();
+      const masterTypeInput = document.getElementById('editAssetWarrantyType');
+      const masterEndInput = document.getElementById('editAssetWarrantyEnd');
+      const masterStatusSelect = document.getElementById('editAssetWarrantyStatus');
+
+      if (components.length === 0) return;
+
+      const firstComp = components[0];
+      if (masterTypeInput) {
+        masterTypeInput.value = firstComp.type || 'Full System';
+      }
+
+      const allNonWarranty = components.every(c => c.type === 'Non-Warranty' || !c.expiryDate || c.expiryDate === 'Non-Warranty');
+      if (allNonWarranty) {
+        if (masterStatusSelect) masterStatusSelect.value = 'non-warranty';
+        if (masterEndInput) {
+          masterEndInput.value = '';
+          masterEndInput.disabled = true;
+          masterEndInput.style.opacity = '0.45';
+        }
+      } else {
+        if (masterStatusSelect) masterStatusSelect.value = 'date';
+        if (masterEndInput) {
+          masterEndInput.disabled = false;
+          masterEndInput.style.opacity = '1';
+          const validExpiries = components.filter(c => c.expiryDate && c.expiryDate !== 'Non-Warranty' && c.type !== 'Non-Warranty').map(c => c.expiryDate);
+          if (validExpiries.length > 0) {
+            masterEndInput.value = validExpiries[0];
+          }
+        }
+      }
+    }
+
+    collectWarrantyComponentsFromForm() {
+      const container = document.getElementById('warrantyComponentsContainer');
+      if (!container) return [];
+      const cards = container.querySelectorAll('.warranty-component-card');
+      const components = [];
+      cards.forEach(card => {
+        const rowId = card.dataset.rowId;
+        const typeSelect = card.querySelector('.wc-type-select');
+        const assignedInput = card.querySelector('.wc-assigned-date');
+        const expiryInput = card.querySelector('.wc-expiry-date');
+
+        if (typeSelect && assignedInput && expiryInput) {
+          const type = typeSelect.value || 'Full System';
+          const assignedDate = assignedInput.value || '';
+          const expiryDate = (type === 'Non-Warranty') ? '' : (expiryInput.value || '');
+          const statusObj = this.calculateWarrantyStatus(assignedDate, expiryDate, type);
+          components.push({
+            id: rowId,
+            type,
+            assignedDate,
+            expiryDate: (type === 'Non-Warranty' || !expiryDate) ? 'Non-Warranty' : expiryDate,
+            status: statusObj.label,
+            statusCode: statusObj.status
+          });
+        }
+      });
+      return components;
+    }
+
+    handleAssignedDateSync(newDate) {
+      if (!newDate) return;
+      const container = document.getElementById('warrantyComponentsContainer');
+      if (!container) return;
+      const assignedInputs = container.querySelectorAll('.wc-assigned-date');
+      assignedInputs.forEach(input => {
+        if (!input.value) {
+          input.value = newDate;
+          input.dispatchEvent(new Event('change'));
+        }
+      });
+    }
+
+    handleMasterWarrantyEndSync(newDate) {
+      if (!newDate) return;
+      const container = document.getElementById('warrantyComponentsContainer');
+      if (!container) return;
+      const firstExpiryInput = container.querySelector('.wc-expiry-date');
+      if (firstExpiryInput && (!firstExpiryInput.value || firstExpiryInput.value === 'Non-Warranty')) {
+        firstExpiryInput.value = newDate;
+        firstExpiryInput.dispatchEvent(new Event('change'));
+      }
+    }
   }
 
   // Instantiate application controller
@@ -5932,23 +6455,27 @@ Remarks: ${r.remark || 'None'}`);
         nextStatus = 'Work From Home'; // 2. Blue Light
       } else if (current === 'work from home' || current === 'wfh' || current === 'yellow') {
         nextStatus = 'User Exit'; // 3. Red Light
+      } else if (current === 'user exit' || current === 'exit') {
+        nextStatus = 'In Stock'; // 4. Amber Light
       } else {
         nextStatus = 'Currently Working'; // 1. Green Light
       }
 
       // Update in local store
       asset.workStatus = nextStatus;
-      if (nextStatus === 'User Exit') {
+      if (nextStatus === 'User Exit' || nextStatus === 'In Stock') {
         asset.status = 'Non-Assigned';
         const departing = asset.user;
         if (departing && departing !== 'None' && departing !== 'NEW SYSTEM') {
           asset.oldUsername = departing;
         }
         asset.user = ''; // Cleared from active assignment, moved to stock
-        asset.userExitDate = new Date().toISOString().substring(0, 10);
-        asset.availableDate = asset.userExitDate;
+        if (nextStatus === 'User Exit') {
+          asset.userExitDate = new Date().toISOString().substring(0, 10);
+          asset.availableDate = asset.userExitDate;
+        }
       } else if (asset.status === 'Non-Assigned') {
-        asset.status = 'Assigned';
+        asset.status = nextStatus === 'Work From Home' ? 'WFH' : 'Assigned';
         if (asset.oldUsername && asset.oldUsername !== 'None') {
           asset.user = asset.oldUsername;
         }
@@ -6164,6 +6691,18 @@ Remarks: ${r.remark || 'None'}`);
           this.toggleWarrantyMode('non-warranty');
         }
       }
+    },
+    addWarrantyComponentRow(compData) {
+      app.addWarrantyComponentRow(compData);
+    },
+    removeWarrantyComponentRow(rowId) {
+      app.removeWarrantyComponentRow(rowId);
+    },
+    handleAssignedDateSync(newDate) {
+      app.handleAssignedDateSync(newDate);
+    },
+    handleMasterWarrantyEndSync(newDate) {
+      app.handleMasterWarrantyEndSync(newDate);
     },
     toggleDedicatedWarrantyMode(mode) {
       const dateInput = document.getElementById('warrantyEndDateInput');
@@ -6472,28 +7011,50 @@ Remarks: ${r.remark || 'None'}`);
             </div>
             ${isNoWarranty ? '' : `
             <div class="spec-card-body">
-              <div class="spec-grid-2col">
-                <div class="spec-col">
-                  <div class="spec-item">
-                    <span class="spec-label">Warranty Component</span>
-                    <span class="spec-value">${Utils.escapeHtml(asset.warrantyType || 'Full System')}</span>
+              ${(Array.isArray(asset.warrantyComponents) && asset.warrantyComponents.length > 0) ? `
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                  ${asset.warrantyComponents.map(c => {
+                    const statusObj = app.calculateWarrantyStatus(c.assignedDate, c.expiryDate, c.type);
+                    return `
+                      <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:10px 14px; flex-wrap:wrap; gap:8px;">
+                        <div>
+                          <strong style="color:var(--text-main); font-size:0.88rem;">${Utils.escapeHtml(c.type)}</strong>
+                          <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">
+                            Assigned: <strong>${Utils.formatDate(c.assignedDate)}</strong> • Expiry: <strong>${Utils.formatDate(c.expiryDate)}</strong>
+                          </div>
+                        </div>
+                        <span class="smart-warranty-badge ${statusObj.badgeClass}" style="height:28px; padding:4px 10px; font-size:0.75rem;">
+                          <span class="badge-dot"></span>
+                          <span>${Utils.escapeHtml(statusObj.text)}</span>
+                        </span>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              ` : `
+                <div class="spec-grid-2col">
+                  <div class="spec-col">
+                    <div class="spec-item">
+                      <span class="spec-label">Warranty Component</span>
+                      <span class="spec-value">${Utils.escapeHtml(asset.warrantyType || 'Full System')}</span>
+                    </div>
+                    <div class="spec-item">
+                      <span class="spec-label">Warranty Start Date</span>
+                      <span class="spec-value">${Utils.formatDate(asset.assignedDate || '2024-01-01')}</span>
+                    </div>
                   </div>
-                  <div class="spec-item">
-                    <span class="spec-label">Warranty Start Date</span>
-                    <span class="spec-value">${Utils.formatDate(asset.assignedDate || '2024-01-01')}</span>
+                  <div class="spec-col">
+                    <div class="spec-item">
+                      <span class="spec-label">Warranty Expiry Date</span>
+                      <span class="spec-value font-mono">${Utils.formatDate(asset.warrantyEnd)}</span>
+                    </div>
+                    <div class="spec-item">
+                      <span class="spec-label">Remaining Days</span>
+                      <div class="spec-value">${warrantyRemainingHtml}</div>
+                    </div>
                   </div>
                 </div>
-                <div class="spec-col">
-                  <div class="spec-item">
-                    <span class="spec-label">Warranty Expiry Date</span>
-                    <span class="spec-value font-mono">${Utils.formatDate(asset.warrantyEnd)}</span>
-                  </div>
-                  <div class="spec-item">
-                    <span class="spec-label">Remaining Days</span>
-                    <div class="spec-value">${warrantyRemainingHtml}</div>
-                  </div>
-                </div>
-              </div>
+              `}
             </div>
             `}
           </div>

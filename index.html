@@ -830,7 +830,11 @@
                 <div class="form-group">
                   <label class="form-label">Employee Work Status <span class="req">*</span></label>
                   <select class="form-control" name="workStatus" id="newUserWorkStatus" required>
-                    <option value="Currently Working" selected>Currently Working</option>
+                    <option value="">-- Select Work Status --</option>
+                    <option value="Currently Working" selected>🟢 Currently Working</option>
+                    <option value="Work From Home">🔵 Work From Home</option>
+                    <option value="In Stock">📦 In Stock (Available Pool)</option>
+                    <option value="User Exit">🔴 User Exit</option>
                   </select>
                 </div>
 
@@ -2022,7 +2026,7 @@
           <div class="modal-section-box hardware-accent">
             <div class="modal-section-title">
               <span>⚙️ Hardware Specifications</span>
-              <span class="badge-tag">CPU • RAM • Storage • Monitor</span>
+              <span class="badge-tag">CPU • RAM • Storage • Display • Network &amp; OS</span>
             </div>
             <div class="form-grid-3">
               <!-- CPU -->
@@ -2060,6 +2064,44 @@
                 <label class="form-label">Asset Type <span class="req">*</span></label>
                 <input type="text" class="form-control" name="editType" id="editAssetType" placeholder="Select or type Asset Type..." required list="assetTypeList" autocomplete="off" value="Desktop">
               </div>
+
+              <!-- Asset ID / Tag -->
+              <div class="form-group">
+                <label class="form-label">Asset ID / Tag <span class="req">*</span></label>
+                <input type="text" class="form-control" name="editAssetId" id="editAssetId" required>
+              </div>
+
+              <!-- MAC Address -->
+              <div class="form-group">
+                <label class="form-label">MAC Address</label>
+                <input type="text" class="form-control" name="editSerialNumber" id="editAssetSerialNumber" placeholder="e.g. 00:7c:6c:83:44:74" autocomplete="off">
+              </div>
+
+              <!-- IP Address -->
+              <div class="form-group">
+                <label class="form-label">IP Address</label>
+                <input type="text" class="form-control" name="editIpAddress" id="editAssetIpAddress" placeholder="e.g. 192.168.10.45 or DHCP">
+              </div>
+
+              <!-- Operating System -->
+              <div class="form-group">
+                <label class="form-label">Operating System</label>
+                <select class="form-control" name="editOs" id="editAssetOs">
+                  <option value="Windows 11 Pro">Windows 11 Pro</option>
+                  <option value="Windows 11 (Original)">Windows 11 (Original)</option>
+                  <option value="Windows 10">Windows 10</option>
+                  <option value="Windows 10 Pro">Windows 10 Pro</option>
+                  <option value="Ubuntu 24.04">Ubuntu 24.04</option>
+                  <option value="Ubuntu 24.04 LTS">Ubuntu 24.04 LTS</option>
+                  <option value="Ubuntu 22.04 LTS">Ubuntu 22.04 LTS</option>
+                  <option value="MAC OS">MAC OS</option>
+                  <option value="macOS Sonoma">macOS Sonoma</option>
+                  <option value="macOS Sequoia">macOS Sequoia</option>
+                  <option value="Red Hat Enterprise Linux">Red Hat Enterprise Linux</option>
+                  <option value="Windows">Windows</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -2092,20 +2134,26 @@
               <div class="form-group">
                 <label class="form-label">System Status <span class="req">*</span></label>
                 <select class="form-control" name="editStatus" id="editAssetStatus" required onchange="window.ITApp && window.ITApp.handleSystemStatusChange ? window.ITApp.handleSystemStatusChange(this.value) : null">
+                  <option value="">-- Select System Status --</option>
                   <option value="Assigned">Assigned</option>
                   <option value="Non-Assigned">Non-Assigned (Available Pool)</option>
-                  <option value="Swap">Swap</option>
+                  <option value="WFH">WFH (Remote)</option>
+                  <option value="Spare">Spare</option>
+                  <option value="Maintenance">Maintenance</option>
                   <option value="Repair">Repair</option>
                   <option value="Warranty">Warranty</option>
+                  <option value="Swap">Swap</option>
                 </select>
               </div>
 
               <!-- Employee Work Status -->
               <div class="form-group">
-                <label class="form-label">Employee Work Status</label>
-                <select class="form-control" name="editWorkStatus" id="editAssetWorkStatus" onchange="window.ITApp && window.ITApp.handleWorkStatusChange ? window.ITApp.handleWorkStatusChange(this.value) : null">
+                <label class="form-label">Employee Work Status <span class="req">*</span></label>
+                <select class="form-control" name="editWorkStatus" id="editAssetWorkStatus" required onchange="window.ITApp && window.ITApp.handleWorkStatusChange ? window.ITApp.handleWorkStatusChange(this.value) : null">
+                  <option value="">-- Select Employee Work Status --</option>
                   <option value="Currently Working">🟢 Currently Working</option>
                   <option value="Work From Home">🔵 Work From Home</option>
+                  <option value="In Stock">📦 In Stock (Available Pool)</option>
                   <option value="User Exit">🔴 User Exit</option>
                 </select>
               </div>
@@ -2146,73 +2194,20 @@
             </div>
           </div>
 
-          <!-- Section 3: System, Network Identifiers & Lifecycle -->
+          <!-- Section 3: Warranty & Hardware Lifecycle Management -->
           <div class="modal-section-box">
             <div class="modal-section-title">
-              <span>🏷️ System Identifiers &amp; Lifecycle</span>
-              <span class="badge-tag">Asset ID • Dates</span>
+              <span>🛡️ Warranty &amp; Hardware Lifecycle</span>
+              <span class="badge-tag">Dates • Coverage • Components</span>
             </div>
             <div class="form-grid-3">
-              <!-- Asset ID -->
-              <div class="form-group">
-                <label class="form-label">Asset ID / Tag <span class="req">*</span></label>
-                <input type="text" class="form-control" name="editAssetId" id="editAssetId" required>
-              </div>
-
-              <!-- Serial Number -->
-              <div class="form-group">
-                <label class="form-label">MAC Address</label>
-                <input type="text" class="form-control" name="editSerialNumber" id="editAssetSerialNumber" placeholder="e.g. 00:7c:6c:83:44:74" autocomplete="off">
-              </div>
-
-              <!-- IP Address -->
-              <div class="form-group">
-                <label class="form-label">IP Address</label>
-                <input type="text" class="form-control" name="editIpAddress" id="editAssetIpAddress" placeholder="e.g. 192.168.10.45 or DHCP">
-              </div>
-
-              <!-- OS -->
-              <div class="form-group">
-                <label class="form-label">Operating System</label>
-                <select class="form-control" name="editOs" id="editAssetOs">
-                  <option value="Windows 11 Pro">Windows 11 Pro</option>
-                  <option value="Windows 11 (Original)">Windows 11 (Original)</option>
-                  <option value="Windows 10">Windows 10</option>
-                  <option value="Windows 10 Pro">Windows 10 Pro</option>
-                  <option value="Ubuntu 24.04">Ubuntu 24.04</option>
-                  <option value="Ubuntu 24.04 LTS">Ubuntu 24.04 LTS</option>
-                  <option value="Ubuntu 22.04 LTS">Ubuntu 22.04 LTS</option>
-                  <option value="MAC OS">MAC OS</option>
-                  <option value="macOS Sonoma">macOS Sonoma</option>
-                  <option value="macOS Sequoia">macOS Sequoia</option>
-                  <option value="Red Hat Enterprise Linux">Red Hat Enterprise Linux</option>
-                  <option value="Windows">Windows</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
               <!-- Assigned Date -->
               <div class="form-group">
                 <label class="form-label">Assigned Date</label>
-                <input type="date" class="form-control" name="editAssignedDate" id="editAssetAssignedDate">
+                <input type="date" class="form-control" name="editAssignedDate" id="editAssetAssignedDate" onchange="window.ITApp.handleAssignedDateSync(this.value)">
               </div>
 
-              <!-- Warranty Component / Type -->
-              <div class="form-group">
-                <label class="form-label">Warranty Component / Type</label>
-                <select class="form-control" name="editWarrantyType" id="editAssetWarrantyType" onchange="window.ITApp.handleWarrantyTypeChange(this.value)">
-                  <option value="Non-Warranty">Non-Warranty</option>
-                  <option value="Full System">Full System (Complete Unit)</option>
-                  <option value="RAM">RAM</option>
-                  <option value="SSD">SSD</option>
-                  <option value="SMPS">SMPS</option>
-                  <option value="Monitor">Monitor</option>
-                  <option value="Motherboard">Motherboard</option>
-                  <option value="CPU">CPU / Processor</option>
-                </select>
-              </div>
-
-              <!-- Warranty Expiry Status -->
+              <!-- Warranty Coverage -->
               <div class="form-group">
                 <label class="form-label">Warranty Coverage</label>
                 <select class="form-control" id="editAssetWarrantyStatus" onchange="window.ITApp.toggleWarrantyMode(this.value)">
@@ -2224,14 +2219,43 @@
               <!-- Warranty Expiry Date -->
               <div class="form-group" id="editAssetWarrantyDateWrap">
                 <label class="form-label">Warranty Expiry Date</label>
-                <input type="date" class="form-control" name="editWarrantyEnd" id="editAssetWarrantyEnd">
+                <input type="date" class="form-control" name="editWarrantyEnd" id="editAssetWarrantyEnd" onchange="window.ITApp.handleMasterWarrantyEndSync(this.value)">
               </div>
 
-              <!-- Remarks / Notes -->
-              <div class="form-group" style="grid-column: span 2;">
-                <label class="form-label">Admin Notes / Hardware Upgrade History</label>
-                <input type="text" class="form-control" name="editRemark" id="editAssetRemark" placeholder="e.g. Upgraded RAM to 32GB and added Dell 27-inch 4K monitor.">
+              <!-- Backward Compatibility Hook for editAssetWarrantyType -->
+              <input type="hidden" name="editWarrantyType" id="editAssetWarrantyType" value="Full System">
+            </div>
+
+            <!-- Redesigned Warranty Component / Type Dynamic Section -->
+            <div class="warranty-component-section" id="warrantyComponentSection">
+              <div class="warranty-component-header">
+                <div class="warranty-header-left">
+                  <div class="warranty-section-label">
+                    <span class="warranty-icon">🛡️</span>
+                    <span>Warranty Component / Type</span>
+                    <span class="warranty-count-pill" id="warrantyComponentsCountBadge">1 Component</span>
+                  </div>
+                  <p class="warranty-subtitle">
+                    Track individual component warranties (RAM, SSD, Monitor, etc.) with independent assigned dates, expiry dates, and smart status badges.
+                  </p>
+                </div>
+                <div class="warranty-header-right">
+                  <button type="button" class="btn-add-component" id="btnAddWarrantyComponent" onclick="window.ITApp.addWarrantyComponentRow()">
+                    <span style="font-size:1.15rem; line-height:1; font-weight:700;">+</span> Add Component
+                  </button>
+                </div>
               </div>
+
+              <!-- Dynamic Component Rows List -->
+              <div class="warranty-components-list" id="warrantyComponentsContainer">
+                <!-- Dynamically populated component rows -->
+              </div>
+            </div>
+
+            <!-- Remarks / Notes -->
+            <div class="form-group" style="margin-top: 14px;">
+              <label class="form-label">Admin Notes / Hardware Upgrade History</label>
+              <input type="text" class="form-control" name="editRemark" id="editAssetRemark" placeholder="e.g. Upgraded RAM to 32GB and added Dell 27-inch 4K monitor.">
             </div>
           </div>
 

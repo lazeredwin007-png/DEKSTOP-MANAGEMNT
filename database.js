@@ -522,9 +522,6 @@ class DatabaseService {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);
 
-      try {
-        this.db.exec("ALTER TABLE assets ADD COLUMN warrantyType TEXT DEFAULT 'Full System'");
-      } catch (e) {}
       CREATE TABLE IF NOT EXISTS assets (
         id TEXT PRIMARY KEY,
         type TEXT NOT NULL,
@@ -704,6 +701,12 @@ class DatabaseService {
     try {
       this.db.exec("ALTER TABLE assets ADD COLUMN availableDate TEXT DEFAULT ''");
     } catch (e) {}
+    try {
+      this.db.exec("ALTER TABLE assets ADD COLUMN warrantyType TEXT DEFAULT 'Full System'");
+    } catch (e) {}
+    try {
+      this.db.exec("ALTER TABLE assets ADD COLUMN warrantyComponents TEXT DEFAULT ''");
+    } catch (e) {}
 
   }
 
@@ -829,25 +832,46 @@ class DatabaseService {
 
   /* Query Interface */
   getAllAssets() {
+    const parseComponents = (raw) => {
+      if (!raw) return [];
+      if (Array.isArray(raw)) return raw;
+      try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        return [];
+      }
+    };
+
     if (this.db) {
       const rows = this.db.prepare('SELECT * FROM assets ORDER BY id ASC').all();
-      return rows.map(r => ({ ...r, warrantyType: r.warrantyType || 'Full System' }));
+      return rows.map(r => ({
+        ...r,
+        warrantyType: r.warrantyType || 'Full System',
+        warrantyComponents: parseComponents(r.warrantyComponents)
+      }));
     }
-    return this.memoryData.assets.map(r => ({ ...r, warrantyType: r.warrantyType || 'Full System' }));
+    return this.memoryData.assets.map(r => ({
+      ...r,
+      warrantyType: r.warrantyType || 'Full System',
+      warrantyComponents: parseComponents(r.warrantyComponents)
+    }));
   }
 
   insertAsset(asset) {
     if (this.db) {
+      const componentsStr = typeof asset.warrantyComponents === 'object' ? JSON.stringify(asset.warrantyComponents || []) : (asset.warrantyComponents || '');
       const stmt = this.db.prepare(`
-        INSERT INTO assets (id, type, user, team, cpu, ram, hdd, ssd, monitor, serialNumber, hostname, ipAddress, os, location, oldUsername, assignedDate, status, condition, warrantyEnd, remark, workStatus, warrantyType, tl, doa)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO assets (id, type, user, team, cpu, ram, hdd, ssd, monitor, serialNumber, hostname, ipAddress, os, location, oldUsername, assignedDate, status, condition, warrantyEnd, remark, workStatus, warrantyType, tl, doa, warrantyComponents)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       stmt.run(
         asset.id, asset.type, asset.user || '', asset.team || '', asset.cpu || '', asset.ram || '',
         asset.hdd || '', asset.ssd || '', asset.monitor || '', asset.serialNumber || '', asset.hostname || '',
         asset.ipAddress || '', asset.os || '', asset.location || '', asset.oldUsername || '',
         asset.assignedDate || '', asset.status || 'Assigned', asset.condition || 'Brand New',
-        asset.warrantyEnd || '', asset.remark || '', asset.workStatus || 'Currently Working', asset.warrantyType || 'Full System', asset.tl || '-', asset.doa || '-'
+        asset.warrantyEnd || '', asset.remark || '', asset.workStatus || 'Currently Working', asset.warrantyType || 'Full System', asset.tl || '-', asset.doa || '-',
+        componentsStr
       );
       this.addActivity('Assigned System', asset.id, asset.user || 'SysAdmin', 'Success');
       return asset;
@@ -865,12 +889,16 @@ class DatabaseService {
         'id', 'type', 'user', 'team', 'cpu', 'ram', 'hdd', 'ssd', 'monitor',
         'serialNumber', 'hostname', 'ipAddress', 'os', 'location', 'oldUsername',
         'assignedDate', 'status', 'condition', 'warrantyEnd', 'remark', 'workStatus', 'warrantyType', 'tl', 'doa',
-        'userExitDate', 'availableDate'
+        'userExitDate', 'availableDate', 'warrantyComponents'
       ];
       const validUpdates = {};
       for (const [k, v] of Object.entries(updates || {})) {
         if (VALID_ASSET_COLUMNS.includes(k)) {
-          validUpdates[k] = v;
+          if (k === 'warrantyComponents' && typeof v === 'object' && v !== null) {
+            validUpdates[k] = JSON.stringify(v);
+          } else {
+            validUpdates[k] = v;
+          }
         }
       }
 
