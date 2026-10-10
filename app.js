@@ -2318,14 +2318,39 @@
           <td><span style="font-size:0.82rem; color:${(!a.ssd || a.ssd === '-' || a.ssd === '—' || a.ssd.toLowerCase() === 'none' || a.ssd.toLowerCase() === 'nil') ? 'var(--text-faint)' : 'var(--text-main)'};">${(!a.ssd || a.ssd === '-' || a.ssd === '—' || a.ssd.toLowerCase() === 'none' || a.ssd.toLowerCase() === 'nil') ? '-' : Utils.escapeHtml(a.ssd)}</span></td>
           <td><span style="font-family:var(--font-mono); font-size:0.75rem;">${Utils.escapeHtml(a.serialNumber)}</span></td>
           <td>
-            ${(a.userExitDate || a.workStatus === 'User Exit') ? `
-              <div style="display:flex; flex-direction:column; gap:2px;">
-                <span style="display:inline-block; font-size:0.68rem; font-weight:700; color:#e11d48; background:#fff1f2; border:1px solid #fecdd3; padding:1px 6px; border-radius:4px; width:fit-content; line-height:1.2;">User Exit</span>
-                <span style="font-size:0.82rem; font-weight:600; color:var(--text-main);">${Utils.formatDate(a.userExitDate || a.availableDate || a.assignedDate || '2026-10-07')}</span>
-              </div>
-            ` : `
-              <span style="font-size:0.82rem; color:var(--text-muted);">${Utils.formatDate(a.availableDate || a.assignedDate || '—')}</span>
-            `}
+            ${(() => {
+              const ws = (a.workStatus || (a.userExitDate ? 'User Exit' : 'In Stock')).trim();
+              const lower = ws.toLowerCase();
+              let badgeStyle = '';
+              let label = ws;
+
+              if (lower === 'user exit' || lower === 'exit') {
+                badgeStyle = 'color:#e11d48; background:#fff1f2; border:1px solid #fecdd3;';
+                label = 'User Exit';
+              } else if (lower === 'currently working' || lower === 'working' || lower === 'active') {
+                badgeStyle = 'color:#059669; background:#ecfdf5; border:1px solid #a7f3d0;';
+                label = 'Currently Working';
+              } else if (lower === 'work from home' || lower === 'wfh' || lower === 'remote') {
+                badgeStyle = 'color:#2563eb; background:#eff6ff; border:1px solid #bfdbfe;';
+                label = 'Work From Home';
+              } else if (lower.includes('stock') || lower.includes('available')) {
+                badgeStyle = 'color:#d97706; background:#fffbeb; border:1px solid #fde68a;';
+                label = 'In Stock';
+              } else {
+                badgeStyle = 'color:#475569; background:#f1f5f9; border:1px solid #cbd5e1;';
+                label = ws;
+              }
+
+              const dateVal = a.userExitDate || a.availableDate || a.assignedDate;
+              const dateFormatted = dateVal ? Utils.formatDate(dateVal) : '';
+
+              return `
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="display:inline-block; font-size:0.68rem; font-weight:700; ${badgeStyle} padding:1px 6px; border-radius:4px; width:fit-content; line-height:1.2;">${Utils.escapeHtml(label)}</span>
+                  ${(dateFormatted && dateFormatted !== '—') ? `<span style="font-size:0.82rem; font-weight:600; color:var(--text-main);">${dateFormatted}</span>` : ''}
+                </div>
+              `;
+            })()}
           </td>
           <td><span class="status-pill status-assigned">${Utils.escapeHtml(a.condition || 'Good')}</span></td>
           <td>
@@ -5266,7 +5291,7 @@ Remarks: ${r.remark || 'None'}`);
       // Initialize dynamic repeatable warranty component tracker
       let components = [];
       if (Array.isArray(asset.warrantyComponents) && asset.warrantyComponents.length > 0) {
-        components = asset.warrantyComponents;
+        components = JSON.parse(JSON.stringify(asset.warrantyComponents));
       } else if (typeof asset.warrantyComponents === 'string' && asset.warrantyComponents.trim()) {
         try {
           const parsed = JSON.parse(asset.warrantyComponents);
@@ -5275,12 +5300,52 @@ Remarks: ${r.remark || 'None'}`);
       }
 
       if (components.length === 0) {
-        components.push({
-          id: 'wc-init-' + Date.now(),
-          type: asset.warrantyType || (isNonWarranty ? 'Non-Warranty' : 'Full System'),
-          assignedDate: asset.assignedDate || new Date().toISOString().substring(0, 10),
-          expiryDate: isNonWarranty ? '' : (asset.warrantyEnd && asset.warrantyEnd !== 'Non-Warranty' ? asset.warrantyEnd : '')
-        });
+        const defaultAssigned = asset.assignedDate || new Date().toISOString().substring(0, 10);
+        const defaultExpiry = isNonWarranty ? '' : (asset.warrantyEnd && asset.warrantyEnd !== 'Non-Warranty' && asset.warrantyEnd !== 'None' ? asset.warrantyEnd : '');
+
+        // Prepopulate individual hardware components from specs if available
+        if (asset.ram && asset.ram.toLowerCase() !== 'none') {
+          components.push({
+            id: 'wc-' + Date.now() + '-ram',
+            type: 'RAM',
+            assignedDate: defaultAssigned,
+            expiryDate: defaultExpiry
+          });
+        }
+        if (asset.ssd && asset.ssd.toLowerCase() !== 'none') {
+          components.push({
+            id: 'wc-' + (Date.now() + 1) + '-ssd',
+            type: 'SSD',
+            assignedDate: defaultAssigned,
+            expiryDate: defaultExpiry
+          });
+        }
+        if (asset.hdd && asset.hdd.toLowerCase() !== 'none') {
+          components.push({
+            id: 'wc-' + (Date.now() + 2) + '-hdd',
+            type: 'HDD',
+            assignedDate: defaultAssigned,
+            expiryDate: defaultExpiry
+          });
+        }
+        if (asset.monitor && asset.monitor.toLowerCase() !== 'none') {
+          components.push({
+            id: 'wc-' + (Date.now() + 3) + '-mon',
+            type: 'Monitor',
+            assignedDate: defaultAssigned,
+            expiryDate: defaultExpiry
+          });
+        }
+
+        // Fallback to Full System if no individual component specs
+        if (components.length === 0) {
+          components.push({
+            id: 'wc-init-' + Date.now(),
+            type: asset.warrantyType || (isNonWarranty ? 'Non-Warranty' : 'Full System'),
+            assignedDate: defaultAssigned,
+            expiryDate: defaultExpiry
+          });
+        }
       }
 
       this.renderWarrantyComponentRows(components);
@@ -5484,19 +5549,10 @@ Remarks: ${r.remark || 'None'}`);
         if (exitDateEl && !exitDateEl.value) {
           exitDateEl.value = new Date().toISOString().substring(0, 10);
         }
-        Utils.showToast('Status Auto-Updated', 'Employee Work Status is User Exit: System Status automatically changed to Non-Assigned (Available Pool).', 'info');
       } else if (workStatus === 'In Stock') {
-        statusSelect.value = 'Non-Assigned';
-        this.updateSystemStatusBadge('Non-Assigned');
-      } else if (workStatus === 'Work From Home') {
-        if (statusSelect.value === 'Non-Assigned') {
-          statusSelect.value = 'WFH';
-          this.updateSystemStatusBadge('WFH');
-        }
-      } else if (workStatus === 'Currently Working') {
-        if (statusSelect.value === 'Non-Assigned') {
-          statusSelect.value = 'Assigned';
-          this.updateSystemStatusBadge('Assigned');
+        if (statusSelect.value !== 'Non-Assigned') {
+          statusSelect.value = 'Non-Assigned';
+          this.updateSystemStatusBadge('Non-Assigned');
         }
       }
     }
@@ -5592,8 +5648,8 @@ Remarks: ${r.remark || 'None'}`);
         const isMarkedNonAssigned = (status === 'Non-Assigned' || workStatus === 'User Exit' || workStatus === 'In Stock');
         if (isMarkedNonAssigned) {
           asset.status = 'Non-Assigned';
-          asset.workStatus = (workStatus === 'User Exit') ? 'User Exit' : 'In Stock';
-          const exitDate = userExitDate || rawExitDate || new Date().toISOString().substring(0, 10);
+          asset.workStatus = workStatus || 'In Stock';
+          const exitDate = userExitDate || rawExitDate || asset.userExitDate || asset.availableDate || asset.assignedDate || new Date().toISOString().substring(0, 10);
           asset.userExitDate = exitDate;
           asset.availableDate = exitDate;
           const departingUser = prevUser || user;
@@ -5602,7 +5658,11 @@ Remarks: ${r.remark || 'None'}`);
           } else if (oldUsername && oldUsername !== 'None') {
             asset.oldUsername = oldUsername;
           }
-          asset.user = ''; // System is unassigned, moved out of Assigned pool into Non-Assigned stock
+          if (workStatus === 'User Exit' || workStatus === 'In Stock') {
+            asset.user = ''; // System is in stock / exited
+          } else {
+            asset.user = user || prevUser || (oldUsername && oldUsername !== 'None' ? oldUsername : '');
+          }
         } else {
           asset.status = status || 'Assigned';
           asset.workStatus = workStatus || 'Currently Working';
@@ -6062,10 +6122,10 @@ Remarks: ${r.remark || 'None'}`);
     calculateWarrantyStatus(assignedDate, expiryDate, componentType) {
       if (!componentType || componentType === 'Non-Warranty' || !expiryDate || expiryDate === 'Non-Warranty' || expiryDate === 'None' || expiryDate === '-') {
         return {
-          status: 'nonwarranty',
-          badgeClass: 'badge-status-nonwarranty',
-          label: 'Non-Warranty Item',
-          text: 'Non-Warranty',
+          status: 'nowarranty',
+          badgeClass: 'badge-status-nowarranty',
+          label: 'No Warranty',
+          text: 'No Warranty',
           daysRemaining: null,
           isValid: true
         };
@@ -6083,50 +6143,58 @@ Remarks: ${r.remark || 'None'}`);
         };
       }
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const exp = new Date(expiryDate);
-      if (isNaN(exp.getTime())) {
+      const expParts = String(expiryDate).match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+      if (!expParts) {
         return {
-          status: 'nonwarranty',
-          badgeClass: 'badge-status-nonwarranty',
-          label: 'Non-Warranty Item',
-          text: 'Non-Warranty',
+          status: 'nowarranty',
+          badgeClass: 'badge-status-nowarranty',
+          label: 'No Warranty',
+          text: 'No Warranty',
           daysRemaining: null,
           isValid: true
         };
       }
 
-      exp.setHours(0, 0, 0, 0);
-      const diffMs = exp - today;
-      const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      const expYear = parseInt(expParts[1], 10);
+      const expMonth = parseInt(expParts[2], 10) - 1;
+      const expDay = parseInt(expParts[3], 10);
 
-      if (daysRemaining < 0) {
-        const absDays = Math.abs(daysRemaining);
-        return {
-          status: 'expired',
-          badgeClass: 'badge-status-expired',
-          label: `Warranty Expired ${absDays} days ago (${expiryDate})`,
-          text: `Warranty Expired (${absDays}d ago)`,
-          daysRemaining,
-          isValid: true
-        };
-      } else if (daysRemaining <= 30) {
-        return {
-          status: 'expiring',
-          badgeClass: 'badge-status-expiring',
-          label: `Warranty Expiring Soon: ${daysRemaining} days remaining (${expiryDate})`,
-          text: `Expiring Soon (${daysRemaining}d left)`,
-          daysRemaining,
-          isValid: true
-        };
-      } else {
+      const now = new Date();
+      const todayUtc = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+      const expUtc = Date.UTC(expYear, expMonth, expDay);
+
+      const diffDays = Math.round((expUtc - todayUtc) / (1000 * 60 * 60 * 24));
+
+      if (diffDays > 30) {
+        const unit = diffDays === 1 ? 'day' : 'days';
         return {
           status: 'active',
           badgeClass: 'badge-status-active',
-          label: `Under Active Warranty: ${daysRemaining} days remaining (${expiryDate})`,
-          text: `Under Warranty (${daysRemaining}d left)`,
-          daysRemaining,
+          label: `${diffDays} ${unit} left (${expiryDate})`,
+          text: `${diffDays} ${unit} left`,
+          daysRemaining: diffDays,
+          isValid: true
+        };
+      } else if (diffDays >= 0 && diffDays <= 30) {
+        const unit = diffDays === 1 ? 'day' : 'days';
+        const labelText = diffDays === 0 ? 'Today' : `${diffDays} ${unit} left`;
+        return {
+          status: 'expiring',
+          badgeClass: 'badge-status-expiring',
+          label: diffDays === 0 ? `Warranty Expires Today (${expiryDate})` : `${diffDays} ${unit} left (${expiryDate})`,
+          text: labelText,
+          daysRemaining: diffDays,
+          isValid: true
+        };
+      } else {
+        const absDays = Math.abs(diffDays);
+        const unit = absDays === 1 ? 'day' : 'days';
+        return {
+          status: 'expired',
+          badgeClass: 'badge-status-expired',
+          label: `Warranty Expired ${absDays} ${unit} ago (${expiryDate})`,
+          text: `Warranty Expired (${absDays} ${unit} ago)`,
+          daysRemaining: diffDays,
           isValid: true
         };
       }
@@ -6145,21 +6213,22 @@ Remarks: ${r.remark || 'None'}`);
           <div class="warranty-empty-state" id="warrantyEmptyState">
             <span class="warranty-empty-icon">🛡️</span>
             <div class="warranty-empty-text">No hardware component warranty rows added yet.</div>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.addWarrantyComponentRow()" style="margin-top:4px;">
+            <div class="warranty-empty-sub">Click "+ Add Component" above to begin tracking component warranties.</div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.addWarrantyComponentRow()" style="margin-top:6px;">
               + Add First Component
             </button>
           </div>
         `;
+        this.updateWarrantyKpis();
         return;
-      }
-
-      if (countBadge) {
-        countBadge.textContent = components.length === 1 ? '1 Component' : `${components.length} Components`;
       }
 
       components.forEach((comp) => {
         this.appendWarrantyComponentCard(comp, container);
       });
+
+      this.updateWarrantyCountBadge();
+      this.updateWarrantyKpis();
     }
 
     appendWarrantyComponentCard(comp, container) {
@@ -6170,12 +6239,22 @@ Remarks: ${r.remark || 'None'}`);
       if (emptyState) emptyState.remove();
 
       const rowId = comp.id || ('wc-' + Date.now() + '-' + Math.floor(Math.random() * 10000));
-      const type = comp.type || 'Full System';
+      const type = (comp.type === 'Non-Warranty') ? 'RAM' : (comp.type || 'RAM');
       const assignedDate = comp.assignedDate || document.getElementById('editAssetAssignedDate')?.value || new Date().toISOString().substring(0, 10);
-      const rawExpiry = comp.expiryDate || (type === 'Non-Warranty' ? '' : document.getElementById('editAssetWarrantyEnd')?.value || '');
-      const expiryDate = (type === 'Non-Warranty' || rawExpiry === 'Non-Warranty') ? '' : rawExpiry;
+      
+      const isExplicitNonWarranty = comp.coverage === 'non-warranty' || comp.type === 'Non-Warranty' || (!comp.expiryDate && comp.expiryDate !== undefined && comp.coverage !== 'warranty') || comp.expiryDate === 'Non-Warranty' || comp.expiryDate === 'None';
+      const coverage = isExplicitNonWarranty ? 'non-warranty' : 'warranty';
 
-      const statusInfo = this.calculateWarrantyStatus(assignedDate, expiryDate, type);
+      let expiryDate = (coverage === 'non-warranty' || !comp.expiryDate || comp.expiryDate === 'Non-Warranty' || comp.expiryDate === 'None') ? '' : comp.expiryDate;
+      if (coverage === 'warranty' && !expiryDate) {
+        const d = new Date(assignedDate);
+        if (!isNaN(d.getTime())) {
+          d.setFullYear(d.getFullYear() + 2);
+          expiryDate = d.toISOString().substring(0, 10);
+        }
+      }
+
+      const statusInfo = this.calculateWarrantyStatus(assignedDate, expiryDate, coverage === 'non-warranty' ? 'Non-Warranty' : type);
 
       const card = document.createElement('div');
       card.className = 'warranty-component-card';
@@ -6183,18 +6262,23 @@ Remarks: ${r.remark || 'None'}`);
       card.dataset.rowId = rowId;
 
       const typeOptions = [
-        'Full System',
         'RAM',
         'SSD',
-        'SMPS',
+        'HDD',
         'Monitor',
         'Motherboard',
+        'SMPS',
         'CPU / Processor',
         'Graphics Card (GPU)',
         'Keyboard / Mouse',
-        'Non-Warranty',
+        'UPS',
+        'Full System',
         'Other'
       ];
+
+      if (type && !typeOptions.some(t => t.toLowerCase() === type.toLowerCase())) {
+        typeOptions.unshift(type);
+      }
 
       const optionsHtml = typeOptions.map(opt => {
         const isSel = (opt.toLowerCase() === type.toLowerCase() || (opt === 'CPU / Processor' && type.toLowerCase().includes('cpu')));
@@ -6206,71 +6290,104 @@ Remarks: ${r.remark || 'None'}`);
           <!-- 1. Component Type Dropdown -->
           <div class="warranty-field-group">
             <label class="warranty-field-label">Component / Type</label>
-            <select class="form-control wc-type-select" data-row-id="${rowId}">
+            <select class="form-control wc-type-select" data-row-id="${rowId}" aria-label="Component Type">
               ${optionsHtml}
             </select>
           </div>
 
-          <!-- 2. Assigned Date -->
+          <!-- 2. Warranty Coverage (Under Warranty / Non-Warranty) -->
+          <div class="warranty-field-group">
+            <label class="warranty-field-label">Warranty Coverage</label>
+            <select class="form-control wc-coverage-select" data-row-id="${rowId}" aria-label="Warranty Coverage">
+              <option value="warranty" ${coverage === 'warranty' ? 'selected' : ''}>🟢 Under Warranty</option>
+              <option value="non-warranty" ${coverage === 'non-warranty' ? 'selected' : ''}>⚪ Non-Warranty</option>
+            </select>
+          </div>
+
+          <!-- 3. Assigned Date -->
           <div class="warranty-field-group">
             <label class="warranty-field-label">Assigned Date</label>
-            <input type="date" class="form-control wc-assigned-date" data-row-id="${rowId}" value="${assignedDate}">
+            <input type="date" class="form-control wc-assigned-date" data-row-id="${rowId}" value="${assignedDate}" aria-label="Assigned Date">
           </div>
 
-          <!-- 3. Expiry Date -->
+          <!-- 4. Expiry Date -->
           <div class="warranty-field-group">
             <label class="warranty-field-label">Warranty Expiry Date</label>
-            <input type="date" class="form-control wc-expiry-date ${statusInfo.isValid ? '' : 'wc-date-invalid'}" data-row-id="${rowId}" value="${expiryDate}" min="${assignedDate}" ${type === 'Non-Warranty' ? 'disabled style="opacity:0.45;"' : ''}>
+            <input type="date" class="form-control wc-expiry-date ${statusInfo.isValid ? '' : 'wc-date-invalid'}" data-row-id="${rowId}" value="${expiryDate}" min="${assignedDate}" ${coverage === 'non-warranty' ? 'disabled' : ''} aria-label="Warranty Expiry Date" placeholder="dd - mm - yyyy">
           </div>
 
-          <!-- 4. Smart Warranty Status Badge -->
-          <div class="warranty-field-group">
+          <!-- 5. Smart Warranty Status Badge -->
+          <div class="warranty-field-group warranty-field-group-status">
             <label class="warranty-field-label">Smart Warranty Status</label>
             <div class="wc-badge-slot" data-row-id="${rowId}">
-              <span class="smart-warranty-badge ${statusInfo.badgeClass}" title="${Utils.escapeHtml(statusInfo.label)}">
+              <span class="smart-warranty-badge ${statusInfo.badgeClass}" title="${Utils.escapeHtml(statusInfo.label)}" role="status" aria-live="polite">
                 <span class="badge-dot"></span>
                 <span>${Utils.escapeHtml(statusInfo.text)}</span>
               </span>
             </div>
           </div>
 
-          <!-- 5. Delete Action Button -->
-          <button type="button" class="btn-delete-component-row" title="Delete this component row" onclick="window.ITApp.removeWarrantyComponentRow('${rowId}')" aria-label="Delete component row">
-            🗑️
-          </button>
+          <!-- 6. Delete Action Button with SVG Trash Can -->
+          <div class="warranty-field-group warranty-field-group-actions" style="align-items: center; justify-content: flex-end;">
+            <label class="warranty-field-label" style="opacity:0;" aria-hidden="true">&nbsp;</label>
+            <button type="button" class="btn-delete-component-row" title="Delete ${type} component" onclick="window.ITApp.removeWarrantyComponentRow('${rowId}')" aria-label="Delete ${type} component row">
+              <svg class="delete-icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+              </svg>
+            </button>
+          </div>
         </div>
       `;
 
       container.appendChild(card);
 
+      const coverageSelect = card.querySelector('.wc-coverage-select');
       const typeSelect = card.querySelector('.wc-type-select');
       const assignedInput = card.querySelector('.wc-assigned-date');
       const expiryInput = card.querySelector('.wc-expiry-date');
 
       const updateRowStatus = () => {
+        const curCoverage = coverageSelect.value;
         const currentType = typeSelect.value;
         const curAssigned = assignedInput.value;
         let curExpiry = expiryInput.value;
 
-        if (currentType === 'Non-Warranty') {
+        // Update delete button title / aria-label
+        const delBtn = card.querySelector('.btn-delete-component-row');
+        if (delBtn) {
+          delBtn.title = `Delete ${currentType} component`;
+          delBtn.setAttribute('aria-label', `Delete ${currentType} component`);
+        }
+
+        if (curCoverage === 'non-warranty') {
           expiryInput.value = '';
           expiryInput.disabled = true;
-          expiryInput.style.opacity = '0.45';
+          expiryInput.classList.remove('wc-date-invalid');
           curExpiry = '';
         } else {
           expiryInput.disabled = false;
-          expiryInput.style.opacity = '1';
+          if (!curExpiry && curAssigned) {
+            const d = new Date(curAssigned);
+            if (!isNaN(d.getTime())) {
+              d.setFullYear(d.getFullYear() + 2);
+              expiryInput.value = d.toISOString().substring(0, 10);
+              curExpiry = expiryInput.value;
+            }
+          }
         }
 
         if (curAssigned) {
           expiryInput.min = curAssigned;
         }
 
-        const newStatus = this.calculateWarrantyStatus(curAssigned, curExpiry, currentType);
+        const newStatus = this.calculateWarrantyStatus(curAssigned, curExpiry, curCoverage === 'non-warranty' ? 'Non-Warranty' : currentType);
         const badgeSlot = card.querySelector('.wc-badge-slot');
         if (badgeSlot) {
           badgeSlot.innerHTML = `
-            <span class="smart-warranty-badge ${newStatus.badgeClass}" title="${Utils.escapeHtml(newStatus.label)}">
+            <span class="smart-warranty-badge ${newStatus.badgeClass}" title="${Utils.escapeHtml(newStatus.label)}" role="status" aria-live="polite">
               <span class="badge-dot"></span>
               <span>${Utils.escapeHtml(newStatus.text)}</span>
             </span>
@@ -6283,9 +6400,11 @@ Remarks: ${r.remark || 'None'}`);
           expiryInput.classList.remove('wc-date-invalid');
         }
 
+        this.updateWarrantyKpis();
         this.syncMasterWarrantyFields();
       };
 
+      coverageSelect.addEventListener('change', updateRowStatus);
       typeSelect.addEventListener('change', updateRowStatus);
       assignedInput.addEventListener('change', updateRowStatus);
       assignedInput.addEventListener('input', updateRowStatus);
@@ -6293,47 +6412,150 @@ Remarks: ${r.remark || 'None'}`);
       expiryInput.addEventListener('input', updateRowStatus);
 
       this.updateWarrantyCountBadge();
+      this.updateWarrantyKpis();
     }
 
     addWarrantyComponentRow(compData = {}) {
       const defaultAssigned = document.getElementById('editAssetAssignedDate')?.value || new Date().toISOString().substring(0, 10);
       let defaultExpiry = document.getElementById('editAssetWarrantyEnd')?.value || '';
-      if (!defaultExpiry && compData.type !== 'Non-Warranty') {
+      const isNonW = compData.coverage === 'non-warranty' || compData.type === 'Non-Warranty';
+      if (!defaultExpiry && !isNonW) {
         const nextYr = new Date();
-        nextYr.setFullYear(nextYr.getFullYear() + 1);
+        nextYr.setFullYear(nextYr.getFullYear() + 2);
         defaultExpiry = nextYr.toISOString().substring(0, 10);
       }
 
       const rowData = {
         id: 'wc-' + Date.now() + '-' + Math.floor(Math.random() * 10000),
         type: compData.type || 'RAM',
+        coverage: isNonW ? 'non-warranty' : 'warranty',
         assignedDate: compData.assignedDate || defaultAssigned,
-        expiryDate: (compData.type === 'Non-Warranty') ? '' : (compData.expiryDate || defaultExpiry)
+        expiryDate: isNonW ? '' : (compData.expiryDate || defaultExpiry)
       };
 
       this.appendWarrantyComponentCard(rowData);
+      this.updateWarrantyKpis();
       this.syncMasterWarrantyFields();
     }
 
     removeWarrantyComponentRow(rowId) {
-      const card = document.getElementById(rowId);
-      if (card) {
-        card.remove();
-      }
-      this.updateWarrantyCountBadge();
-      this.syncMasterWarrantyFields();
+      this.requestDeleteWarrantyComponent(rowId);
+    }
 
+    requestDeleteWarrantyComponent(rowId) {
+      const card = document.getElementById(rowId);
+      if (!card) return;
+
+      this.pendingDeleteRowId = rowId;
+      const typeSelect = card.querySelector('.wc-type-select');
+      const compType = typeSelect ? typeSelect.value : 'Component';
+
+      const modal = document.getElementById('modalConfirmDeleteComponent');
+      const msg = document.getElementById('deleteComponentModalMessage');
+      if (msg) {
+        msg.innerHTML = `Are you sure you want to remove the <strong>${Utils.escapeHtml(compType)}</strong> component from lifecycle tracking?`;
+      }
+
+      if (modal) {
+        modal.style.display = 'flex';
+        const confirmBtn = document.getElementById('btnConfirmDeleteComponentAction');
+        if (confirmBtn) confirmBtn.focus();
+      }
+    }
+
+    confirmDeleteWarrantyComponent() {
+      const rowId = this.pendingDeleteRowId;
+      const modal = document.getElementById('modalConfirmDeleteComponent');
+      if (modal) modal.style.display = 'none';
+
+      if (!rowId) return;
+
+      const card = document.getElementById(rowId);
+      const typeSelect = card ? card.querySelector('.wc-type-select') : null;
+      const compType = typeSelect ? typeSelect.value : 'Component';
+
+      if (card) {
+        card.style.transition = 'opacity 0.18s ease, transform 0.18s ease';
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(-6px)';
+        setTimeout(() => {
+          card.remove();
+          this.updateWarrantyCountBadge();
+          this.updateWarrantyKpis();
+          this.syncMasterWarrantyFields();
+
+          const container = document.getElementById('warrantyComponentsContainer');
+          if (container && container.querySelectorAll('.warranty-component-card').length === 0) {
+            container.innerHTML = `
+              <div class="warranty-empty-state" id="warrantyEmptyState">
+                <span class="warranty-empty-icon">🛡️</span>
+                <div class="warranty-empty-text">No hardware component warranty rows added yet.</div>
+                <div class="warranty-empty-sub">Click "+ Add Component" above to begin tracking component warranties.</div>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.addWarrantyComponentRow()" style="margin-top:6px;">
+                  + Add First Component
+                </button>
+              </div>
+            `;
+          }
+          Utils.showToast('Component Removed', `${compType} was removed from the list.`);
+        }, 180);
+      }
+      this.pendingDeleteRowId = null;
+    }
+
+    cancelDeleteWarrantyComponent() {
+      const modal = document.getElementById('modalConfirmDeleteComponent');
+      if (modal) modal.style.display = 'none';
+      this.pendingDeleteRowId = null;
+    }
+
+    updateWarrantyKpis() {
       const container = document.getElementById('warrantyComponentsContainer');
-      if (container && container.querySelectorAll('.warranty-component-card').length === 0) {
-        container.innerHTML = `
-          <div class="warranty-empty-state" id="warrantyEmptyState">
-            <span class="warranty-empty-icon">🛡️</span>
-            <div class="warranty-empty-text">No hardware component warranty rows added yet.</div>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.addWarrantyComponentRow()" style="margin-top:4px;">
-              + Add First Component
-            </button>
-          </div>
-        `;
+      if (!container) return;
+
+      const cards = container.querySelectorAll('.warranty-component-card');
+      const total = cards.length;
+      let underWarranty = 0;
+      let expiringSoon = 0;
+      let expiredOrNoWarranty = 0;
+
+      cards.forEach((card) => {
+        const coverageSelect = card.querySelector('.wc-coverage-select');
+        const typeSelect = card.querySelector('.wc-type-select');
+        const assignedInput = card.querySelector('.wc-assigned-date');
+        const expiryInput = card.querySelector('.wc-expiry-date');
+
+        const coverage = coverageSelect ? coverageSelect.value : 'warranty';
+        const type = typeSelect ? typeSelect.value : 'RAM';
+        const assignedDate = assignedInput ? assignedInput.value : '';
+        const expiryDate = expiryInput ? expiryInput.value : '';
+
+        if (coverage === 'non-warranty' || !expiryDate) {
+          expiredOrNoWarranty++;
+        } else {
+          const statusObj = this.calculateWarrantyStatus(assignedDate, expiryDate, type);
+          if (!statusObj.isValid || statusObj.status === 'expired' || statusObj.status === 'nowarranty') {
+            expiredOrNoWarranty++;
+          } else if (statusObj.status === 'expiring' || statusObj.status === 'today') {
+            expiringSoon++;
+          } else if (statusObj.status === 'active') {
+            underWarranty++;
+          }
+        }
+      });
+
+      const elTotal = document.getElementById('kpiTotalComponents');
+      const elActive = document.getElementById('kpiActiveWarranty');
+      const elExpiring = document.getElementById('kpiExpiringSoon');
+      const elExpired = document.getElementById('kpiExpiredWarranty');
+      const countBadge = document.getElementById('warrantyComponentsCountBadge');
+
+      if (elTotal) elTotal.textContent = total;
+      if (elActive) elActive.textContent = underWarranty;
+      if (elExpiring) elExpiring.textContent = expiringSoon;
+      if (elExpired) elExpired.textContent = expiredOrNoWarranty;
+      if (countBadge) {
+        countBadge.textContent = total === 1 ? '1 Component' : `${total} Components`;
       }
     }
 
@@ -6358,7 +6580,7 @@ Remarks: ${r.remark || 'None'}`);
         masterTypeInput.value = firstComp.type || 'Full System';
       }
 
-      const allNonWarranty = components.every(c => c.type === 'Non-Warranty' || !c.expiryDate || c.expiryDate === 'Non-Warranty');
+      const allNonWarranty = components.every(c => c.coverage === 'non-warranty' || c.type === 'Non-Warranty' || !c.expiryDate || c.expiryDate === 'Non-Warranty');
       if (allNonWarranty) {
         if (masterStatusSelect) masterStatusSelect.value = 'non-warranty';
         if (masterEndInput) {
@@ -6371,7 +6593,7 @@ Remarks: ${r.remark || 'None'}`);
         if (masterEndInput) {
           masterEndInput.disabled = false;
           masterEndInput.style.opacity = '1';
-          const validExpiries = components.filter(c => c.expiryDate && c.expiryDate !== 'Non-Warranty' && c.type !== 'Non-Warranty').map(c => c.expiryDate);
+          const validExpiries = components.filter(c => c.coverage !== 'non-warranty' && c.expiryDate && c.expiryDate !== 'Non-Warranty' && c.type !== 'Non-Warranty').map(c => c.expiryDate);
           if (validExpiries.length > 0) {
             masterEndInput.value = validExpiries[0];
           }
@@ -6387,21 +6609,25 @@ Remarks: ${r.remark || 'None'}`);
       cards.forEach(card => {
         const rowId = card.dataset.rowId;
         const typeSelect = card.querySelector('.wc-type-select');
+        const coverageSelect = card.querySelector('.wc-coverage-select');
         const assignedInput = card.querySelector('.wc-assigned-date');
         const expiryInput = card.querySelector('.wc-expiry-date');
 
         if (typeSelect && assignedInput && expiryInput) {
-          const type = typeSelect.value || 'Full System';
+          const type = typeSelect.value || 'RAM';
+          const coverage = coverageSelect ? coverageSelect.value : (expiryInput.value ? 'warranty' : 'non-warranty');
           const assignedDate = assignedInput.value || '';
-          const expiryDate = (type === 'Non-Warranty') ? '' : (expiryInput.value || '');
-          const statusObj = this.calculateWarrantyStatus(assignedDate, expiryDate, type);
+          const expiryDate = (coverage === 'non-warranty') ? '' : (expiryInput.value || '');
+          const statusObj = this.calculateWarrantyStatus(assignedDate, expiryDate, coverage === 'non-warranty' ? 'Non-Warranty' : type);
           components.push({
             id: rowId,
             type,
+            coverage,
             assignedDate,
-            expiryDate: (type === 'Non-Warranty' || !expiryDate) ? 'Non-Warranty' : expiryDate,
-            status: statusObj.label,
-            statusCode: statusObj.status
+            expiryDate: (coverage === 'non-warranty' || !expiryDate) ? 'Non-Warranty' : expiryDate,
+            status: statusObj.text,
+            statusCode: statusObj.status,
+            daysRemaining: statusObj.daysRemaining
           });
         }
       });
@@ -6697,6 +6923,15 @@ Remarks: ${r.remark || 'None'}`);
     },
     removeWarrantyComponentRow(rowId) {
       app.removeWarrantyComponentRow(rowId);
+    },
+    confirmDeleteWarrantyComponent() {
+      app.confirmDeleteWarrantyComponent();
+    },
+    cancelDeleteWarrantyComponent() {
+      app.cancelDeleteWarrantyComponent();
+    },
+    focusEditWarrantyComponentRow(rowId) {
+      if (app.focusEditWarrantyComponentRow) app.focusEditWarrantyComponentRow(rowId);
     },
     handleAssignedDateSync(newDate) {
       app.handleAssignedDateSync(newDate);
@@ -7011,50 +7246,70 @@ Remarks: ${r.remark || 'None'}`);
             </div>
             ${isNoWarranty ? '' : `
             <div class="spec-card-body">
-              ${(Array.isArray(asset.warrantyComponents) && asset.warrantyComponents.length > 0) ? `
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                  ${asset.warrantyComponents.map(c => {
-                    const statusObj = app.calculateWarrantyStatus(c.assignedDate, c.expiryDate, c.type);
+              ${(() => {
+                const rawComponents = (Array.isArray(asset.warrantyComponents) && asset.warrantyComponents.length > 0) ? asset.warrantyComponents : [];
+                // Filter out components that have 'No Warranty' (hide them from display)
+                const warrantedComponents = rawComponents.filter(c => {
+                  const statusObj = app.calculateWarrantyStatus(c.assignedDate, c.expiryDate, c.type);
+                  return statusObj && statusObj.status !== 'nowarranty';
+                });
+
+                if (rawComponents.length > 0) {
+                  if (warrantedComponents.length === 0) {
                     return `
-                      <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:10px 14px; flex-wrap:wrap; gap:8px;">
-                        <div>
-                          <strong style="color:var(--text-main); font-size:0.88rem;">${Utils.escapeHtml(c.type)}</strong>
-                          <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">
-                            Assigned: <strong>${Utils.formatDate(c.assignedDate)}</strong> • Expiry: <strong>${Utils.formatDate(c.expiryDate)}</strong>
-                          </div>
-                        </div>
-                        <span class="smart-warranty-badge ${statusObj.badgeClass}" style="height:28px; padding:4px 10px; font-size:0.75rem;">
-                          <span class="badge-dot"></span>
-                          <span>${Utils.escapeHtml(statusObj.text)}</span>
-                        </span>
+                      <div style="padding:14px; text-align:center; color:var(--text-muted); font-size:0.85rem; background:#f8fafc; border-radius:6px; border:1px dashed #cbd5e1;">
+                        No individual hardware components currently under warranty.
                       </div>
                     `;
-                  }).join('')}
-                </div>
-              ` : `
-                <div class="spec-grid-2col">
-                  <div class="spec-col">
-                    <div class="spec-item">
-                      <span class="spec-label">Warranty Component</span>
-                      <span class="spec-value">${Utils.escapeHtml(asset.warrantyType || 'Full System')}</span>
+                  }
+                  return `
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                      ${warrantedComponents.map(c => {
+                        const statusObj = app.calculateWarrantyStatus(c.assignedDate, c.expiryDate, c.type);
+                        return `
+                          <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:10px 14px; flex-wrap:wrap; gap:8px;">
+                            <div>
+                              <strong style="color:var(--text-main); font-size:0.88rem;">${Utils.escapeHtml(c.type)}</strong>
+                              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">
+                                Assigned: <strong>${Utils.formatDate(c.assignedDate)}</strong> • Expiry: <strong>${Utils.formatDate(c.expiryDate)}</strong>
+                              </div>
+                            </div>
+                            <span class="smart-warranty-badge ${statusObj.badgeClass}" style="height:28px; padding:4px 10px; font-size:0.75rem;">
+                              <span class="badge-dot"></span>
+                              <span>${Utils.escapeHtml(statusObj.text)}</span>
+                            </span>
+                          </div>
+                        `;
+                      }).join('')}
                     </div>
-                    <div class="spec-item">
-                      <span class="spec-label">Warranty Start Date</span>
-                      <span class="spec-value">${Utils.formatDate(asset.assignedDate || '2024-01-01')}</span>
+                  `;
+                }
+
+                return `
+                  <div class="spec-grid-2col">
+                    <div class="spec-col">
+                      <div class="spec-item">
+                        <span class="spec-label">Warranty Component</span>
+                        <span class="spec-value">${Utils.escapeHtml(asset.warrantyType || 'Full System')}</span>
+                      </div>
+                      <div class="spec-item">
+                        <span class="spec-label">Warranty Start Date</span>
+                        <span class="spec-value">${Utils.formatDate(asset.assignedDate || '2024-01-01')}</span>
+                      </div>
+                    </div>
+                    <div class="spec-col">
+                      <div class="spec-item">
+                        <span class="spec-label">Warranty Expiry Date</span>
+                        <span class="spec-value font-mono">${Utils.formatDate(asset.warrantyEnd)}</span>
+                      </div>
+                      <div class="spec-item">
+                        <span class="spec-label">Remaining Days</span>
+                        <div class="spec-value">${warrantyRemainingHtml}</div>
+                      </div>
                     </div>
                   </div>
-                  <div class="spec-col">
-                    <div class="spec-item">
-                      <span class="spec-label">Warranty Expiry Date</span>
-                      <span class="spec-value font-mono">${Utils.formatDate(asset.warrantyEnd)}</span>
-                    </div>
-                    <div class="spec-item">
-                      <span class="spec-label">Remaining Days</span>
-                      <div class="spec-value">${warrantyRemainingHtml}</div>
-                    </div>
-                  </div>
-                </div>
-              `}
+                `;
+              })()}
             </div>
             `}
           </div>
@@ -7566,4 +7821,14 @@ Remarks: ${r.remark || 'None'}`);
       setTimeout(() => location.reload(), 800);
     }
   };
+
+  // Keyboard accessibility: Escape key closes delete confirmation modal
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const delModal = document.getElementById('modalConfirmDeleteComponent');
+      if (delModal && delModal.style.display !== 'none') {
+        app.cancelDeleteWarrantyComponent();
+      }
+    }
+  });
 })();
