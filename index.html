@@ -975,9 +975,9 @@
                   </h3>
 
                   <div class="form-group" style="margin-bottom: 12px;">
-                    <label class="form-label">Select Active User System <span class="req">*</span></label>
+                    <label class="form-label">Select Active User System (In Stock / User Exit) <span class="req">*</span></label>
                     <select class="form-control" id="swapOldUserSelect" required>
-                      <!-- Populated dynamically -->
+                      <!-- Populated dynamically: In Stock & User Exit only -->
                     </select>
                   </div>
 
@@ -1204,22 +1204,22 @@
              ================================================================== -->
         <div class="view-panel" id="view-all-assets">
           <!-- TOP SUMMARY / STATS BAR WITH BACK BUTTON & FILTERED LIVE COUNT -->
-          <div class="assets-filter-summary-bar" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; padding:12px 18px; background:var(--card-bg, #ffffff); border-radius:10px; border:1px solid var(--border-color, #e2e8f0); box-shadow:0 1px 4px rgba(0,0,0,0.05); flex-wrap:wrap; gap:10px;">
+          <div class="assets-filter-summary-bar">
             <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
               <!-- Back to Dashboard button -->
-              <button class="btn btn-secondary btn-sm" onclick="window.ITApp.navTo('dashboard')" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; cursor:pointer;" title="Return to Dashboard">
-                ← Back to Dashboard
+              <button class="btn-back-dashboard" onclick="window.ITApp.navTo('dashboard')" title="Return to Dashboard">
+                ← Dashboard
               </button>
               
-              <div style="height:20px; width:1px; background:var(--border-color, #cbd5e1);"></div>
+              <div style="height:20px; width:1px; background:#cbd5e1;"></div>
 
               <!-- Filtered Live Count Badge -->
               <div style="display:inline-flex; align-items:center; gap:8px;">
-                <span style="font-size:0.88rem; color:var(--text-main, #334155); font-weight:700;">Filtered Result:</span>
-                <span class="badge" id="assetsFilterCountBadge" style="background:#2563eb; color:#ffffff; font-size:1.05rem; font-weight:800; padding:4px 14px; border-radius:20px; box-shadow:0 2px 8px rgba(37,99,235,0.3);">
+                <span style="font-size:0.86rem; color:#475569; font-weight:700;">Filtered Result:</span>
+                <span class="badge filter-count-badge-main" id="assetsFilterCountBadge">
                   44 Total
                 </span>
-                <span id="assetsFilterBreakdownText" style="font-size:0.84rem; color:var(--text-muted, #64748b); font-weight:600;">
+                <span id="assetsFilterBreakdownText" style="font-size:0.84rem; color:#64748b; font-weight:600;">
                   (All 44 Fleet Items)
                 </span>
               </div>
@@ -1234,7 +1234,10 @@
 
           <div class="table-toolbar">
             <div class="toolbar-left">
-              <input type="text" class="filter-input" id="assetsSearchInput" placeholder="Search asset ID, CPU, RAM, HDD, user..." oninput="window.ITApp.renderAllAssetsTable()">
+              <div class="search-box-wrapper">
+                <span class="search-box-icon" aria-hidden="true">🔍</span>
+                <input type="text" class="filter-input" id="assetsSearchInput" placeholder="Search asset ID, CPU, RAM, HDD, user..." oninput="window.ITApp.renderAllAssetsTable()">
+              </div>
               
               <select class="filter-input" id="assetsTypeFilter" onchange="window.ITApp.renderAllAssetsTable()">
                 <option value="all">All Types</option>
@@ -1267,7 +1270,7 @@
               </select>
 
               <!-- Inline live counter in toolbar -->
-              <span id="assetsToolbarCountPill" style="display:inline-flex; align-items:center; font-size:0.82rem; font-weight:700; color:#2563eb; background:#eff6ff; border:1px solid #bfdbfe; padding:4px 10px; border-radius:6px; white-space:nowrap;">
+              <span id="assetsToolbarCountPill">
                 44 Assets
               </span>
             </div>
@@ -1959,22 +1962,23 @@
 
   <!-- 1. View Asset Details Modal -->
   <div class="modal-overlay" id="modalViewAsset">
-    <div class="modal-dialog modal-lg" style="max-width: 820px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);">
-      <div class="modal-header" id="viewAssetModalHeader" style="padding: 16px 24px; border-bottom: 1px solid var(--border-color); background: #ffffff; display: flex; align-items: center; justify-content: space-between; gap: 16px;">
-        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-          <h3 class="modal-title" style="margin: 0; font-size: 1.12rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
-            <span>🖥️</span> Hardware Asset Specification
-          </h3>
-          <div id="viewAssetModalMeta" class="spec-modal-meta-row" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header" id="viewAssetModalHeader">
+        <div class="spec-modal-brand">
+          <div class="spec-modal-icon-badge" aria-hidden="true">🖥️</div>
+          <div>
+            <h3 class="spec-modal-title">Hardware Asset Specification</h3>
+          </div>
+          <div id="viewAssetModalMeta" class="spec-modal-meta-row" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <!-- Populated dynamically: Asset ID badge, Device Type badge, Status badge -->
           </div>
         </div>
-        <button class="modal-close-btn" data-close-modal title="Close Popup" aria-label="Close" style="font-size: 1.3rem; line-height: 1; padding: 4px 8px;">✕</button>
+        <button class="modal-close-btn" data-close-modal title="Close Popup" aria-label="Close">✕</button>
       </div>
-      <div class="modal-body" id="viewAssetModalBody" style="padding: 20px 24px; background: #ffffff; max-height: 72vh; overflow-y: auto;"></div>
-      <div class="modal-footer" id="viewAssetModalFooter" style="position: sticky; bottom: 0; background: #ffffff; border-top: 1px solid var(--border-color); padding: 14px 24px; display: flex; justify-content: flex-end; gap: 12px; z-index: 10;">
-        <button class="btn btn-secondary" data-close-modal type="button" style="padding: 8px 18px; font-weight: 600;">Close</button>
-        <button class="btn btn-primary" id="viewAssetEditModalBtn" type="button" style="padding: 8px 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">✏️ Edit Specifications</button>
+      <div class="modal-body" id="viewAssetModalBody" style="padding: 18px 22px; background: #ffffff; max-height: 74vh; overflow-y: auto;"></div>
+      <div class="modal-footer" id="viewAssetModalFooter">
+        <button class="btn btn-secondary" data-close-modal type="button" style="padding: 7px 18px; font-weight: 600;">Close</button>
+        <button class="btn btn-primary" id="viewAssetEditModalBtn" type="button" style="padding: 7px 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">✏️ Edit Specifications</button>
       </div>
     </div>
   </div>

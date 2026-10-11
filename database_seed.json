@@ -1297,9 +1297,9 @@
                                                       "coverage":  "warranty",
                                                       "assignedDate":  "2025-01-15",
                                                       "expiryDate":  "2027-01-15",
-                                                      "status":  "97 days left",
+                                                      "status":  "96 days left",
                                                       "statusCode":  "active",
-                                                      "daysRemaining":  97
+                                                      "daysRemaining":  96
                                                   },
                                                   {
                                                       "id":  "wc-1791604072447-ssd",
@@ -1323,7 +1323,7 @@
                                                   }
                                               ],
                        "isRecentlySaved":  true,
-                       "lastSavedAt":  "09:17:55 am",
+                       "lastSavedAt":  "05:54:16 am",
                        "savedStatus":  "Saved Data"
                    },
                    {
@@ -1438,7 +1438,7 @@
                        "condition":  "Good",
                        "warrantyEnd":  "2027-01-15",
                        "remark":  "Good Working",
-                       "workStatus":  "In Stock",
+                       "workStatus":  "User Exit",
                        "warrantyType":  "RAM",
                        "tl":  "Sundar Sir",
                        "doa":  "-",
@@ -1451,9 +1451,9 @@
                                                       "coverage":  "warranty",
                                                       "assignedDate":  "2025-01-15",
                                                       "expiryDate":  "2027-01-15",
-                                                      "status":  "97 days left",
+                                                      "status":  "96 days left",
                                                       "statusCode":  "active",
-                                                      "daysRemaining":  97
+                                                      "daysRemaining":  96
                                                   },
                                                   {
                                                       "id":  "wc-1791569948683-ssd",
@@ -1461,9 +1461,9 @@
                                                       "coverage":  "warranty",
                                                       "assignedDate":  "2025-01-15",
                                                       "expiryDate":  "2027-01-15",
-                                                      "status":  "97 days left",
+                                                      "status":  "96 days left",
                                                       "statusCode":  "active",
-                                                      "daysRemaining":  97
+                                                      "daysRemaining":  96
                                                   },
                                                   {
                                                       "id":  "wc-1791569948685-mon",
@@ -1477,7 +1477,7 @@
                                                   }
                                               ],
                        "isRecentlySaved":  true,
-                       "lastSavedAt":  "09:43:10 am",
+                       "lastSavedAt":  "05:49:07 am",
                        "savedStatus":  "Saved Data"
                    },
                    {
@@ -1502,11 +1502,46 @@
                        "warrantyEnd":  "2027-01-15",
                        "remark":  "Slowness",
                        "workStatus":  "Currently Working",
-                       "warrantyType":  "Full System",
+                       "warrantyType":  "RAM",
                        "tl":  "Sundar Sir",
                        "doa":  "-",
                        "userExitDate":  "",
-                       "availableDate":  ""
+                       "availableDate":  "",
+                       "warrantyComponents":  [
+                                                  {
+                                                      "id":  "wc-1791635314194-ram",
+                                                      "type":  "RAM",
+                                                      "coverage":  "warranty",
+                                                      "assignedDate":  "2025-01-15",
+                                                      "expiryDate":  "2027-01-15",
+                                                      "status":  "97 days left",
+                                                      "statusCode":  "active",
+                                                      "daysRemaining":  97
+                                                  },
+                                                  {
+                                                      "id":  "wc-1791635314195-ssd",
+                                                      "type":  "SSD",
+                                                      "coverage":  "warranty",
+                                                      "assignedDate":  "2025-01-15",
+                                                      "expiryDate":  "2027-01-15",
+                                                      "status":  "97 days left",
+                                                      "statusCode":  "active",
+                                                      "daysRemaining":  97
+                                                  },
+                                                  {
+                                                      "id":  "wc-1791635314197-mon",
+                                                      "type":  "Other",
+                                                      "coverage":  "non-warranty",
+                                                      "assignedDate":  "2025-01-15",
+                                                      "expiryDate":  "Non-Warranty",
+                                                      "status":  "No Warranty",
+                                                      "statusCode":  "nowarranty",
+                                                      "daysRemaining":  null
+                                                  }
+                                              ],
+                       "isRecentlySaved":  true,
+                       "lastSavedAt":  "05:59:27 pm",
+                       "savedStatus":  "Saved Data"
                    },
                    {
                        "id":  "PIX_DSK_06",
@@ -2509,12 +2544,47 @@
                        "condition":  "Good",
                        "warrantyEnd":  "2027-01-15",
                        "remark":  "Good Working",
-                       "workStatus":  "In Stock",
-                       "warrantyType":  "Full System",
+                       "workStatus":  "User Exit",
+                       "warrantyType":  "RAM",
                        "tl":  "Sundar Sir",
                        "doa":  "-",
                        "userExitDate":  "2026-10-08",
-                       "availableDate":  "2026-10-08"
+                       "availableDate":  "2026-10-08",
+                       "warrantyComponents":  [
+                                                  {
+                                                      "id":  "wc-1791678268015-ram",
+                                                      "type":  "RAM",
+                                                      "coverage":  "warranty",
+                                                      "assignedDate":  "2025-01-15",
+                                                      "expiryDate":  "2027-01-15",
+                                                      "status":  "96 days left",
+                                                      "statusCode":  "active",
+                                                      "daysRemaining":  96
+                                                  },
+                                                  {
+                                                      "id":  "wc-1791678268016-ssd",
+                                                      "type":  "SSD",
+                                                      "coverage":  "warranty",
+                                                      "assignedDate":  "2025-01-15",
+                                                      "expiryDate":  "2027-01-15",
+                                                      "status":  "96 days left",
+                                                      "statusCode":  "active",
+                                                      "daysRemaining":  96
+                                                  },
+                                                  {
+                                                      "id":  "wc-1791678268018-mon",
+                                                      "type":  "Monitor",
+                                                      "coverage":  "warranty",
+                                                      "assignedDate":  "2025-01-15",
+                                                      "expiryDate":  "2027-01-15",
+                                                      "status":  "96 days left",
+                                                      "statusCode":  "active",
+                                                      "daysRemaining":  96
+                                                  }
+                                              ],
+                       "isRecentlySaved":  true,
+                       "lastSavedAt":  "05:54:32 am",
+                       "savedStatus":  "Saved Data"
                    },
                    {
                        "id":  "PIX_LAP_02",
@@ -2537,12 +2607,47 @@
                        "condition":  "Good",
                        "warrantyEnd":  "2027-01-15",
                        "remark":  "Returned to stock from Nishalini S on 2026-10-08",
-                       "workStatus":  "In Stock",
-                       "warrantyType":  "Full System",
+                       "workStatus":  "User Exit",
+                       "warrantyType":  "RAM",
                        "tl":  "Sundar Sir",
                        "doa":  "-",
-                       "userExitDate":  "",
-                       "availableDate":  "2026-10-08"
+                       "userExitDate":  "2026-10-11",
+                       "availableDate":  "2026-10-11",
+                       "warrantyComponents":  [
+                                                  {
+                                                      "id":  "wc-1791678277652-ram",
+                                                      "type":  "RAM",
+                                                      "coverage":  "warranty",
+                                                      "assignedDate":  "2026-10-08",
+                                                      "expiryDate":  "2027-01-15",
+                                                      "status":  "96 days left",
+                                                      "statusCode":  "active",
+                                                      "daysRemaining":  96
+                                                  },
+                                                  {
+                                                      "id":  "wc-1791678277653-ssd",
+                                                      "type":  "SSD",
+                                                      "coverage":  "warranty",
+                                                      "assignedDate":  "2026-10-08",
+                                                      "expiryDate":  "2027-01-15",
+                                                      "status":  "96 days left",
+                                                      "statusCode":  "active",
+                                                      "daysRemaining":  96
+                                                  },
+                                                  {
+                                                      "id":  "wc-1791678277655-mon",
+                                                      "type":  "Monitor",
+                                                      "coverage":  "warranty",
+                                                      "assignedDate":  "2026-10-08",
+                                                      "expiryDate":  "2027-01-15",
+                                                      "status":  "96 days left",
+                                                      "statusCode":  "active",
+                                                      "daysRemaining":  96
+                                                  }
+                                              ],
+                       "isRecentlySaved":  true,
+                       "lastSavedAt":  "05:54:41 am",
+                       "savedStatus":  "Saved Data"
                    },
                    {
                        "id":  "PIX_LAP_03",
@@ -2566,11 +2671,46 @@
                        "warrantyEnd":  "2027-01-15",
                        "remark":  "Good Working",
                        "workStatus":  "Currently Working",
-                       "warrantyType":  "Full System",
+                       "warrantyType":  "RAM",
                        "tl":  "Sundar Sir",
                        "doa":  "-",
                        "userExitDate":  "",
-                       "availableDate":  ""
+                       "availableDate":  "",
+                       "warrantyComponents":  [
+                                                  {
+                                                      "id":  "wc-1791674838603-ram",
+                                                      "type":  "RAM",
+                                                      "coverage":  "warranty",
+                                                      "assignedDate":  "2025-01-15",
+                                                      "expiryDate":  "2027-01-15",
+                                                      "status":  "96 days left",
+                                                      "statusCode":  "active",
+                                                      "daysRemaining":  96
+                                                  },
+                                                  {
+                                                      "id":  "wc-1791674838604-ssd",
+                                                      "type":  "SSD",
+                                                      "coverage":  "warranty",
+                                                      "assignedDate":  "2025-01-15",
+                                                      "expiryDate":  "2027-01-15",
+                                                      "status":  "96 days left",
+                                                      "statusCode":  "active",
+                                                      "daysRemaining":  96
+                                                  },
+                                                  {
+                                                      "id":  "wc-1791674838606-mon",
+                                                      "type":  "Monitor",
+                                                      "coverage":  "non-warranty",
+                                                      "assignedDate":  "2025-01-15",
+                                                      "expiryDate":  "Non-Warranty",
+                                                      "status":  "No Warranty",
+                                                      "statusCode":  "nowarranty",
+                                                      "daysRemaining":  null
+                                                  }
+                                              ],
+                       "isRecentlySaved":  true,
+                       "lastSavedAt":  "04:57:32 am",
+                       "savedStatus":  "Saved Data"
                    },
                    {
                        "id":  "PIX_LAP_04",
