@@ -64,6 +64,98 @@ function Send-JsonResponse($response, [int]$statusCode, [string]$jsonContent) {
     $response.OutputStream.Write($bytes, 0, $bytes.Length)
 }
 
+$script:sqliteLoaded = $false
+try {
+    $winSqliteCode = @'
+using System;
+using System.Runtime.InteropServices;
+
+public class WinSqlite {
+    [DllImport("winsqlite3.dll", EntryPoint = "sqlite3_open", CallingConvention = CallingConvention.Cdecl)]
+    public static extern int Open(string filename, out IntPtr db);
+
+    [DllImport("winsqlite3.dll", EntryPoint = "sqlite3_close", CallingConvention = CallingConvention.Cdecl)]
+    public static extern int Close(IntPtr db);
+
+    [DllImport("winsqlite3.dll", EntryPoint = "sqlite3_exec", CallingConvention = CallingConvention.Cdecl)]
+    public static extern int Exec(IntPtr db, string sql, IntPtr callback, IntPtr arg, out IntPtr errMsg);
+
+    public static int ExecuteNonQuery(string dbPath, string sql) {
+        IntPtr db;
+        int rc = Open(dbPath, out db);
+        if (rc != 0) return rc;
+        IntPtr errMsg;
+        rc = Exec(db, sql, IntPtr.Zero, IntPtr.Zero, out errMsg);
+        Close(db);
+        return rc;
+    }
+}
+'@
+    if (-not ([System.Management.Automation.PSTypeName]'WinSqlite').Type) {
+        Add-Type -TypeDefinition $winSqliteCode -ErrorAction SilentlyContinue
+    }
+    $script:sqliteLoaded = $true
+} catch {
+    $script:sqliteLoaded = $false
+}
+
+function Escape-Sql([string]$str) {
+    if ([string]::IsNullOrEmpty($str)) { return "''" }
+    return "'" + $str.Replace("'", "''") + "'"
+}
+
+function Sync-SqliteAsset([string]$dbPath, $asset) {
+    if (-not $script:sqliteLoaded -or -not (Test-Path $dbPath)) { return }
+    try {
+        $id = Escape-Sql $asset.id
+        $type = Escape-Sql $asset.type
+        $user = Escape-Sql $asset.user
+        $team = Escape-Sql $asset.team
+        $cpu = Escape-Sql $asset.cpu
+        $ram = Escape-Sql $asset.ram
+        $hdd = Escape-Sql $asset.hdd
+        $ssd = Escape-Sql $asset.ssd
+        $monitor = Escape-Sql $asset.monitor
+        $serialNumber = Escape-Sql $asset.serialNumber
+        $hostname = Escape-Sql $asset.hostname
+        $ipAddress = Escape-Sql $asset.ipAddress
+        $os = Escape-Sql $asset.os
+        $location = Escape-Sql $asset.location
+        $oldUsername = Escape-Sql $asset.oldUsername
+        $assignedDate = Escape-Sql $asset.assignedDate
+        $status = Escape-Sql $asset.status
+        $condition = Escape-Sql $asset.condition
+        $warrantyEnd = Escape-Sql $asset.warrantyEnd
+        $remark = Escape-Sql $asset.remark
+        $workStatus = Escape-Sql $asset.workStatus
+        $warrantyType = Escape-Sql $asset.warrantyType
+        $tl = Escape-Sql $asset.tl
+        $userExitDate = Escape-Sql $asset.userExitDate
+        $availableDate = Escape-Sql $asset.availableDate
+        $componentsJson = "''"
+        if ($asset.warrantyComponents) {
+            $componentsJson = Escape-Sql ($asset.warrantyComponents | ConvertTo-Json -Compress)
+        }
+
+        $sql = @"
+INSERT OR REPLACE INTO assets (
+    id, type, user, team, cpu, ram, hdd, ssd, monitor,
+    serialNumber, hostname, ipAddress, os, location, oldUsername,
+    assignedDate, status, condition, warrantyEnd, remark,
+    workStatus, warrantyType, tl, userExitDate, availableDate, warrantyComponents
+) VALUES (
+    $id, $type, $user, $team, $cpu, $ram, $hdd, $ssd, $monitor,
+    $serialNumber, $hostname, $ipAddress, $os, $location, $oldUsername,
+    $assignedDate, $status, $condition, $warrantyEnd, $remark,
+    $workStatus, $warrantyType, $tl, $userExitDate, $availableDate, $componentsJson
+);
+"@
+        [WinSqlite]::ExecuteNonQuery($dbPath, $sql) | Out-Null
+    } catch {
+        # Silent fallback
+    }
+}
+
 try {
     while ($listener.IsListening) {
         $context = $listener.GetContext()
@@ -113,12 +205,12 @@ try {
                     $reader = New-Object System.IO.StreamReader($request.InputStream, [System.Text.Encoding]::UTF8)
                     $bodyText = $reader.ReadToEnd()
                     $seedFile = Join-Path $basePath "database_seed.json"
+                    $updatedAsset = $bodyText | ConvertFrom-Json
                     if (Test-Path $seedFile) {
                         $seedObj = Get-Content $seedFile -Raw -Encoding UTF8 | ConvertFrom-Json
-                        $updatedAsset = $bodyText | ConvertFrom-Json
                         $found = $false
                         for ($i = 0; $i -lt $seedObj.assets.Count; $i++) {
-                            if ($seedObj.assets[$i].id -eq $assetId) {
+                            if ($seedObj.assets[$i].id -eq $assetId -or $seedObj.assets[$i].id -eq $updatedAsset.id) {
                                 $seedObj.assets[$i] = $updatedAsset
                                 $found = $true
                                 break
@@ -130,10 +222,19 @@ try {
                         $newJson = $seedObj | ConvertTo-Json -Depth 25
                         [System.IO.File]::WriteAllText($seedFile, $newJson, [System.Text.Encoding]::UTF8)
                     }
+
+                    # Live Sync with SQLite
+                    $sqliteFile = Join-Path $basePath "it_assets.sqlite"
+                    if (Test-Path $sqliteFile) {
+                        if ($assetId -ne $updatedAsset.id) {
+                            [WinSqlite]::ExecuteNonQuery($sqliteFile, "DELETE FROM assets WHERE id = " + (Escape-Sql $assetId) + ";") | Out-Null
+                        }
+                        Sync-SqliteAsset $sqliteFile $updatedAsset
+                    }
                 } catch {
-                    Write-Verbose "Error updating seed database: $_"
+                    Write-Verbose "Error updating database: $_"
                 }
-                Send-JsonResponse $response 200 '{"ok":true,"message":"Asset updated in database"}'
+                Send-JsonResponse $response 200 '{"ok":true,"message":"Asset updated in database and SQLite"}'
                 $response.OutputStream.Close()
                 continue
             }

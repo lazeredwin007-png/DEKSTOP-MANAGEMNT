@@ -5522,6 +5522,11 @@ Remarks: ${r.remark || 'None'}`);
         exitDateInput.value = asset.userExitDate || (asset.workStatus === 'User Exit' ? (asset.availableDate || new Date().toISOString().substring(0, 10)) : '');
       }
 
+      const availDateInput = document.getElementById('editAssetAvailableDate');
+      if (availDateInput) {
+        availDateInput.value = asset.availableDate || (asset.workStatus === 'In Stock' || asset.status === 'Non-Assigned' ? (asset.userExitDate || new Date().toISOString().substring(0, 10)) : '');
+      }
+
       // 5. System Identifiers & Dates
       const idInput = document.getElementById('editAssetId');
       if (idInput) idInput.value = asset.id;
@@ -5847,6 +5852,10 @@ Remarks: ${r.remark || 'None'}`);
           statusSelect.value = 'Non-Assigned';
           this.updateSystemStatusBadge('Non-Assigned');
         }
+        const availDateEl = document.getElementById('editAssetAvailableDate');
+        if (availDateEl && !availDateEl.value) {
+          availDateEl.value = new Date().toISOString().substring(0, 10);
+        }
       }
     }
 
@@ -5892,6 +5901,7 @@ Remarks: ${r.remark || 'None'}`);
           status = 'Non-Assigned';
         }
         const rawExitDate = formData.get('editExitDate')?.trim();
+        const rawAvailableDate = formData.get('editAvailableDate')?.trim();
         const location = formData.get('editLocation')?.trim() || '';
         const condition = formData.get('editCondition');
         const oldUsername = formData.get('editOldUsername')?.trim() || 'None';
@@ -5942,9 +5952,11 @@ Remarks: ${r.remark || 'None'}`);
         if (isMarkedNonAssigned) {
           asset.status = 'Non-Assigned';
           asset.workStatus = workStatus || 'In Stock';
-          const exitDate = userExitDate || rawExitDate || asset.userExitDate || asset.availableDate || asset.assignedDate || new Date().toISOString().substring(0, 10);
+          const defaultToday = new Date().toISOString().substring(0, 10);
+          const exitDate = rawExitDate || (workStatus === 'User Exit' ? (asset.userExitDate || defaultToday) : (asset.userExitDate || ''));
+          const availDate = rawAvailableDate || (workStatus === 'In Stock' ? (asset.availableDate || defaultToday) : (asset.availableDate || exitDate || defaultToday));
           asset.userExitDate = exitDate;
-          asset.availableDate = exitDate;
+          asset.availableDate = availDate;
           const departingUser = prevUser || user;
           if (departingUser && departingUser !== 'None' && departingUser !== 'NEW SYSTEM' && departingUser !== 'Unassigned') {
             asset.oldUsername = departingUser;
@@ -5961,6 +5973,8 @@ Remarks: ${r.remark || 'None'}`);
           asset.workStatus = workStatus || 'Currently Working';
           asset.user = user || prevUser || (oldUsername && oldUsername !== 'None' ? oldUsername : '');
           asset.oldUsername = oldUsername;
+          if (rawExitDate !== undefined) asset.userExitDate = rawExitDate;
+          if (rawAvailableDate !== undefined) asset.availableDate = rawAvailableDate;
         }
         asset.serialNumber = serialNumber;
         asset.hostname = hostname;
