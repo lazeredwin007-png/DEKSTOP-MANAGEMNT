@@ -30,13 +30,29 @@
         <span id="loginErrorMessage">Invalid username or password.</span>
       </div>
 
+      <!-- Clear Default Login Helper Banner -->
+      <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:12px 14px; margin-bottom:16px; font-size:0.83rem; color:#1e40af; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <div>
+          <div style="font-weight:700; color:#1e3a8a; display:flex; align-items:center; gap:6px;">
+            <span>🔑</span> <span>Default Admin Credentials:</span>
+          </div>
+          <div style="font-size:0.79rem; color:#2563eb; margin-top:2px;">
+            User: <strong style="color:#1e40af; background:#dbeafe; padding:1px 6px; border-radius:4px;">admin</strong> &nbsp;|&nbsp; 
+            Password: <strong style="color:#1e40af; background:#dbeafe; padding:1px 6px; border-radius:4px;">admin</strong>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" onclick="window.ITApp.fillRolePreset('admin', true)" style="white-space:nowrap; font-weight:700; padding:6px 12px; font-size:0.76rem; box-shadow:0 2px 8px rgba(37,99,235,0.25);">
+          ⚡ 1-Click Login
+        </button>
+      </div>
+
       <form id="portalLoginForm" onsubmit="window.ITApp.handleLoginSubmit(event)">
         <!-- Username -->
         <div class="login-form-group">
           <label class="login-label" for="loginUsername">Username / ID</label>
           <div class="login-input-wrapper">
             <span class="login-input-icon">👤</span>
-            <input type="text" class="login-input" id="loginUsername" placeholder="e.g. admin or support" required autofocus autocomplete="username">
+            <input type="text" class="login-input" id="loginUsername" placeholder="e.g. admin or support" required autofocus autocomplete="username" value="admin">
           </div>
         </div>
 
@@ -45,7 +61,7 @@
           <label class="login-label" for="loginPassword">Password</label>
           <div class="login-input-wrapper">
             <span class="login-input-icon">🔒</span>
-            <input type="password" class="login-input" id="loginPassword" placeholder="Enter password" required autocomplete="current-password">
+            <input type="password" class="login-input" id="loginPassword" placeholder="Enter password" required autocomplete="current-password" value="admin">
             <button type="button" class="login-pwd-toggle" id="loginPwdToggle" onclick="window.ITApp.togglePasswordVisibility()" title="Show/Hide Password" aria-label="Toggle password visibility">
               👁️
             </button>
@@ -72,15 +88,15 @@
       <div class="login-presets-section">
         <div class="login-presets-title">Quick Role Credentials</div>
         <div class="login-preset-btns">
-          <button type="button" class="login-preset-btn" onclick="window.ITApp.fillRolePreset('admin')" title="Fill Admin Credentials">
+          <button type="button" class="login-preset-btn" onclick="window.ITApp.fillRolePreset('admin', true)" title="Fill & Sign In as Admin">
             <span>👑 Admin</span>
             <span class="login-preset-badge">admin / admin</span>
           </button>
-          <button type="button" class="login-preset-btn" onclick="window.ITApp.fillRolePreset('support')" title="Fill IT Support Credentials">
+          <button type="button" class="login-preset-btn" onclick="window.ITApp.fillRolePreset('support', true)" title="Fill & Sign In as IT Support">
             <span>🛠️ IT Support</span>
             <span class="login-preset-badge">support / support</span>
           </button>
-          <button type="button" class="login-preset-btn" onclick="window.ITApp.fillRolePreset('viewer')" title="Fill Read-Only Viewer Credentials">
+          <button type="button" class="login-preset-btn" onclick="window.ITApp.fillRolePreset('viewer', true)" title="Fill & Sign In as Viewer">
             <span>👁️ Viewer</span>
             <span class="login-preset-badge">viewer / viewer</span>
           </button>
