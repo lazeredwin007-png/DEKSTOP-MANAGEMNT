@@ -2363,7 +2363,206 @@
           </td>
         </tr>
       `;
-      }).join('');
+      // Auto-populate default In-Stock Asset ID if form is visible and empty
+      this.refreshNextInStockAssetId(false);
+    }
+
+    /* ==========================================================================
+       IN-STOCK SYSTEM ENTRY & HARDWARE SPECIFICATION METHODS
+       ========================================================================== */
+    generateNextInStockAssetId(type = 'Desktop') {
+      const assets = (store && store.data && store.data.assets) || [];
+      const isLap = (type === 'Laptop');
+      const prefix = isLap ? 'PIX_LAP_' : 'PIX_DSK_';
+      let maxNum = 0;
+
+      assets.forEach(a => {
+        if (a && a.id) {
+          const idUpper = a.id.toUpperCase();
+          if (idUpper.startsWith(prefix)) {
+            const numPart = idUpper.replace(prefix, '');
+            const n = parseInt(numPart, 10);
+            if (!isNaN(n) && n > maxNum) {
+              maxNum = n;
+            }
+          }
+        }
+      });
+
+      const next = maxNum + 1;
+      const formatted = next < 10 ? '0' + next : String(next);
+      return `${prefix}${formatted}`;
+    }
+
+    refreshNextInStockAssetId(force = false) {
+      const idInput = document.getElementById('inStockAssetId');
+      if (!idInput) return;
+      if (!force && idInput.value && idInput.value.trim() !== '') return;
+      const type = document.getElementById('inStockType')?.value || 'Desktop';
+      idInput.value = this.generateNextInStockAssetId(type);
+    }
+
+    onInStockTypeChange() {
+      const typeSelect = document.getElementById('inStockType');
+      const type = typeSelect ? typeSelect.value : 'Desktop';
+      const idInput = document.getElementById('inStockAssetId');
+      if (idInput) {
+        idInput.value = this.generateNextInStockAssetId(type);
+      }
+      const monitorInput = document.getElementById('inStockMonitor');
+      if (monitorInput) {
+        if (type === 'Laptop') {
+          monitorInput.value = 'Laptop Built-in Screen';
+        } else if (monitorInput.value === 'Laptop Built-in Screen') {
+          monitorInput.value = 'DELL 19.5 inch';
+        }
+      }
+    }
+
+    openInStockEntry() {
+      this.navigateTo('non-assigned');
+      setTimeout(() => {
+        const card = document.getElementById('inStockSystemCard');
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          card.style.transition = 'box-shadow 0.3s ease, border-color 0.3s ease';
+          card.style.boxShadow = '0 0 0 4px rgba(37,99,235,0.3)';
+          card.style.borderColor = '#2563eb';
+          setTimeout(() => {
+            card.style.boxShadow = '';
+            card.style.borderColor = '#bfdbfe';
+          }, 2200);
+        }
+        const cpuInput = document.getElementById('inStockCpu');
+        if (cpuInput) cpuInput.focus();
+      }, 100);
+    }
+
+    toggleInStockFormCollapse() {
+      const content = document.getElementById('inStockFormContent');
+      const btn = document.getElementById('inStockCollapseBtn');
+      if (!content) return;
+      if (content.style.display === 'none') {
+        content.style.display = 'block';
+        if (btn) btn.textContent = 'Collapse ▴';
+      } else {
+        content.style.display = 'none';
+        if (btn) btn.textContent = 'Expand ▾';
+      }
+    }
+
+    resetInStockForm() {
+      const form = document.getElementById('addInStockSystemForm');
+      if (form) form.reset();
+      const typeSelect = document.getElementById('inStockType');
+      if (typeSelect) typeSelect.value = 'Desktop';
+      this.refreshNextInStockAssetId(true);
+      const ramInput = document.getElementById('inStockRam');
+      if (ramInput) ramInput.value = '8 DDR3';
+      const ssdInput = document.getElementById('inStockSsd');
+      if (ssdInput) ssdInput.value = '240GB SSD';
+      const hddInput = document.getElementById('inStockHdd');
+      if (hddInput) hddInput.value = 'None';
+      const monitorInput = document.getElementById('inStockMonitor');
+      if (monitorInput) monitorInput.value = 'DELL 19.5 inch';
+      const osInput = document.getElementById('inStockOs');
+      if (osInput) osInput.value = 'Ubuntu 24.04';
+      const locInput = document.getElementById('inStockLocation');
+      if (locInput) locInput.value = '1ST FLOOR';
+      const condSelect = document.getElementById('inStockCondition');
+      if (condSelect) condSelect.value = 'Good';
+    }
+
+    saveInStockSystem(assignImmediately = false) {
+      const type = document.getElementById('inStockType')?.value || 'Desktop';
+      const assetId = document.getElementById('inStockAssetId')?.value?.trim();
+      const serialNumber = document.getElementById('inStockSerial')?.value?.trim() || '';
+      const cpu = document.getElementById('inStockCpu')?.value?.trim();
+      const ram = document.getElementById('inStockRam')?.value?.trim();
+      const ssd = document.getElementById('inStockSsd')?.value?.trim() || '';
+      const hdd = document.getElementById('inStockHdd')?.value?.trim() || 'None';
+      const monitor = document.getElementById('inStockMonitor')?.value?.trim() || '';
+      const model = document.getElementById('inStockModel')?.value?.trim() || '';
+      const os = document.getElementById('inStockOs')?.value?.trim() || (type === 'Desktop' ? 'Ubuntu 24.04' : 'Windows 11 Pro');
+      const condition = document.getElementById('inStockCondition')?.value || 'Good';
+      const location = document.getElementById('inStockLocation')?.value?.trim() || '1ST FLOOR';
+      const ipAddress = document.getElementById('inStockIpAddress')?.value?.trim() || '';
+      const warrantyEnd = document.getElementById('inStockWarrantyEnd')?.value || '';
+      const remark = document.getElementById('inStockRemark')?.value?.trim() || '';
+
+      if (!assetId) {
+        Utils.showToast('Validation Error', 'Please specify an Asset ID for the In-Stock system.', 'error');
+        document.getElementById('inStockAssetId')?.focus();
+        return;
+      }
+      if (!cpu) {
+        Utils.showToast('Validation Error', 'Please enter CPU configuration (e.g. i5 10th GEN, i7 13700).', 'error');
+        document.getElementById('inStockCpu')?.focus();
+        return;
+      }
+      if (!ram) {
+        Utils.showToast('Validation Error', 'Please enter RAM memory (e.g. 8 DDR3, 16GB DDR4).', 'error');
+        document.getElementById('inStockRam')?.focus();
+        return;
+      }
+
+      const exists = (store.data.assets || []).some(a => a.id && a.id.toLowerCase() === assetId.toLowerCase());
+      if (exists) {
+        Utils.showToast('Duplicate Asset ID', `An asset with ID "${assetId}" already exists. Please pick a unique ID.`, 'error');
+        document.getElementById('inStockAssetId')?.focus();
+        return;
+      }
+
+      const defaultSerial = `00:e0:4c:d4:${Math.floor(10 + Math.random() * 89).toString(16)}:${Math.floor(10 + Math.random() * 89).toString(16)}`;
+      const defaultHostname = `${type.substring(0, 3).toUpperCase()}-STOCK-${Math.floor(100 + Math.random() * 900)}`;
+
+      const newAsset = {
+        id: assetId,
+        type: type,
+        user: '',
+        team: 'IT Stock',
+        tl: 'Sundar Sir',
+        doa: '-',
+        workStatus: 'In Stock',
+        status: 'Non-Assigned',
+        cpu: cpu,
+        ram: ram,
+        hdd: hdd || 'None',
+        ssd: ssd || 'None',
+        monitor: monitor || (type === 'Laptop' ? 'Laptop Built-in Screen' : 'None'),
+        serialNumber: serialNumber || defaultSerial,
+        hostname: defaultHostname,
+        ipAddress: ipAddress || 'DHCP',
+        os: os,
+        location: location,
+        oldUsername: 'None',
+        assignedDate: '',
+        condition: condition,
+        warrantyEnd: warrantyEnd || '',
+        warrantyType: 'Full System',
+        remark: (remark ? remark + ' | ' : '') + (model ? `Model: ${model}` : 'Registered directly into In-Stock inventory'),
+        userExitDate: '',
+        availableDate: new Date().toISOString().substring(0, 10),
+        isRecentlySaved: true
+      };
+
+      store.data.assets.unshift(newAsset);
+      store.addActivity(`Added In-Stock System: ${newAsset.id} (${newAsset.cpu})`, newAsset.id, 'IT Admin', 'Success');
+      store.save();
+
+      this.updateDashboardMetrics();
+      this.renderNonAssignedView();
+      if (this.currentView === 'all-assets') this.renderAllAssetsTable();
+      this.renderSwapSystemPage();
+
+      if (assignImmediately) {
+        Utils.showToast('In-Stock System Registered', `${newAsset.id} added to Stock! Opening immediate assignment...`, 'info');
+        this.resetInStockForm();
+        this.openQuickAssignModal(newAsset.id);
+      } else {
+        Utils.showToast('In-Stock System Added', `${newAsset.id} (${newAsset.type}) successfully registered into Available Stock Pool!`, 'success');
+        this.resetInStockForm();
+      }
     }
 
     /* ==========================================================================
@@ -6971,6 +7170,25 @@ Remarks: ${r.remark || 'None'}`);
     filterNonAssigned(type = 'all') {
       app.nonAssignedTypeFilter = type;
       app.renderNonAssignedView();
+    },
+
+    openInStockEntry() {
+      app.openInStockEntry();
+    },
+    refreshNextInStockAssetId(force = false) {
+      app.refreshNextInStockAssetId(force);
+    },
+    onInStockTypeChange() {
+      app.onInStockTypeChange();
+    },
+    saveInStockSystem(assignImmediately = false) {
+      app.saveInStockSystem(assignImmediately);
+    },
+    resetInStockForm() {
+      app.resetInStockForm();
+    },
+    toggleInStockFormCollapse() {
+      app.toggleInStockFormCollapse();
     },
 
     // Modal Control

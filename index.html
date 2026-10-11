@@ -536,6 +536,10 @@
                 <span class="quick-btn-icon">+</span>
                 <span>Add New User</span>
               </button>
+              <button class="quick-btn" onclick="window.ITApp.openInStockEntry()" title="Enter new hardware into In-Stock inventory pool">
+                <span class="quick-btn-icon">📦</span>
+                <span>In-Stock Entry</span>
+              </button>
               <button class="quick-btn" onclick="window.ITApp.navTo('non-assigned')">
                 <span class="quick-btn-icon">⚡</span>
                 <span>Assign System</span>
@@ -1266,9 +1270,9 @@
             </button>
             <span style="font-size:0.86rem; color:var(--text-muted); font-weight:600;">Inventory Pool: Available Systems & Spare Hardware</span>
           </div>
-          <!-- Non-Assigned Stock Card in Image 2 Style -->
-          <div style="margin-bottom: 20px; max-width: 360px;">
-            <div class="metric-card" style="--card-accent: #0284c7;" onclick="window.ITApp.filterNonAssigned('all')" title="Click to view all non-assigned inventory">
+          <!-- Non-Assigned Stock Summary & Quick Action Header -->
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; gap: 16px; flex-wrap: wrap;">
+            <div class="metric-card" style="--card-accent: #0284c7; min-width: 320px; margin: 0;" onclick="window.ITApp.filterNonAssigned('all')" title="Click to view all non-assigned inventory">
               <div class="metric-top">
                 <span class="metric-title">NON-ASSIGNED SYSTEM</span>
                 <div class="metric-icon-wrap" style="--icon-bg:#f0f9ff; --icon-color:#0284c7;">📦</div>
@@ -1283,6 +1287,188 @@
                 <span class="metric-trend trend-up">⚡ In Stock</span>
               </div>
             </div>
+
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+              <button class="btn btn-primary" onclick="window.ITApp.openInStockEntry()" style="display:inline-flex; align-items:center; gap:8px; font-weight:700; padding:9px 18px; box-shadow:0 2px 10px rgba(37,99,235,0.25);" title="Jump to In-Stock System Entry Form">
+                <span>➕</span>
+                <span>Enter In-Stock System</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- ==================================================================
+               IN-STOCK SYSTEM ENTRY & HARDWARE SPECIFICATION CARD
+               ================================================================== -->
+          <div class="form-card" id="inStockSystemCard" style="margin-bottom: 24px; border: 1px solid #bfdbfe; box-shadow: 0 4px 18px rgba(37,99,235,0.06);">
+            <div class="section-header-row" style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 18px;">
+              <div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <h2 style="font-size:1.22rem; font-weight:700; color:var(--text-main); margin:0;">📦 In-Stock Hardware Entry &amp; System Specification</h2>
+                  <span class="badge" style="background:#eff6ff; color:#2563eb; font-weight:700; font-size:0.75rem; border:1px solid #bfdbfe;">⚡ Direct In-Stock Pool</span>
+                </div>
+                <p style="color:var(--text-muted); font-size:0.83rem; margin-top:3px; margin-bottom:0;">
+                  Enter newly arrived or spare hardware into the In-Stock inventory (CPU, RAM, SSD, HDD, Monitor, Peripherals). Store in available pool or assign directly to an employee.
+                </p>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.resetInStockForm()">🔄 Reset</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.toggleInStockFormCollapse()" id="inStockCollapseBtn">Collapse ▴</button>
+              </div>
+            </div>
+
+            <form id="addInStockSystemForm" onsubmit="event.preventDefault(); window.ITApp.saveInStockSystem(false);">
+              <div id="inStockFormContent">
+                <div class="form-grid-3" style="row-gap: 16px;">
+                  <!-- 1. System Type -->
+                  <div class="form-group">
+                    <label class="form-label">Asset Type <span class="req">*</span></label>
+                    <select class="form-control" name="inStockType" id="inStockType" onchange="window.ITApp.onInStockTypeChange()" required>
+                      <option value="Desktop" selected>🖥️ Desktop</option>
+                      <option value="Laptop">💻 Laptop</option>
+                      <option value="Server">🖥️ Server / Workstation</option>
+                    </select>
+                  </div>
+
+                  <!-- 2. Asset ID -->
+                  <div class="form-group">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <label class="form-label" style="margin-bottom:0;">Asset ID / Tag <span class="req">*</span></label>
+                      <a href="javascript:void(0)" onclick="window.ITApp.refreshNextInStockAssetId(true)" style="font-size:0.72rem; color:var(--primary); font-weight:600; text-decoration:none;">🔄 Next ID</a>
+                    </div>
+                    <input type="text" class="form-control" name="inStockAssetId" id="inStockAssetId" placeholder="e.g. PIX_DSK_45" required autocomplete="off">
+                  </div>
+
+                  <!-- 3. Serial / MAC Address -->
+                  <div class="form-group">
+                    <label class="form-label">Serial Number / MAC Address</label>
+                    <input type="text" class="form-control" name="inStockSerial" id="inStockSerial" placeholder="e.g. 00:e0:4c:d4:7f:88 or SN-9024" autocomplete="off">
+                  </div>
+
+                  <!-- 4. CPU Configuration (MANDATORY & DETAILED) -->
+                  <div class="form-group">
+                    <label class="form-label">CPU Configuration <span class="req">*</span></label>
+                    <input type="text" class="form-control" name="inStockCpu" id="inStockCpu" placeholder="e.g. i5 10th GEN, i7 13700, Ryzen 5 5600G" required list="inStockCpuOptions" autocomplete="off">
+                    <datalist id="inStockCpuOptions">
+                      <option value="i3 2nd Gen">
+                      <option value="i3 10th Gen">
+                      <option value="i5 4th Gen">
+                      <option value="i5 6th GEN">
+                      <option value="i5 7th GEN">
+                      <option value="i5 10th GEN">
+                      <option value="i5 12th Gen">
+                      <option value="i7 12th Gen">
+                      <option value="i7 13th Gen">
+                      <option value="Intel Core i5">
+                      <option value="Intel Core i7-13700 3.4GHz">
+                      <option value="AMD Ryzen 5 5600G">
+                      <option value="AMD Ryzen 7 5800X">
+                      <option value="Apple M2">
+                      <option value="Apple M3 Pro">
+                    </datalist>
+                  </div>
+
+                  <!-- 5. RAM Memory -->
+                  <div class="form-group">
+                    <label class="form-label">RAM Memory <span class="req">*</span></label>
+                    <input type="text" class="form-control" name="inStockRam" id="inStockRam" placeholder="e.g. 8 DDR3, 16GB DDR4, 32GB DDR5" required list="ramOptionsList" autocomplete="off" value="8 DDR3">
+                  </div>
+
+                  <!-- 6. SSD Storage -->
+                  <div class="form-group">
+                    <label class="form-label">Hard Disk - SSD</label>
+                    <input type="text" class="form-control" name="inStockSsd" id="inStockSsd" placeholder="e.g. 240GB SSD, 512GB NVMe M.2" list="ssdOptionsList" autocomplete="off" value="240GB SSD">
+                  </div>
+
+                  <!-- 7. HDD Storage -->
+                  <div class="form-group">
+                    <label class="form-label">Hard Disk - HDD</label>
+                    <input type="text" class="form-control" name="inStockHdd" id="inStockHdd" placeholder="e.g. None or 500GB HDD, 1TB HDD" list="hddOptionsList" autocomplete="off" value="None">
+                  </div>
+
+                  <!-- 8. Monitor Model -->
+                  <div class="form-group">
+                    <label class="form-label">Monitor / Display Model</label>
+                    <input type="text" class="form-control" name="inStockMonitor" id="inStockMonitor" placeholder="e.g. DELL 19.5 inch, DELL 22 inch FHD, Samsung 24 inch" list="inStockMonitorOptions" autocomplete="off">
+                    <datalist id="inStockMonitorOptions">
+                      <option value="DELL 19.5 inch">
+                      <option value="DELL 22 inch">
+                      <option value="Dell P2422H 24&quot; FHD IPS">
+                      <option value="Samsung 21&quot; inch">
+                      <option value="Samsung 24 inch">
+                      <option value="LAPTOP - LENOVO - IDEAPAD3">
+                      <option value="Laptop Built-in Screen">
+                    </datalist>
+                  </div>
+
+                  <!-- 9. Motherboard / System Model -->
+                  <div class="form-group">
+                    <label class="form-label">Motherboard / Brand Model</label>
+                    <input type="text" class="form-control" name="inStockModel" id="inStockModel" placeholder="e.g. Dell OptiPlex 7090 / Lenovo IdeaPad 3 / Custom Assembly" autocomplete="off">
+                  </div>
+
+                  <!-- 10. Operating System -->
+                  <div class="form-group">
+                    <label class="form-label">Operating System</label>
+                    <input type="text" class="form-control" name="inStockOs" id="inStockOs" placeholder="e.g. Ubuntu 24.04, Windows 11 Pro" list="osOptionsList" value="Ubuntu 24.04">
+                  </div>
+
+                  <!-- 11. Hardware Condition -->
+                  <div class="form-group">
+                    <label class="form-label">Physical / Hardware Condition</label>
+                    <select class="form-control" name="inStockCondition" id="inStockCondition">
+                      <option value="Good" selected>🟢 Good Working</option>
+                      <option value="Brand New">✨ Brand New (Sealed)</option>
+                      <option value="Refurbished">🔄 Refurbished / Serviced</option>
+                      <option value="Issue">⚠️ Minor Issue / Maintenance</option>
+                    </select>
+                  </div>
+
+                  <!-- 12. Storage Location -->
+                  <div class="form-group">
+                    <label class="form-label">Floor / Inventory Location</label>
+                    <input type="text" class="form-control" name="inStockLocation" id="inStockLocation" placeholder="e.g. 1ST FLOOR, 2ND FLOOR, Server Room" value="1ST FLOOR">
+                  </div>
+
+                  <!-- 13. IP Address / Network -->
+                  <div class="form-group">
+                    <label class="form-label">IP Address (Optional)</label>
+                    <input type="text" class="form-control" name="inStockIpAddress" id="inStockIpAddress" placeholder="e.g. 192.168.6.xxx or DHCP">
+                  </div>
+
+                  <!-- 14. Warranty Expiry -->
+                  <div class="form-group">
+                    <label class="form-label">Warranty Valid Until</label>
+                    <input type="date" class="form-control" name="inStockWarrantyEnd" id="inStockWarrantyEnd">
+                  </div>
+
+                  <!-- 15. Remarks / Spec Notes -->
+                  <div class="form-group">
+                    <label class="form-label">Remarks / Hardware Notes</label>
+                    <input type="text" class="form-control" name="inStockRemark" id="inStockRemark" placeholder="e.g. KB: Logitech, Mouse: Logitech / Received from vendor">
+                  </div>
+                </div>
+
+                <!-- Action Buttons Bar -->
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding-top:16px; border-top:1px solid var(--border-color); flex-wrap:wrap; gap:12px;">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:0.8rem; color:var(--text-muted);">
+                      💡 <em>Choose whether to keep device in <strong>In-Stock Pool</strong> or <strong>Assign directly to an employee</strong>.</em>
+                    </span>
+                  </div>
+                  <div style="display:flex; gap:12px; align-items:center;">
+                    <button type="button" class="btn btn-secondary" onclick="window.ITApp.resetInStockForm()">
+                      ✕ Clear
+                    </button>
+                    <button type="button" class="btn btn-secondary" style="background:#f0fdf4; color:#15803d; border-color:#bbf7d0; font-weight:700; display:inline-flex; align-items:center; gap:6px;" onclick="window.ITApp.saveInStockSystem(false)">
+                      💾 Save to In-Stock Pool
+                    </button>
+                    <button type="button" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; box-shadow:0 2px 8px rgba(37,99,235,0.28);" onclick="window.ITApp.saveInStockSystem(true)">
+                      ⚡ Save &amp; Assign to User Now
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
           </div>
 
           <div class="section-card">
