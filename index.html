@@ -15,9 +15,9 @@
 </head>
 <body>
   <!-- ======================================================================
-       AUTHENTICATION & LOGIN SCREEN (DEFAULT BYPASSED - ALLOW DIRECT ACCESS)
+       AUTHENTICATION & LOGIN SCREEN
        ====================================================================== -->
-  <div class="login-wrapper" id="loginWrapper" style="display: none;">
+  <div class="login-wrapper" id="loginWrapper">
     <div class="login-card">
       <div class="login-header">
         <div class="login-logo-box">⚡</div>
@@ -30,29 +30,13 @@
         <span id="loginErrorMessage">Invalid username or password.</span>
       </div>
 
-      <!-- Clear Default Login Helper Banner -->
-      <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:12px 14px; margin-bottom:16px; font-size:0.83rem; color:#1e40af; display:flex; align-items:center; justify-content:space-between; gap:10px;">
-        <div>
-          <div style="font-weight:700; color:#1e3a8a; display:flex; align-items:center; gap:6px;">
-            <span>🔑</span> <span>Default Admin Credentials:</span>
-          </div>
-          <div style="font-size:0.79rem; color:#2563eb; margin-top:2px;">
-            User: <strong style="color:#1e40af; background:#dbeafe; padding:1px 6px; border-radius:4px;">admin</strong> &nbsp;|&nbsp; 
-            Password: <strong style="color:#1e40af; background:#dbeafe; padding:1px 6px; border-radius:4px;">admin</strong>
-          </div>
-        </div>
-        <button type="button" class="btn btn-primary btn-sm" onclick="window.ITApp.fillRolePreset('admin', true)" style="white-space:nowrap; font-weight:700; padding:6px 12px; font-size:0.76rem; box-shadow:0 2px 8px rgba(37,99,235,0.25);">
-          ⚡ 1-Click Login
-        </button>
-      </div>
-
       <form id="portalLoginForm" onsubmit="window.ITApp.handleLoginSubmit(event)">
         <!-- Username -->
         <div class="login-form-group">
           <label class="login-label" for="loginUsername">Username / ID</label>
           <div class="login-input-wrapper">
             <span class="login-input-icon">👤</span>
-            <input type="text" class="login-input" id="loginUsername" placeholder="e.g. admin or support" required autofocus autocomplete="username" value="admin">
+            <input type="text" class="login-input" id="loginUsername" placeholder="e.g. admin or support" required autofocus autocomplete="username">
           </div>
         </div>
 
@@ -61,7 +45,7 @@
           <label class="login-label" for="loginPassword">Password</label>
           <div class="login-input-wrapper">
             <span class="login-input-icon">🔒</span>
-            <input type="password" class="login-input" id="loginPassword" placeholder="Enter password" required autocomplete="current-password" value="admin">
+            <input type="password" class="login-input" id="loginPassword" placeholder="Enter password" required autocomplete="current-password">
             <button type="button" class="login-pwd-toggle" id="loginPwdToggle" onclick="window.ITApp.togglePasswordVisibility()" title="Show/Hide Password" aria-label="Toggle password visibility">
               👁️
             </button>
@@ -88,15 +72,15 @@
       <div class="login-presets-section">
         <div class="login-presets-title">Quick Role Credentials</div>
         <div class="login-preset-btns">
-          <button type="button" class="login-preset-btn" onclick="window.ITApp.fillRolePreset('admin', true)" title="Fill & Sign In as Admin">
+          <button type="button" class="login-preset-btn" onclick="window.ITApp.fillRolePreset('admin')" title="Fill Admin Credentials">
             <span>👑 Admin</span>
             <span class="login-preset-badge">admin / admin</span>
           </button>
-          <button type="button" class="login-preset-btn" onclick="window.ITApp.fillRolePreset('support', true)" title="Fill & Sign In as IT Support">
+          <button type="button" class="login-preset-btn" onclick="window.ITApp.fillRolePreset('support')" title="Fill IT Support Credentials">
             <span>🛠️ IT Support</span>
             <span class="login-preset-badge">support / support</span>
           </button>
-          <button type="button" class="login-preset-btn" onclick="window.ITApp.fillRolePreset('viewer', true)" title="Fill & Sign In as Viewer">
+          <button type="button" class="login-preset-btn" onclick="window.ITApp.fillRolePreset('viewer')" title="Fill Read-Only Viewer Credentials">
             <span>👁️ Viewer</span>
             <span class="login-preset-badge">viewer / viewer</span>
           </button>
@@ -105,7 +89,7 @@
     </div>
   </div>
 
-  <div class="app-container" id="appContainer" style="display: flex;">
+  <div class="app-container" id="appContainer" style="display: none;">
     <!-- ======================================================================
          LEFT SIDEBAR NAVIGATION
          ====================================================================== -->
@@ -552,10 +536,6 @@
                 <span class="quick-btn-icon">+</span>
                 <span>Add New User</span>
               </button>
-              <button class="quick-btn" onclick="window.ITApp.openInStockEntry()" title="Enter new hardware into In-Stock inventory pool">
-                <span class="quick-btn-icon">📦</span>
-                <span>In-Stock Entry</span>
-              </button>
               <button class="quick-btn" onclick="window.ITApp.navTo('non-assigned')">
                 <span class="quick-btn-icon">⚡</span>
                 <span>Assign System</span>
@@ -995,9 +975,9 @@
                   </h3>
 
                   <div class="form-group" style="margin-bottom: 12px;">
-                    <label class="form-label">Select Active User System (In Stock / User Exit) <span class="req">*</span></label>
+                    <label class="form-label">Select Active User System <span class="req">*</span></label>
                     <select class="form-control" id="swapOldUserSelect" required>
-                      <!-- Populated dynamically: In Stock & User Exit only -->
+                      <!-- Populated dynamically -->
                     </select>
                   </div>
 
@@ -1161,6 +1141,62 @@
             </form>
           </div>
 
+          <!-- Swap History Table -->
+          <div class="section-card" id="historicalSwapSectionCard">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+              <div>
+                <h3 class="section-heading-title" style="margin-bottom: 4px;">📜 Historical System Swap Transactions</h3>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin:0;">
+                  Filter by date, view transaction extracts, or click Edit to load details directly into System Swap Facility
+                </p>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="window.ITApp.extractSwapDataCSV()" style="display:inline-flex; align-items:center; gap:6px; font-weight:600; padding:6px 12px;">
+                  📥 Extract Data (CSV)
+                </button>
+              </div>
+            </div>
+
+            <!-- Date Filter & Extract Bar -->
+            <div style="margin-bottom:14px; background:var(--bg-subtle); padding:10px 14px; border-radius:var(--radius-md); border:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+              <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span style="font-size:0.82rem; font-weight:600; color:var(--text-main);">📅 Date Range:</span>
+                  <input type="date" class="form-control" id="swapDateFilterFrom" style="font-size:0.8rem; padding:4px 8px; width:auto;" onchange="window.ITApp.filterSwapHistory()" title="From Date">
+                  <span style="font-size:0.8rem; color:var(--text-muted);">to</span>
+                  <input type="date" class="form-control" id="swapDateFilterTo" style="font-size:0.8rem; padding:4px 8px; width:auto;" onchange="window.ITApp.filterSwapHistory()" title="To Date">
+                </div>
+                <input type="text" class="form-control" id="swapHistorySearch" placeholder="Search ID, user, asset, reason..." style="font-size:0.8rem; padding:5px 12px; width:220px;" oninput="window.ITApp.filterSwapHistory()">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.resetSwapDateFilter()" style="padding:4px 10px; font-size:0.78rem;">
+                  Clear
+                </button>
+              </div>
+              <div id="swapRecordCount" style="font-size:0.82rem; color:var(--text-muted); font-weight:600;">
+                Showing transactions
+              </div>
+            </div>
+
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Swap ID</th>
+                    <th>New User / Team</th>
+                    <th>New Asset ID</th>
+                    <th>Old User</th>
+                    <th>Old Asset ID</th>
+                    <th>Reason</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th style="min-width:145px; text-align:center;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="swapHistoryTableBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
         <!-- ==================================================================
@@ -1168,22 +1204,22 @@
              ================================================================== -->
         <div class="view-panel" id="view-all-assets">
           <!-- TOP SUMMARY / STATS BAR WITH BACK BUTTON & FILTERED LIVE COUNT -->
-          <div class="assets-filter-summary-bar">
+          <div class="assets-filter-summary-bar" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; padding:12px 18px; background:var(--card-bg, #ffffff); border-radius:10px; border:1px solid var(--border-color, #e2e8f0); box-shadow:0 1px 4px rgba(0,0,0,0.05); flex-wrap:wrap; gap:10px;">
             <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
               <!-- Back to Dashboard button -->
-              <button class="btn-back-dashboard" onclick="window.ITApp.navTo('dashboard')" title="Return to Dashboard">
-                ← Dashboard
+              <button class="btn btn-secondary btn-sm" onclick="window.ITApp.navTo('dashboard')" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; cursor:pointer;" title="Return to Dashboard">
+                ← Back to Dashboard
               </button>
               
-              <div style="height:20px; width:1px; background:#cbd5e1;"></div>
+              <div style="height:20px; width:1px; background:var(--border-color, #cbd5e1);"></div>
 
               <!-- Filtered Live Count Badge -->
               <div style="display:inline-flex; align-items:center; gap:8px;">
-                <span style="font-size:0.86rem; color:#475569; font-weight:700;">Filtered Result:</span>
-                <span class="badge filter-count-badge-main" id="assetsFilterCountBadge">
+                <span style="font-size:0.88rem; color:var(--text-main, #334155); font-weight:700;">Filtered Result:</span>
+                <span class="badge" id="assetsFilterCountBadge" style="background:#2563eb; color:#ffffff; font-size:1.05rem; font-weight:800; padding:4px 14px; border-radius:20px; box-shadow:0 2px 8px rgba(37,99,235,0.3);">
                   44 Total
                 </span>
-                <span id="assetsFilterBreakdownText" style="font-size:0.84rem; color:#64748b; font-weight:600;">
+                <span id="assetsFilterBreakdownText" style="font-size:0.84rem; color:var(--text-muted, #64748b); font-weight:600;">
                   (All 44 Fleet Items)
                 </span>
               </div>
@@ -1198,10 +1234,7 @@
 
           <div class="table-toolbar">
             <div class="toolbar-left">
-              <div class="search-box-wrapper">
-                <span class="search-box-icon" aria-hidden="true">🔍</span>
-                <input type="text" class="filter-input" id="assetsSearchInput" placeholder="Search asset ID, CPU, RAM, HDD, user..." oninput="window.ITApp.renderAllAssetsTable()">
-              </div>
+              <input type="text" class="filter-input" id="assetsSearchInput" placeholder="Search asset ID, CPU, RAM, HDD, user..." oninput="window.ITApp.renderAllAssetsTable()">
               
               <select class="filter-input" id="assetsTypeFilter" onchange="window.ITApp.renderAllAssetsTable()">
                 <option value="all">All Types</option>
@@ -1234,7 +1267,7 @@
               </select>
 
               <!-- Inline live counter in toolbar -->
-              <span id="assetsToolbarCountPill">
+              <span id="assetsToolbarCountPill" style="display:inline-flex; align-items:center; font-size:0.82rem; font-weight:700; color:#2563eb; background:#eff6ff; border:1px solid #bfdbfe; padding:4px 10px; border-radius:6px; white-space:nowrap;">
                 44 Assets
               </span>
             </div>
@@ -1286,9 +1319,9 @@
             </button>
             <span style="font-size:0.86rem; color:var(--text-muted); font-weight:600;">Inventory Pool: Available Systems & Spare Hardware</span>
           </div>
-          <!-- Non-Assigned Stock Summary & Quick Action Header -->
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; gap: 16px; flex-wrap: wrap;">
-            <div class="metric-card" style="--card-accent: #0284c7; min-width: 320px; margin: 0;" onclick="window.ITApp.filterNonAssigned('all')" title="Click to view all non-assigned inventory">
+          <!-- Non-Assigned Stock Card in Image 2 Style -->
+          <div style="margin-bottom: 20px; max-width: 360px;">
+            <div class="metric-card" style="--card-accent: #0284c7;" onclick="window.ITApp.filterNonAssigned('all')" title="Click to view all non-assigned inventory">
               <div class="metric-top">
                 <span class="metric-title">NON-ASSIGNED SYSTEM</span>
                 <div class="metric-icon-wrap" style="--icon-bg:#f0f9ff; --icon-color:#0284c7;">📦</div>
@@ -1303,188 +1336,6 @@
                 <span class="metric-trend trend-up">⚡ In Stock</span>
               </div>
             </div>
-
-            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-              <button class="btn btn-primary" onclick="window.ITApp.openInStockEntry()" style="display:inline-flex; align-items:center; gap:8px; font-weight:700; padding:9px 18px; box-shadow:0 2px 10px rgba(37,99,235,0.25);" title="Jump to In-Stock System Entry Form">
-                <span>➕</span>
-                <span>Enter In-Stock System</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- ==================================================================
-               IN-STOCK SYSTEM ENTRY & HARDWARE SPECIFICATION CARD
-               ================================================================== -->
-          <div class="form-card" id="inStockSystemCard" style="margin-bottom: 24px; border: 1px solid #bfdbfe; box-shadow: 0 4px 18px rgba(37,99,235,0.06);">
-            <div class="section-header-row" style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 18px;">
-              <div>
-                <div style="display:flex; align-items:center; gap:10px;">
-                  <h2 style="font-size:1.22rem; font-weight:700; color:var(--text-main); margin:0;">📦 In-Stock Hardware Entry &amp; System Specification</h2>
-                  <span class="badge" style="background:#eff6ff; color:#2563eb; font-weight:700; font-size:0.75rem; border:1px solid #bfdbfe;">⚡ Direct In-Stock Pool</span>
-                </div>
-                <p style="color:var(--text-muted); font-size:0.83rem; margin-top:3px; margin-bottom:0;">
-                  Enter newly arrived or spare hardware into the In-Stock inventory (CPU, RAM, SSD, HDD, Monitor, Peripherals). Store in available pool or assign directly to an employee.
-                </p>
-              </div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.resetInStockForm()">🔄 Reset</button>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.toggleInStockFormCollapse()" id="inStockCollapseBtn">Collapse ▴</button>
-              </div>
-            </div>
-
-            <form id="addInStockSystemForm" onsubmit="event.preventDefault(); window.ITApp.saveInStockSystem(false);">
-              <div id="inStockFormContent">
-                <div class="form-grid-3" style="row-gap: 16px;">
-                  <!-- 1. System Type -->
-                  <div class="form-group">
-                    <label class="form-label">Asset Type <span class="req">*</span></label>
-                    <select class="form-control" name="inStockType" id="inStockType" onchange="window.ITApp.onInStockTypeChange()" required>
-                      <option value="Desktop" selected>🖥️ Desktop</option>
-                      <option value="Laptop">💻 Laptop</option>
-                      <option value="Server">🖥️ Server / Workstation</option>
-                    </select>
-                  </div>
-
-                  <!-- 2. Asset ID -->
-                  <div class="form-group">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                      <label class="form-label" style="margin-bottom:0;">Asset ID / Tag <span class="req">*</span></label>
-                      <a href="javascript:void(0)" onclick="window.ITApp.refreshNextInStockAssetId(true)" style="font-size:0.72rem; color:var(--primary); font-weight:600; text-decoration:none;">🔄 Next ID</a>
-                    </div>
-                    <input type="text" class="form-control" name="inStockAssetId" id="inStockAssetId" placeholder="e.g. PIX_DSK_45" required autocomplete="off">
-                  </div>
-
-                  <!-- 3. Serial / MAC Address -->
-                  <div class="form-group">
-                    <label class="form-label">Serial Number / MAC Address</label>
-                    <input type="text" class="form-control" name="inStockSerial" id="inStockSerial" placeholder="e.g. 00:e0:4c:d4:7f:88 or SN-9024" autocomplete="off">
-                  </div>
-
-                  <!-- 4. CPU Configuration (MANDATORY & DETAILED) -->
-                  <div class="form-group">
-                    <label class="form-label">CPU Configuration <span class="req">*</span></label>
-                    <input type="text" class="form-control" name="inStockCpu" id="inStockCpu" placeholder="e.g. i5 10th GEN, i7 13700, Ryzen 5 5600G" required list="inStockCpuOptions" autocomplete="off">
-                    <datalist id="inStockCpuOptions">
-                      <option value="i3 2nd Gen">
-                      <option value="i3 10th Gen">
-                      <option value="i5 4th Gen">
-                      <option value="i5 6th GEN">
-                      <option value="i5 7th GEN">
-                      <option value="i5 10th GEN">
-                      <option value="i5 12th Gen">
-                      <option value="i7 12th Gen">
-                      <option value="i7 13th Gen">
-                      <option value="Intel Core i5">
-                      <option value="Intel Core i7-13700 3.4GHz">
-                      <option value="AMD Ryzen 5 5600G">
-                      <option value="AMD Ryzen 7 5800X">
-                      <option value="Apple M2">
-                      <option value="Apple M3 Pro">
-                    </datalist>
-                  </div>
-
-                  <!-- 5. RAM Memory -->
-                  <div class="form-group">
-                    <label class="form-label">RAM Memory <span class="req">*</span></label>
-                    <input type="text" class="form-control" name="inStockRam" id="inStockRam" placeholder="e.g. 8 DDR3, 16GB DDR4, 32GB DDR5" required list="ramOptionsList" autocomplete="off" value="8 DDR3">
-                  </div>
-
-                  <!-- 6. SSD Storage -->
-                  <div class="form-group">
-                    <label class="form-label">Hard Disk - SSD</label>
-                    <input type="text" class="form-control" name="inStockSsd" id="inStockSsd" placeholder="e.g. 240GB SSD, 512GB NVMe M.2" list="ssdOptionsList" autocomplete="off" value="240GB SSD">
-                  </div>
-
-                  <!-- 7. HDD Storage -->
-                  <div class="form-group">
-                    <label class="form-label">Hard Disk - HDD</label>
-                    <input type="text" class="form-control" name="inStockHdd" id="inStockHdd" placeholder="e.g. None or 500GB HDD, 1TB HDD" list="hddOptionsList" autocomplete="off" value="None">
-                  </div>
-
-                  <!-- 8. Monitor Model -->
-                  <div class="form-group">
-                    <label class="form-label">Monitor / Display Model</label>
-                    <input type="text" class="form-control" name="inStockMonitor" id="inStockMonitor" placeholder="e.g. DELL 19.5 inch, DELL 22 inch FHD, Samsung 24 inch" list="inStockMonitorOptions" autocomplete="off">
-                    <datalist id="inStockMonitorOptions">
-                      <option value="DELL 19.5 inch">
-                      <option value="DELL 22 inch">
-                      <option value="Dell P2422H 24&quot; FHD IPS">
-                      <option value="Samsung 21&quot; inch">
-                      <option value="Samsung 24 inch">
-                      <option value="LAPTOP - LENOVO - IDEAPAD3">
-                      <option value="Laptop Built-in Screen">
-                    </datalist>
-                  </div>
-
-                  <!-- 9. Motherboard / System Model -->
-                  <div class="form-group">
-                    <label class="form-label">Motherboard / Brand Model</label>
-                    <input type="text" class="form-control" name="inStockModel" id="inStockModel" placeholder="e.g. Dell OptiPlex 7090 / Lenovo IdeaPad 3 / Custom Assembly" autocomplete="off">
-                  </div>
-
-                  <!-- 10. Operating System -->
-                  <div class="form-group">
-                    <label class="form-label">Operating System</label>
-                    <input type="text" class="form-control" name="inStockOs" id="inStockOs" placeholder="e.g. Ubuntu 24.04, Windows 11 Pro" list="osOptionsList" value="Ubuntu 24.04">
-                  </div>
-
-                  <!-- 11. Hardware Condition -->
-                  <div class="form-group">
-                    <label class="form-label">Physical / Hardware Condition</label>
-                    <select class="form-control" name="inStockCondition" id="inStockCondition">
-                      <option value="Good" selected>🟢 Good Working</option>
-                      <option value="Brand New">✨ Brand New (Sealed)</option>
-                      <option value="Refurbished">🔄 Refurbished / Serviced</option>
-                      <option value="Issue">⚠️ Minor Issue / Maintenance</option>
-                    </select>
-                  </div>
-
-                  <!-- 12. Storage Location -->
-                  <div class="form-group">
-                    <label class="form-label">Floor / Inventory Location</label>
-                    <input type="text" class="form-control" name="inStockLocation" id="inStockLocation" placeholder="e.g. 1ST FLOOR, 2ND FLOOR, Server Room" value="1ST FLOOR">
-                  </div>
-
-                  <!-- 13. IP Address / Network -->
-                  <div class="form-group">
-                    <label class="form-label">IP Address (Optional)</label>
-                    <input type="text" class="form-control" name="inStockIpAddress" id="inStockIpAddress" placeholder="e.g. 192.168.6.xxx or DHCP">
-                  </div>
-
-                  <!-- 14. Warranty Expiry -->
-                  <div class="form-group">
-                    <label class="form-label">Warranty Valid Until</label>
-                    <input type="date" class="form-control" name="inStockWarrantyEnd" id="inStockWarrantyEnd">
-                  </div>
-
-                  <!-- 15. Remarks / Spec Notes -->
-                  <div class="form-group">
-                    <label class="form-label">Remarks / Hardware Notes</label>
-                    <input type="text" class="form-control" name="inStockRemark" id="inStockRemark" placeholder="e.g. KB: Logitech, Mouse: Logitech / Received from vendor">
-                  </div>
-                </div>
-
-                <!-- Action Buttons Bar -->
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding-top:16px; border-top:1px solid var(--border-color); flex-wrap:wrap; gap:12px;">
-                  <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:0.8rem; color:var(--text-muted);">
-                      💡 <em>Choose whether to keep device in <strong>In-Stock Pool</strong> or <strong>Assign directly to an employee</strong>.</em>
-                    </span>
-                  </div>
-                  <div style="display:flex; gap:12px; align-items:center;">
-                    <button type="button" class="btn btn-secondary" onclick="window.ITApp.resetInStockForm()">
-                      ✕ Clear
-                    </button>
-                    <button type="button" class="btn btn-secondary" style="background:#f0fdf4; color:#15803d; border-color:#bbf7d0; font-weight:700; display:inline-flex; align-items:center; gap:6px;" onclick="window.ITApp.saveInStockSystem(false)">
-                      💾 Save to In-Stock Pool
-                    </button>
-                    <button type="button" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; box-shadow:0 2px 8px rgba(37,99,235,0.28);" onclick="window.ITApp.saveInStockSystem(true)">
-                      ⚡ Save &amp; Assign to User Now
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </form>
           </div>
 
           <div class="section-card">
@@ -1517,7 +1368,7 @@
                     <th>HDD</th>
                     <th>SSD</th>
                     <th>Serial Number</th>
-                    <th style="min-width:130px;">User Status</th>
+                    <th style="min-width:130px;">User Exit Date</th>
                     <th>Condition</th>
                     <th>Quick Action</th>
                   </tr>
@@ -2108,23 +1959,22 @@
 
   <!-- 1. View Asset Details Modal -->
   <div class="modal-overlay" id="modalViewAsset">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-header" id="viewAssetModalHeader">
-        <div class="spec-modal-brand">
-          <div class="spec-modal-icon-badge" aria-hidden="true">🖥️</div>
-          <div>
-            <h3 class="spec-modal-title">Hardware Asset Specification</h3>
-          </div>
-          <div id="viewAssetModalMeta" class="spec-modal-meta-row" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+    <div class="modal-dialog modal-lg" style="max-width: 820px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);">
+      <div class="modal-header" id="viewAssetModalHeader" style="padding: 16px 24px; border-bottom: 1px solid var(--border-color); background: #ffffff; display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <h3 class="modal-title" style="margin: 0; font-size: 1.12rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+            <span>🖥️</span> Hardware Asset Specification
+          </h3>
+          <div id="viewAssetModalMeta" class="spec-modal-meta-row" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <!-- Populated dynamically: Asset ID badge, Device Type badge, Status badge -->
           </div>
         </div>
-        <button class="modal-close-btn" data-close-modal title="Close Popup" aria-label="Close">✕</button>
+        <button class="modal-close-btn" data-close-modal title="Close Popup" aria-label="Close" style="font-size: 1.3rem; line-height: 1; padding: 4px 8px;">✕</button>
       </div>
-      <div class="modal-body" id="viewAssetModalBody" style="padding: 18px 22px; background: #ffffff; max-height: 74vh; overflow-y: auto;"></div>
-      <div class="modal-footer" id="viewAssetModalFooter">
-        <button class="btn btn-secondary" data-close-modal type="button" style="padding: 7px 18px; font-weight: 600;">Close</button>
-        <button class="btn btn-primary" id="viewAssetEditModalBtn" type="button" style="padding: 7px 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">✏️ Edit Specifications</button>
+      <div class="modal-body" id="viewAssetModalBody" style="padding: 20px 24px; background: #ffffff; max-height: 72vh; overflow-y: auto;"></div>
+      <div class="modal-footer" id="viewAssetModalFooter" style="position: sticky; bottom: 0; background: #ffffff; border-top: 1px solid var(--border-color); padding: 14px 24px; display: flex; justify-content: flex-end; gap: 12px; z-index: 10;">
+        <button class="btn btn-secondary" data-close-modal type="button" style="padding: 8px 18px; font-weight: 600;">Close</button>
+        <button class="btn btn-primary" id="viewAssetEditModalBtn" type="button" style="padding: 8px 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">✏️ Edit Specifications</button>
       </div>
     </div>
   </div>
@@ -2341,126 +2191,70 @@
                 </label>
                 <input type="date" class="form-control" name="editExitDate" id="editAssetExitDate" title="Employee exit date for returned/available system">
               </div>
-
-              <!-- Available Date -->
-              <div class="form-group" id="groupEditAssetAvailableDate">
-                <label class="form-label" style="display:flex; align-items:center; gap:6px;">
-                  <span>Available Date</span>
-                  <span style="font-size:0.7rem; color:#d97706; font-weight:600; background:#fffbeb; padding:1px 6px; border-radius:4px; border:1px solid #fde68a;">Stock Availability</span>
-                </label>
-                <input type="date" class="form-control" name="editAvailableDate" id="editAssetAvailableDate" title="Date system became available in inventory">
-              </div>
             </div>
           </div>
 
           <!-- Section 3: Warranty & Hardware Lifecycle Management -->
-          <div class="modal-section-box warranty-dashboard-container">
-            <div class="warranty-section-topbar">
-              <div class="warranty-brand-group">
-                <svg class="warranty-brand-shield-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                  <path d="M12 22V2c-4 0-8 3-8 3v7c0 6 8 10 8 10z" fill="rgba(37,99,235,0.18)"/>
-                </svg>
-                <span class="warranty-brand-title">Warranty &amp; Hardware Lifecycle</span>
-                <span class="warranty-brand-sub">Component Lifecycle Tracking</span>
-              </div>
+          <div class="modal-section-box">
+            <div class="modal-section-title">
+              <span>🛡️ Warranty &amp; Hardware Lifecycle</span>
+              <span class="badge-tag">Dates • Coverage • Components</span>
             </div>
+            <div class="form-grid-3">
+              <!-- Assigned Date -->
+              <div class="form-group">
+                <label class="form-label">Assigned Date</label>
+                <input type="date" class="form-control" name="editAssignedDate" id="editAssetAssignedDate" onchange="window.ITApp.handleAssignedDateSync(this.value)">
+              </div>
 
-            <!-- Hidden Fields for State & Form Compatibility -->
-            <input type="hidden" name="editAssignedDate" id="editAssetAssignedDate">
-            <input type="hidden" id="editAssetWarrantyStatus" value="date">
-            <input type="hidden" name="editWarrantyEnd" id="editAssetWarrantyEnd">
-            <input type="hidden" name="editWarrantyType" id="editAssetWarrantyType" value="Full System">
+              <!-- Warranty Coverage -->
+              <div class="form-group">
+                <label class="form-label">Warranty Coverage</label>
+                <select class="form-control" id="editAssetWarrantyStatus" onchange="window.ITApp.toggleWarrantyMode(this.value)">
+                  <option value="date">Date (Under Warranty)</option>
+                  <option value="non-warranty">Non-Warranty (No Warranty)</option>
+                </select>
+              </div>
+
+              <!-- Warranty Expiry Date -->
+              <div class="form-group" id="editAssetWarrantyDateWrap">
+                <label class="form-label">Warranty Expiry Date</label>
+                <input type="date" class="form-control" name="editWarrantyEnd" id="editAssetWarrantyEnd" onchange="window.ITApp.handleMasterWarrantyEndSync(this.value)">
+              </div>
+
+              <!-- Backward Compatibility Hook for editAssetWarrantyType -->
+              <input type="hidden" name="editWarrantyType" id="editAssetWarrantyType" value="Full System">
+            </div>
 
             <!-- Redesigned Warranty Component / Type Dynamic Section -->
             <div class="warranty-component-section" id="warrantyComponentSection">
               <div class="warranty-component-header">
-                <div class="warranty-header-left" style="display: none;">
+                <div class="warranty-header-left">
                   <div class="warranty-section-label">
-                    <svg class="warranty-icon-svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                      <path d="M12 22V2c-4 0-8 3-8 3v7c0 6 8 10 8 10z" fill="rgba(37,99,235,0.2)"/>
-                    </svg>
-                    <span>Individual Hardware Component Warranties</span>
-                    <span class="warranty-count-pill" id="warrantyComponentsCountBadge">0 Components</span>
+                    <span class="warranty-icon">🛡️</span>
+                    <span>Warranty Component / Type</span>
+                    <span class="warranty-count-pill" id="warrantyComponentsCountBadge">1 Component</span>
                   </div>
                   <p class="warranty-subtitle">
-                    Manage individual hardware component warranties (RAM, SSD, HDD, Monitor, etc.) with independent assigned dates, expiry dates, and smart status badges.
+                    Track individual component warranties (RAM, SSD, Monitor, etc.) with independent assigned dates, expiry dates, and smart status badges.
                   </p>
                 </div>
                 <div class="warranty-header-right">
-                  <button type="button" class="btn-add-component" id="btnAddWarrantyComponent" onclick="window.ITApp.addWarrantyComponentRow()" aria-label="Add new hardware component">
-                    <span class="btn-add-icon">+</span> Add Component
+                  <button type="button" class="btn-add-component" id="btnAddWarrantyComponent" onclick="window.ITApp.addWarrantyComponentRow()">
+                    <span style="font-size:1.15rem; line-height:1; font-weight:700;">+</span> Add Component
                   </button>
                 </div>
               </div>
 
-              <!-- 4 Dynamic KPI Summary Cards -->
-              <div class="warranty-kpi-grid" id="warrantyKpiGrid" style="display: none;">
-                <div class="warranty-kpi-card kpi-total">
-                  <div class="kpi-icon-wrap kpi-blue">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                      <line x1="8" y1="21" x2="16" y2="21"></line>
-                      <line x1="12" y1="17" x2="12" y2="21"></line>
-                    </svg>
-                  </div>
-                  <div class="kpi-info">
-                    <span class="kpi-label">Total Components</span>
-                    <span class="kpi-value" id="kpiTotalComponents">0</span>
-                  </div>
-                </div>
-
-                <div class="warranty-kpi-card kpi-active">
-                  <div class="kpi-icon-wrap kpi-green">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                      <polyline points="9 12 11 14 15 10"></polyline>
-                    </svg>
-                  </div>
-                  <div class="kpi-info">
-                    <span class="kpi-label">Under Warranty</span>
-                    <span class="kpi-value" id="kpiActiveWarranty">0</span>
-                  </div>
-                </div>
-
-                <div class="warranty-kpi-card kpi-expiring">
-                  <div class="kpi-icon-wrap kpi-amber">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                  </div>
-                  <div class="kpi-info">
-                    <span class="kpi-label">Expiring Soon</span>
-                    <span class="kpi-value" id="kpiExpiringSoon">0</span>
-                  </div>
-                </div>
-
-                <div class="warranty-kpi-card kpi-expired">
-                  <div class="kpi-icon-wrap kpi-red">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <line x1="15" y1="9" x2="9" y2="15"></line>
-                      <line x1="9" y1="9" x2="15" y2="15"></line>
-                    </svg>
-                  </div>
-                  <div class="kpi-info">
-                    <span class="kpi-label">Expired / No Warranty</span>
-                    <span class="kpi-value" id="kpiExpiredWarranty">0</span>
-                  </div>
-                </div>
-              </div>
-
               <!-- Dynamic Component Rows List -->
-              <div class="warranty-components-list" id="warrantyComponentsContainer" role="region" aria-label="Component warranties list">
+              <div class="warranty-components-list" id="warrantyComponentsContainer">
                 <!-- Dynamically populated component rows -->
               </div>
             </div>
 
             <!-- Remarks / Notes -->
             <div class="form-group" style="margin-top: 14px;">
-              <label class="form-label" for="editAssetRemark">Admin Notes / Hardware Upgrade History</label>
+              <label class="form-label">Admin Notes / Hardware Upgrade History</label>
               <input type="text" class="form-control" name="editRemark" id="editAssetRemark" placeholder="e.g. Upgraded RAM to 32GB and added Dell 27-inch 4K monitor.">
             </div>
           </div>
@@ -3427,35 +3221,6 @@
           </button>
         </div>
       </form>
-    </div>
-  <!-- Modal: Confirm Delete Hardware Component -->
-  <div class="modal-backdrop" id="modalConfirmDeleteComponent" style="display: none; z-index: 10050;" role="dialog" aria-modal="true" aria-labelledby="deleteComponentModalTitle">
-    <div class="modal-dialog modal-sm" style="max-width: 440px; margin: 80px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.08);">
-      <div class="modal-content" style="border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
-        <div class="modal-header" style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; background: #ffffff;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="width: 36px; height: 36px; border-radius: 8px; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 1.15rem;">
-              🗑️
-            </div>
-            <div>
-              <h4 id="deleteComponentModalTitle" style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #0f172a;">Delete Component</h4>
-              <span style="font-size: 0.75rem; color: #64748b;">Confirm removal from lifecycle tracking</span>
-            </div>
-          </div>
-          <button type="button" class="btn-close" onclick="window.ITApp.cancelDeleteWarrantyComponent()" aria-label="Close modal" style="background: none; border: none; font-size: 1.35rem; color: #94a3b8; cursor: pointer; line-height: 1; padding: 4px;">&times;</button>
-        </div>
-        <div class="modal-body" style="padding: 20px; font-size: 0.9rem; color: #334155; line-height: 1.5; background: #ffffff;">
-          <p id="deleteComponentModalMessage" style="margin: 0;">Are you sure you want to remove this hardware component from lifecycle tracking?</p>
-          <div style="margin-top: 12px; padding: 10px 14px; background: #fff5f5; border: 1px solid #fee2e2; border-radius: 8px; font-size: 0.8rem; color: #b91c1c; display: flex; align-items: center; gap: 8px;">
-            <span>⚠️</span>
-            <span>This component row will be permanently removed when you save.</span>
-          </div>
-        </div>
-        <div class="modal-footer" style="padding: 14px 20px; background: #f8fafc; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 10px;">
-          <button type="button" class="btn btn-secondary" onclick="window.ITApp.cancelDeleteWarrantyComponent()" style="padding: 8px 16px; font-size: 0.85rem; font-weight: 600; border-radius: 6px; cursor: pointer;">Cancel</button>
-          <button type="button" class="btn btn-danger" id="btnConfirmDeleteComponentAction" onclick="window.ITApp.confirmDeleteWarrantyComponent()" style="padding: 8px 18px; font-size: 0.85rem; font-weight: 600; border-radius: 6px; background: #dc2626; color: white; border: 1px solid #b91c1c; cursor: pointer; box-shadow: 0 1px 2px rgba(220, 38, 38, 0.2);">Delete Component</button>
-        </div>
-      </div>
     </div>
   </div>
 
