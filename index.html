@@ -1141,62 +1141,6 @@
             </form>
           </div>
 
-          <!-- Swap History Table -->
-          <div class="section-card" id="historicalSwapSectionCard">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
-              <div>
-                <h3 class="section-heading-title" style="margin-bottom: 4px;">📜 Historical System Swap Transactions</h3>
-                <p style="font-size:0.8rem; color:var(--text-muted); margin:0;">
-                  Filter by date, view transaction extracts, or click Edit to load details directly into System Swap Facility
-                </p>
-              </div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <button type="button" class="btn btn-outline-primary btn-sm" onclick="window.ITApp.extractSwapDataCSV()" style="display:inline-flex; align-items:center; gap:6px; font-weight:600; padding:6px 12px;">
-                  📥 Extract Data (CSV)
-                </button>
-              </div>
-            </div>
-
-            <!-- Date Filter & Extract Bar -->
-            <div style="margin-bottom:14px; background:var(--bg-subtle); padding:10px 14px; border-radius:var(--radius-md); border:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-              <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                <div style="display:flex; align-items:center; gap:6px;">
-                  <span style="font-size:0.82rem; font-weight:600; color:var(--text-main);">📅 Date Range:</span>
-                  <input type="date" class="form-control" id="swapDateFilterFrom" style="font-size:0.8rem; padding:4px 8px; width:auto;" onchange="window.ITApp.filterSwapHistory()" title="From Date">
-                  <span style="font-size:0.8rem; color:var(--text-muted);">to</span>
-                  <input type="date" class="form-control" id="swapDateFilterTo" style="font-size:0.8rem; padding:4px 8px; width:auto;" onchange="window.ITApp.filterSwapHistory()" title="To Date">
-                </div>
-                <input type="text" class="form-control" id="swapHistorySearch" placeholder="Search ID, user, asset, reason..." style="font-size:0.8rem; padding:5px 12px; width:220px;" oninput="window.ITApp.filterSwapHistory()">
-                <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.resetSwapDateFilter()" style="padding:4px 10px; font-size:0.78rem;">
-                  Clear
-                </button>
-              </div>
-              <div id="swapRecordCount" style="font-size:0.82rem; color:var(--text-muted); font-weight:600;">
-                Showing transactions
-              </div>
-            </div>
-
-            <div class="table-container">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Swap ID</th>
-                    <th>New User / Team</th>
-                    <th>New Asset ID</th>
-                    <th>Old User</th>
-                    <th>Old Asset ID</th>
-                    <th>Reason</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th style="min-width:145px; text-align:center;">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="swapHistoryTableBody">
-                  <!-- Populated by JS -->
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
 
         <!-- ==================================================================
