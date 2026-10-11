@@ -969,8 +969,7 @@
     },
 
     isAuthenticated() {
-      return localStorage.getItem(this.AUTH_TOKEN_KEY) === 'true' ||
-        sessionStorage.getItem(this.AUTH_TOKEN_KEY) === 'true';
+      return true; // Always allow direct access
     },
 
     getCurrentUser() {
@@ -980,38 +979,26 @@
           return JSON.parse(stored);
         } catch (e) { }
       }
-      return null;
+      return {
+        username: 'admin',
+        displayName: 'Sundar Pichai',
+        role: 'Admin',
+        avatar: 'SP',
+        permissions: { manageUsers: true, editAssets: true, deleteAssets: true, assignSystems: true, systemSwap: true, repairs: true, warranty: true, network: true, antivirus: true, reports: true, settings: true, exportImport: true },
+        loginTime: new Date().toISOString()
+      };
     },
 
     login(username, password, remember = true) {
-      const u = (username || '').trim().toLowerCase();
-      const p = (password || '').trim();
-
-      // Normalize username aliases
-      let accountKey = u;
-      if (['admin', 'administrator', 'admin@apextech.com', 'admin@pixel.com', 'admin@pixelwebsolutions.com', 'sundar', 'sundarpichai', 'root'].includes(u)) {
-        accountKey = 'admin';
-      } else if (['support', 'itsupport', 'it_support', 'tech', 'helpdesk'].includes(u)) {
+      const u = (username || 'admin').trim().toLowerCase();
+      let accountKey = 'admin';
+      if (['support', 'itsupport', 'tech'].includes(u)) {
         accountKey = 'support';
-      } else if (['viewer', 'audit', 'guest', 'user'].includes(u)) {
+      } else if (['viewer', 'guest', 'audit'].includes(u)) {
         accountKey = 'viewer';
       }
 
-      const account = this.ACCOUNTS[accountKey];
-      if (!account) {
-        return { success: false, message: 'Invalid username. Please use "admin", "support", or "viewer".' };
-      }
-
-      // Check allowed passwords (case-insensitive & common admin variations)
-      const allowedPasswords = Array.isArray(account.password) ? account.password.map(x => x.toLowerCase()) : [account.password.toLowerCase()];
-      allowedPasswords.push('admin', 'admin123', 'admin@123', 'admin1234', 'password', '123456', 'pixel', 'pixel123', 'sundar', account.username.toLowerCase());
-
-      const isPasswordValid = allowedPasswords.includes(p.toLowerCase()) || (accountKey === 'admin' && p.length > 0);
-
-      if (!isPasswordValid) {
-        return { success: false, message: 'Incorrect password. Default password is: admin' };
-      }
-
+      const account = this.ACCOUNTS[accountKey] || this.ACCOUNTS['admin'];
       const sessionData = {
         username: account.username,
         displayName: account.displayName,
@@ -1021,13 +1008,10 @@
         loginTime: new Date().toISOString()
       };
 
-      if (remember) {
+      try {
         localStorage.setItem(this.AUTH_TOKEN_KEY, 'true');
         localStorage.setItem(this.USER_INFO_KEY, JSON.stringify(sessionData));
-      } else {
-        sessionStorage.setItem(this.AUTH_TOKEN_KEY, 'true');
-        sessionStorage.setItem(this.USER_INFO_KEY, JSON.stringify(sessionData));
-      }
+      } catch (e) { }
 
       return { success: true, user: sessionData };
     },
@@ -1064,22 +1048,11 @@
       const loginWrapper = document.getElementById('loginWrapper');
       const appContainer = document.getElementById('appContainer');
 
-      if (!AuthService.isAuthenticated()) {
-        // Not authenticated: hide dashboard, display login screen
-        if (appContainer) appContainer.style.display = 'none';
-        if (loginWrapper) {
-          loginWrapper.style.display = 'flex';
-          const userInput = document.getElementById('loginUsername');
-          if (userInput) setTimeout(() => userInput.focus(), 150);
-        }
-        return;
-      }
-
-      // User is authenticated: hide login screen, show dashboard
+      // Direct Access Allowed: hide login screen, show dashboard
       if (loginWrapper) loginWrapper.style.display = 'none';
       if (appContainer) appContainer.style.display = 'flex';
 
-      const user = AuthService.getCurrentUser() || { displayName: 'Sundar Pichai', role: 'Admin', avatar: 'SP' };
+      const user = AuthService.getCurrentUser();
       this.applyRole(user.role, user);
 
       this.renderCurrentView();
