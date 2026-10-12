@@ -1368,7 +1368,7 @@
                     <th>HDD</th>
                     <th>SSD</th>
                     <th>Serial Number</th>
-                    <th style="min-width:130px;">User Exit Date</th>
+                    <th style="min-width:130px;">User Status</th>
                     <th>Condition</th>
                     <th>Quick Action</th>
                   </tr>
@@ -2195,66 +2195,113 @@
           </div>
 
           <!-- Section 3: Warranty & Hardware Lifecycle Management -->
-          <div class="modal-section-box">
-            <div class="modal-section-title">
-              <span>🛡️ Warranty &amp; Hardware Lifecycle</span>
-              <span class="badge-tag">Dates • Coverage • Components</span>
+          <div class="modal-section-box warranty-dashboard-container">
+            <div class="warranty-section-topbar">
+              <div class="warranty-brand-group">
+                <svg class="warranty-brand-shield-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <path d="M12 22V2c-4 0-8 3-8 3v7c0 6 8 10 8 10z" fill="rgba(37,99,235,0.18)"/>
+                </svg>
+                <span class="warranty-brand-title">Warranty &amp; Hardware Lifecycle</span>
+                <span class="warranty-brand-sub">Component Lifecycle Tracking</span>
+              </div>
             </div>
-            <div class="form-grid-3">
-              <!-- Assigned Date -->
-              <div class="form-group">
-                <label class="form-label">Assigned Date</label>
-                <input type="date" class="form-control" name="editAssignedDate" id="editAssetAssignedDate" onchange="window.ITApp.handleAssignedDateSync(this.value)">
-              </div>
 
-              <!-- Warranty Coverage -->
-              <div class="form-group">
-                <label class="form-label">Warranty Coverage</label>
-                <select class="form-control" id="editAssetWarrantyStatus" onchange="window.ITApp.toggleWarrantyMode(this.value)">
-                  <option value="date">Date (Under Warranty)</option>
-                  <option value="non-warranty">Non-Warranty (No Warranty)</option>
-                </select>
-              </div>
-
-              <!-- Warranty Expiry Date -->
-              <div class="form-group" id="editAssetWarrantyDateWrap">
-                <label class="form-label">Warranty Expiry Date</label>
-                <input type="date" class="form-control" name="editWarrantyEnd" id="editAssetWarrantyEnd" onchange="window.ITApp.handleMasterWarrantyEndSync(this.value)">
-              </div>
-
-              <!-- Backward Compatibility Hook for editAssetWarrantyType -->
-              <input type="hidden" name="editWarrantyType" id="editAssetWarrantyType" value="Full System">
-            </div>
+            <!-- Hidden Fields for State & Form Compatibility -->
+            <input type="hidden" name="editAssignedDate" id="editAssetAssignedDate">
+            <input type="hidden" id="editAssetWarrantyStatus" value="date">
+            <input type="hidden" name="editWarrantyEnd" id="editAssetWarrantyEnd">
+            <input type="hidden" name="editWarrantyType" id="editAssetWarrantyType" value="Full System">
 
             <!-- Redesigned Warranty Component / Type Dynamic Section -->
             <div class="warranty-component-section" id="warrantyComponentSection">
               <div class="warranty-component-header">
-                <div class="warranty-header-left">
+                <div class="warranty-header-left" style="display: none;">
                   <div class="warranty-section-label">
-                    <span class="warranty-icon">🛡️</span>
-                    <span>Warranty Component / Type</span>
-                    <span class="warranty-count-pill" id="warrantyComponentsCountBadge">1 Component</span>
+                    <svg class="warranty-icon-svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                      <path d="M12 22V2c-4 0-8 3-8 3v7c0 6 8 10 8 10z" fill="rgba(37,99,235,0.2)"/>
+                    </svg>
+                    <span>Individual Hardware Component Warranties</span>
+                    <span class="warranty-count-pill" id="warrantyComponentsCountBadge">0 Components</span>
                   </div>
                   <p class="warranty-subtitle">
-                    Track individual component warranties (RAM, SSD, Monitor, etc.) with independent assigned dates, expiry dates, and smart status badges.
+                    Manage individual hardware component warranties (RAM, SSD, HDD, Monitor, etc.) with independent assigned dates, expiry dates, and smart status badges.
                   </p>
                 </div>
                 <div class="warranty-header-right">
-                  <button type="button" class="btn-add-component" id="btnAddWarrantyComponent" onclick="window.ITApp.addWarrantyComponentRow()">
-                    <span style="font-size:1.15rem; line-height:1; font-weight:700;">+</span> Add Component
+                  <button type="button" class="btn-add-component" id="btnAddWarrantyComponent" onclick="window.ITApp.addWarrantyComponentRow()" aria-label="Add new hardware component">
+                    <span class="btn-add-icon">+</span> Add Component
                   </button>
                 </div>
               </div>
 
+              <!-- 4 Dynamic KPI Summary Cards -->
+              <div class="warranty-kpi-grid" id="warrantyKpiGrid" style="display: none;">
+                <div class="warranty-kpi-card kpi-total">
+                  <div class="kpi-icon-wrap kpi-blue">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                      <line x1="8" y1="21" x2="16" y2="21"></line>
+                      <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                  </div>
+                  <div class="kpi-info">
+                    <span class="kpi-label">Total Components</span>
+                    <span class="kpi-value" id="kpiTotalComponents">0</span>
+                  </div>
+                </div>
+
+                <div class="warranty-kpi-card kpi-active">
+                  <div class="kpi-icon-wrap kpi-green">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                      <polyline points="9 12 11 14 15 10"></polyline>
+                    </svg>
+                  </div>
+                  <div class="kpi-info">
+                    <span class="kpi-label">Under Warranty</span>
+                    <span class="kpi-value" id="kpiActiveWarranty">0</span>
+                  </div>
+                </div>
+
+                <div class="warranty-kpi-card kpi-expiring">
+                  <div class="kpi-icon-wrap kpi-amber">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                  </div>
+                  <div class="kpi-info">
+                    <span class="kpi-label">Expiring Soon</span>
+                    <span class="kpi-value" id="kpiExpiringSoon">0</span>
+                  </div>
+                </div>
+
+                <div class="warranty-kpi-card kpi-expired">
+                  <div class="kpi-icon-wrap kpi-red">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="15" y1="9" x2="9" y2="15"></line>
+                      <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                  </div>
+                  <div class="kpi-info">
+                    <span class="kpi-label">Expired / No Warranty</span>
+                    <span class="kpi-value" id="kpiExpiredWarranty">0</span>
+                  </div>
+                </div>
+              </div>
+
               <!-- Dynamic Component Rows List -->
-              <div class="warranty-components-list" id="warrantyComponentsContainer">
+              <div class="warranty-components-list" id="warrantyComponentsContainer" role="region" aria-label="Component warranties list">
                 <!-- Dynamically populated component rows -->
               </div>
             </div>
 
             <!-- Remarks / Notes -->
             <div class="form-group" style="margin-top: 14px;">
-              <label class="form-label">Admin Notes / Hardware Upgrade History</label>
+              <label class="form-label" for="editAssetRemark">Admin Notes / Hardware Upgrade History</label>
               <input type="text" class="form-control" name="editRemark" id="editAssetRemark" placeholder="e.g. Upgraded RAM to 32GB and added Dell 27-inch 4K monitor.">
             </div>
           </div>
@@ -3221,6 +3268,35 @@
           </button>
         </div>
       </form>
+    </div>
+  <!-- Modal: Confirm Delete Hardware Component -->
+  <div class="modal-backdrop" id="modalConfirmDeleteComponent" style="display: none; z-index: 10050;" role="dialog" aria-modal="true" aria-labelledby="deleteComponentModalTitle">
+    <div class="modal-dialog modal-sm" style="max-width: 440px; margin: 80px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.08);">
+      <div class="modal-content" style="border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+        <div class="modal-header" style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; background: #ffffff;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 36px; height: 36px; border-radius: 8px; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 1.15rem;">
+              🗑️
+            </div>
+            <div>
+              <h4 id="deleteComponentModalTitle" style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #0f172a;">Delete Component</h4>
+              <span style="font-size: 0.75rem; color: #64748b;">Confirm removal from lifecycle tracking</span>
+            </div>
+          </div>
+          <button type="button" class="btn-close" onclick="window.ITApp.cancelDeleteWarrantyComponent()" aria-label="Close modal" style="background: none; border: none; font-size: 1.35rem; color: #94a3b8; cursor: pointer; line-height: 1; padding: 4px;">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 20px; font-size: 0.9rem; color: #334155; line-height: 1.5; background: #ffffff;">
+          <p id="deleteComponentModalMessage" style="margin: 0;">Are you sure you want to remove this hardware component from lifecycle tracking?</p>
+          <div style="margin-top: 12px; padding: 10px 14px; background: #fff5f5; border: 1px solid #fee2e2; border-radius: 8px; font-size: 0.8rem; color: #b91c1c; display: flex; align-items: center; gap: 8px;">
+            <span>⚠️</span>
+            <span>This component row will be permanently removed when you save.</span>
+          </div>
+        </div>
+        <div class="modal-footer" style="padding: 14px 20px; background: #f8fafc; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" class="btn btn-secondary" onclick="window.ITApp.cancelDeleteWarrantyComponent()" style="padding: 8px 16px; font-size: 0.85rem; font-weight: 600; border-radius: 6px; cursor: pointer;">Cancel</button>
+          <button type="button" class="btn btn-danger" id="btnConfirmDeleteComponentAction" onclick="window.ITApp.confirmDeleteWarrantyComponent()" style="padding: 8px 18px; font-size: 0.85rem; font-weight: 600; border-radius: 6px; background: #dc2626; color: white; border: 1px solid #b91c1c; cursor: pointer; box-shadow: 0 1px 2px rgba(220, 38, 38, 0.2);">Delete Component</button>
+        </div>
+      </div>
     </div>
   </div>
 
