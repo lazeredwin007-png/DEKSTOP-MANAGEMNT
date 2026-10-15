@@ -55,7 +55,7 @@
         <!-- Remember Me Checkbox -->
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; font-size:0.8rem; color:#94a3b8;">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-            <input type="checkbox" id="loginRememberMe" checked style="accent-color:#2563eb; cursor:pointer;">
+            <input type="checkbox" id="loginRememberMe" aria-label="Remember session" checked style="accent-color:#2563eb; cursor:pointer;">
             <span>Remember session</span>
           </label>
           <span style="font-size:0.75rem; color:#64748b;">v2.6 Secure Auth</span>
@@ -399,7 +399,7 @@
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <input type="text" id="globalSearchInput" class="search-input" placeholder="Quick search assets, users, swaps, serials (Ctrl+K)..." autocomplete="off">
+            <input type="text" id="globalSearchInput" aria-label="Global Search Assets, Users, Devices" class="search-input" placeholder="Quick search assets, users, swaps, serials (Ctrl+K)..." autocomplete="off">
             <span class="search-badge" title="Press Ctrl+K to search">Ctrl+K</span>
           </div>
           <!-- Spotlight Search Dropdown -->
@@ -799,14 +799,14 @@
               <div class="form-grid-3">
                 <!-- 1. Name -->
                 <div class="form-group">
-                  <label class="form-label">Employee Name <span class="req">*</span></label>
+                  <label class="form-label" for="newUserNameInput">Employee Name <span class="req">*</span></label>
                   <input type="text" class="form-control" name="userName" id="newUserNameInput" placeholder="e.g. Arun Ramanathan" required autocomplete="off">
                   <div id="newUserNameError" class="input-error-msg" style="display:none;"></div>
                 </div>
 
                 <!-- 2. Team -->
                 <div class="form-group">
-                  <label class="form-label">Department / Team <span class="req">*</span></label>
+                  <label class="form-label" for="newUserTeamInput">Department / Team <span class="req">*</span></label>
                   <input type="text" class="form-control" name="userTeam" id="newUserTeamInput" placeholder="Enter department / team name..." required list="teamsDatalist" autocomplete="off" value="SYSTEM ADMIN">
                   <datalist id="teamsDatalist">
                     <option value="SYSTEM ADMIN">
@@ -821,7 +821,7 @@
 
                 <!-- Asset Type -->
                 <div class="form-group">
-                  <label class="form-label">Asset Type <span class="req">*</span></label>
+                  <label class="form-label" for="newUserAssetType">Asset Type <span class="req">*</span></label>
                   <input type="text" class="form-control" name="assetType" id="newUserAssetType" placeholder="Select or type Asset Type (Desktop, Laptop)..." required list="assetTypeList" autocomplete="off" value="Desktop">
                   <datalist id="assetTypeList">
                     <option value="Desktop">
@@ -831,13 +831,13 @@
 
                 <!-- 3. CPU Configuration -->
                 <div class="form-group">
-                  <label class="form-label">CPU Configuration <span class="req">*</span></label>
+                  <label class="form-label" for="newUserCpu">CPU Configuration <span class="req">*</span></label>
                   <input type="text" class="form-control" name="userCpu" id="newUserCpu" list="cpuPresetList" placeholder="e.g. Intel Core i7-13700 3.4GHz" required>
                 </div>
 
                 <!-- 4. RAM -->
                 <div class="form-group">
-                  <label class="form-label">RAM Memory <span class="req">*</span></label>
+                  <label class="form-label" for="newUserRam">RAM Memory <span class="req">*</span></label>
                   <input type="text" class="form-control" name="userRam" id="newUserRam" placeholder="e.g. 16GB DDR4, 32GB DDR5" required list="ramOptionsList" autocomplete="off" value="32GB DDR5">
                   <datalist id="ramOptionsList">
                     <option value="8GB DDR4">
@@ -851,7 +851,7 @@
 
                 <!-- 5. HDD -->
                 <div class="form-group">
-                  <label class="form-label">Hard Disk - HDD</label>
+                  <label class="form-label" for="newUserHdd">Hard Disk - HDD</label>
                   <input type="text" class="form-control" name="userHdd" id="newUserHdd" placeholder="e.g. 1TB HDD or None" list="hddOptionsList" autocomplete="off" value="None">
                   <datalist id="hddOptionsList">
                     <option value="None">
@@ -863,7 +863,7 @@
 
                 <!-- 6. SSD -->
                 <div class="form-group">
-                  <label class="form-label">Hard Disk - SSD <span class="req">*</span></label>
+                  <label class="form-label" for="newUserSsd">Hard Disk - SSD <span class="req">*</span></label>
                   <input type="text" class="form-control" name="userSsd" id="newUserSsd" placeholder="e.g. 512GB NVMe M.2" required list="ssdOptionsList" autocomplete="off" value="512GB NVMe M.2">
                   <datalist id="ssdOptionsList">
                     <option value="256GB NVMe">
@@ -875,14 +875,14 @@
 
                 <!-- 7. Monitor Model -->
                 <div class="form-group">
-                  <label class="form-label">Monitor Model</label>
+                  <label class="form-label" for="newUserMonitor">Monitor Model</label>
                   <input type="text" class="form-control" name="userMonitor" id="newUserMonitor" placeholder="e.g. Dell P2422H 24' FHD IPS / Dual Monitor">
                 </div>
 
                 <!-- 8. Old Username -->
                 <div class="form-group">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                    <label class="form-label" style="margin-bottom:0;">Old Username (If Replaced)</label>
+                    <label class="form-label" for="newUserOldUsername" style="margin-bottom:0;">Old Username (If Replaced)</label>
                     <span style="font-size:0.72rem; color:var(--primary-600); font-weight:600;">⚡ Auto-fills specs</span>
                   </div>
                   <input type="text" class="form-control" name="oldUsername" id="newUserOldUsername" placeholder="Type old user name to auto-fill specs..." list="oldUsernamesList" autocomplete="off">
@@ -892,19 +892,19 @@
 
                 <!-- 10. Assigned Date -->
                 <div class="form-group">
-                  <label class="form-label">Assigned Date <span class="req">*</span></label>
+                  <label class="form-label" for="newUserAssignedDate">Assigned Date <span class="req">*</span></label>
                   <input type="date" class="form-control" name="assignedDate" id="newUserAssignedDate" required>
                 </div>
 
                 <!-- Asset ID -->
                 <div class="form-group">
-                  <label class="form-label">Asset ID / Asset Tag</label>
+                  <label class="form-label" for="newUserAssetId">Asset ID / Asset Tag</label>
                   <input type="text" class="form-control" name="assetId" id="newUserAssetId" placeholder="Auto-generated if left blank (e.g. AST-DSK-1045)">
                 </div>
 
                 <!-- MAC Address -->
                 <div class="form-group">
-                  <label class="form-label">MAC Address</label>
+                  <label class="form-label" for="newUserSerialNumber">MAC Address</label>
                   <input type="text" class="form-control" name="serialNumber" id="newUserSerialNumber" placeholder="e.g. 00:7c:6c:83:44:74" autocomplete="off">
                 </div>
 
@@ -912,13 +912,13 @@
 
                 <!-- IP Address -->
                 <div class="form-group">
-                  <label class="form-label">IP Address</label>
+                  <label class="form-label" for="newUserIpAddress">IP Address</label>
                   <input type="text" class="form-control" name="ipAddress" id="newUserIpAddress" placeholder="e.g. 192.168.10.45 or DHCP">
                 </div>
 
                 <!-- Operating System -->
                 <div class="form-group">
-                  <label class="form-label">Operating System</label>
+                  <label class="form-label" for="newUserOs">Operating System</label>
                   <input type="text" class="form-control" name="operatingSystem" id="newUserOs" placeholder="e.g. Windows 11 Pro" list="osOptionsList" value="Windows 11 Pro">
                   <datalist id="osOptionsList">
                     <option value="Windows 11 Pro">
@@ -932,7 +932,7 @@
 
                 <!-- Office Location (Floor) -->
                 <div class="form-group">
-                  <label class="form-label">Office Location (Floor)</label>
+                  <label class="form-label" for="newUserOfficeLocation">Office Location (Floor)</label>
                   <input type="text" class="form-control" name="officeLocation" id="newUserOfficeLocation" placeholder="Select or type floor (Floor 1, Floor 2, Floor 3)..." list="floorOptionsList" autocomplete="off" value="Floor 1">
                   <datalist id="floorOptionsList">
                     <option value="Floor 1">
@@ -943,7 +943,7 @@
 
                 <!-- Employee Work Status -->
                 <div class="form-group">
-                  <label class="form-label">Employee Work Status <span class="req">*</span></label>
+                  <label class="form-label" for="assignedUsersSearch">Employee Work Status <span class="req">*</span></label>
                   <select class="form-control" name="workStatus" id="newUserWorkStatus" required>
                     <option value="">-- Select Work Status --</option>
                     <option value="Currently Working" selected>🟢 Currently Working</option>
@@ -1094,7 +1094,7 @@
 
                   <div class="form-group" style="margin-bottom: 12px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
-                      <label class="form-label" style="margin:0;">Select Active User System <span class="req">*</span></label>
+                      <label class="form-label" for="swapOldTeam" style="margin:0;">Select Active User System <span class="req">*</span></label>
                       <div class="swap-pool-filter-group" style="display:inline-flex; gap:4px; background:#f1f5f9; padding:2px; border-radius:6px; border:1px solid #cbd5e1;">
                         <button type="button" class="btn btn-xs swap-filter-pill is-active" id="btnFilterSwapPoolAll" onclick="window.ITApp.filterSwapOldSystems('all')" style="padding:2px 8px; font-size:0.72rem; border-radius:4px; font-weight:600; border:none; background:#2563eb; color:#ffffff; cursor:pointer;">All</button>
                         <button type="button" class="btn btn-xs swap-filter-pill" id="btnFilterSwapPoolInStock" onclick="window.ITApp.filterSwapOldSystems('instock')" style="padding:2px 8px; font-size:0.72rem; border-radius:4px; font-weight:600; border:none; background:transparent; color:#475569; cursor:pointer;">📦 In Stock</button>
@@ -1112,17 +1112,17 @@
                   </div>
 
                   <div class="form-group" style="margin-bottom: 12px;">
-                    <label class="form-label">Old Asset ID</label>
+                    <label class="form-label" for="swapOldAssetId">Old Asset ID</label>
                     <input type="text" class="form-control" name="swapOldAssetId" id="swapOldAssetId" readonly placeholder="Auto-populated">
                   </div>
 
                   <div class="form-group" style="margin-bottom: 12px;">
-                    <label class="form-label">Old System Specs Summary</label>
+                    <label class="form-label" for="swapOldDetails">Old System Specs Summary</label>
                     <input type="text" class="form-control" id="swapOldDetails" readonly placeholder="Auto-populated">
                   </div>
 
                   <div class="form-group">
-                    <label class="form-label">Old Username</label>
+                    <label class="form-label" for="swapOldUsername">Old Username</label>
                     <input type="text" class="form-control" name="swapOldUsername" id="swapOldUsername" readonly placeholder="Auto-populated">
                   </div>
                 </div>
@@ -1142,34 +1142,34 @@
                   </div>
 
                   <div class="form-group" style="margin-bottom: 12px;">
-                    <label class="form-label">New User Name <span class="req">*</span></label>
+                    <label class="form-label" for="swapNewUserInput">New User Name <span class="req">*</span></label>
                     <input type="text" class="form-control" name="swapNewUser" id="swapNewUserInput" placeholder="e.g. Vikram Seth (or New Employee)" required>
                   </div>
 
                   <div class="form-group" style="margin-bottom: 12px;">
-                    <label class="form-label">New Team <span class="req">*</span></label>
+                    <label class="form-label" for="swapNewTeamSelect">New Team <span class="req">*</span></label>
                     <input type="text" class="form-control" name="swapNewTeam" id="swapNewTeamSelect" placeholder="Enter department / team name..." required list="teamsDatalist" autocomplete="off">
                   </div>
 
                   <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom: 12px;">
                     <div class="form-group">
-                      <label class="form-label">Replacement Asset Type <span class="req">*</span></label>
+                      <label class="form-label" for="swapAssetTypeSelect">Replacement Asset Type <span class="req">*</span></label>
                       <input type="text" class="form-control" name="swapAssetType" id="swapAssetTypeSelect" placeholder="Select or type Asset Type..." required list="assetTypeList" autocomplete="off" value="Desktop">
                     </div>
                     <div class="form-group">
-                      <label class="form-label">New Asset ID</label>
+                      <label class="form-label" for="swapNewAssetId">New Asset ID</label>
                       <input type="text" class="form-control" name="swapNewAssetId" id="swapNewAssetId" placeholder="Leave empty for auto-tag">
                     </div>
                   </div>
 
                   <div class="form-group" style="margin-bottom: 12px;">
-                    <label class="form-label">New CPU Configuration <span class="req">*</span></label>
+                    <label class="form-label" for="swapCpuInput">New CPU Configuration <span class="req">*</span></label>
                     <input type="text" class="form-control" name="swapCpu" id="swapCpuInput" list="cpuPresetList" placeholder="e.g. Intel Core i7-13700 3.4GHz" required>
                   </div>
 
                   <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom: 12px;">
                     <div class="form-group">
-                      <label class="form-label">New RAM <span class="req">*</span></label>
+                      <label class="form-label" for="swapMonitorInput">New RAM <span class="req">*</span></label>
                       <select class="form-control" name="swapRam" id="swapRamSelect" required>
                         <option value="8GB DDR4">8GB DDR4</option>
                         <option value="16GB DDR4">16GB DDR4</option>
@@ -1215,7 +1215,7 @@
                   </div>
 
                   <div class="form-group">
-                    <label class="form-label">Assigned Date</label>
+                    <label class="form-label" for="swapAssignedDateInput">Assigned Date</label>
                     <input type="date" class="form-control" name="swapAssignedDate" id="swapAssignedDateInput">
                   </div>
                 </div>
@@ -1224,7 +1224,7 @@
               <!-- Additional Swap Parameters -->
               <div class="form-grid-3" style="margin-top: 20px;">
                 <div class="form-group">
-                  <label class="form-label">Swap Reason <span class="req">*</span></label>
+                  <label class="form-label" for="swapReasonInput">Swap Reason <span class="req">*</span></label>
                   <input type="text" class="form-control" name="swapReason" id="swapReasonInput" list="swapReasonPresets" placeholder="Enter swap reason (e.g. Performance Upgrade, Defective)..." required>
                   <datalist id="swapReasonPresets">
                     <option value="Performance Upgrade">
@@ -1238,11 +1238,11 @@
                   </datalist>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Swap Date</label>
+                  <label class="form-label" for="swapDateInput">Swap Date</label>
                   <input type="date" class="form-control" name="swapDate" id="swapDateInput">
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Swap Status</label>
+                  <label class="form-label" for="swapDateFilterFrom">Swap Status</label>
                   <select class="form-control" name="swapStatus">
                     <option value="Completed" selected>Completed &amp; Deployed</option>
                     <option value="Pending">Pending Setup</option>
@@ -1289,9 +1289,9 @@
                   <span style="font-size:0.82rem; font-weight:600; color:var(--text-main);">📅 Date Range:</span>
                   <input type="date" class="form-control" id="swapDateFilterFrom" style="font-size:0.8rem; padding:4px 8px; width:auto;" onchange="window.ITApp.filterSwapHistory()" title="From Date">
                   <span style="font-size:0.8rem; color:var(--text-muted);">to</span>
-                  <input type="date" class="form-control" id="swapDateFilterTo" style="font-size:0.8rem; padding:4px 8px; width:auto;" onchange="window.ITApp.filterSwapHistory()" title="To Date">
+                  <input type="date" class="form-control" id="swapDateFilterTo" aria-label="Filter swap history to date" style="font-size:0.8rem; padding:4px 8px; width:auto;" onchange="window.ITApp.filterSwapHistory()" title="To Date">
                 </div>
-                <input type="text" class="form-control" id="swapHistorySearch" placeholder="Search ID, user, asset, reason..." style="font-size:0.8rem; padding:5px 12px; width:220px;" oninput="window.ITApp.filterSwapHistory()">
+                <input type="text" class="form-control" id="swapHistorySearch" placeholder="Search ID, user, asset, reason..." style="font-size:0.8rem; padding:5px 12px; width:220px;" oninput="window.ITApp.filterSwapHistory()" aria-label="Search ID, user, asset, reason...">
                 <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.resetSwapDateFilter()" style="padding:4px 10px; font-size:0.78rem;">
                   Clear
                 </button>
@@ -1359,7 +1359,7 @@
 
           <div class="table-toolbar">
             <div class="toolbar-left">
-              <input type="text" class="filter-input" id="assetsSearchInput" placeholder="Search Asset ID, CPU, RAM..." oninput="window.ITApp.handleAssetFilterChange('search')">
+              <input type="text" class="filter-input" id="assetsSearchInput" placeholder="Search Asset ID, CPU, RAM..." oninput="window.ITApp.handleAssetFilterChange('search')" aria-label="Search Asset ID, CPU, RAM...">
               
               <select class="filter-input" id="assetsTypeFilter" onchange="window.ITApp.handleAssetFilterChange('type')">
                 <option value="all">All Types</option>
@@ -1483,7 +1483,7 @@
             <div class="table-toolbar" style="margin-bottom:14px; background:#f8fafc; padding:10px 14px; border-radius:8px; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
               <div class="toolbar-left" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex:1;">
                 <!-- 1. Search Bar -->
-                <input type="text" class="filter-input" id="nonAssignedSearchInput" placeholder="Search Asset ID, CPU, RAM, User, Serial..." oninput="window.ITApp.handleNonAssignedFilterChange('search')" style="min-width:240px; flex:1; max-width:320px;">
+                <input type="text" class="filter-input" id="nonAssignedSearchInput" placeholder="Search Asset ID, CPU, RAM, User, Serial..." oninput="window.ITApp.handleNonAssignedFilterChange('search')" style="min-width:240px; flex:1; max-width:320px;" aria-label="Search Asset ID, CPU, RAM, User, Serial...">
                 
                 <!-- 2. Asset Type Filter (Desktop, Laptop, MacBook) -->
                 <select class="filter-input" id="nonAssignedTypeFilter" onchange="window.ITApp.handleNonAssignedFilterChange('type')">
@@ -1556,7 +1556,7 @@
                 <span style="font-size:0.78rem; color:var(--text-muted);">Active desktop &amp; laptop deployments with live user allocation and return controls</span>
               </div>
               <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                <input type="text" class="filter-input" id="assignedSystemsSearch" placeholder="Search Asset, User, Emp ID, Team..." oninput="window.ITApp.renderAssignedSystemsTable()" style="width: 240px;">
+                <input type="text" class="filter-input" id="assignedSystemsSearch" placeholder="Search Asset, User, Emp ID, Team..." oninput="window.ITApp.renderAssignedSystemsTable()" style="width: 240px;" aria-label="Search Asset, User, Emp ID, Team...">
                 <div style="display:flex; gap:4px;" id="assignedSystemsFilterTabs">
                   <button type="button" class="activity-filter-btn assigned-filter-btn active" data-filter="all" onclick="window.ITApp.filterAssignedSystems('all')">All Assigned</button>
                   <button type="button" class="activity-filter-btn assigned-filter-btn" data-filter="Desktop" onclick="window.ITApp.filterAssignedSystems('Desktop')">🖥️ Desktops</button>
@@ -1596,7 +1596,7 @@
         <div class="view-panel" id="view-non-it-assets" style="display: none !important;">
           <div class="table-toolbar">
             <div class="toolbar-left">
-              <input type="text" class="filter-input" id="nonItSearchInput" placeholder="Search furniture, projector, UPS..." oninput="window.ITApp.navTo('non-it-assets')">
+              <input type="text" class="filter-input" id="nonItSearchInput" placeholder="Search furniture, projector, UPS..." oninput="window.ITApp.navTo('non-it-assets')" aria-label="Search furniture, projector, UPS...">
               
               <select class="filter-input" id="nonItCatFilter" onchange="window.ITApp.navTo('non-it-assets')">
                 <option value="all">All Categories</option>
@@ -1647,7 +1647,7 @@
         <div class="view-panel" id="view-new-requirements">
           <div class="table-toolbar">
             <div class="toolbar-left">
-              <input type="text" class="filter-input" id="reqSearchInput" placeholder="Search requirement, requester..." oninput="window.ITApp.handleRequirementsFilterChange('search')">
+              <input type="text" class="filter-input" id="reqSearchInput" placeholder="Search requirement, requester..." oninput="window.ITApp.handleRequirementsFilterChange('search')" aria-label="Search requirement, requester...">
               
               <select class="filter-input" id="reqStatusFilter" onchange="window.ITApp.handleRequirementsFilterChange('status')">
                 <option value="all">All Statuses</option>
@@ -1920,7 +1920,7 @@
                 <span style="font-size:0.75rem; color:var(--text-secondary);">Click Stock / Assigned to filter • Click + New Entry to add stock</span>
               </div>
 
-              <div class="instock-category-grid" id="instockCategoryCardsGrid">
+              <div class="instock-category-grid" id="instockCardsContainer">
                 <!-- 1. CPU -->
                 <div class="instock-cat-card" id="catCardCPU" onclick="window.ITApp.filterInventoryByCategory('CPU')" title="Click card header to filter all CPU inventory">
                   <div class="instock-cat-header">
@@ -2092,7 +2092,7 @@
               <!-- Search & Filter Toolbar for Inventory -->
               <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; background:#f8fafc; padding:12px 16px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:16px;">
                 <div style="position:relative; flex:1; min-width:220px;">
-                  <input type="text" id="instockInventorySearch" class="form-control" placeholder="🔍 Search Asset ID, specification / model, or serial..." oninput="window.ITApp.filterInstockDashboard()" style="padding-left:14px; width:100%; border-radius:8px; font-size:0.85rem;">
+                  <input type="text" id="instockInventorySearch" class="form-control" placeholder="🔍 Search Asset ID, specification / model, or serial..." oninput="window.ITApp.filterInstockDashboard()" style="padding-left:14px; width:100%; border-radius:8px; font-size:0.85rem;" aria-label="🔍 Search Asset ID, specification / model, or serial...">
                 </div>
                 <select id="instockInventoryCategoryFilter" class="form-select" onchange="window.ITApp.filterInstockDashboard()" style="width:auto; min-width:140px; border-radius:8px; font-size:0.85rem;">
                   <option value="all">All Categories</option>
@@ -2177,7 +2177,7 @@
             <!-- Full-View Inventory Search & Filter Toolbar -->
             <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; background:#f8fafc; padding:12px 16px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:16px;">
               <div style="position:relative; flex:1; min-width:220px;">
-                <input type="text" id="instockInventoryFullSearch" class="form-control" placeholder="🔍 Search Asset ID, specification / model, or serial..." oninput="window.ITApp.filterFullInventoryView()" style="padding-left:14px; width:100%; border-radius:8px; font-size:0.85rem;">
+                <input type="text" id="instockInventoryFullSearch" class="form-control" placeholder="🔍 Search Asset ID, specification / model, or serial..." oninput="window.ITApp.filterFullInventoryView()" style="padding-left:14px; width:100%; border-radius:8px; font-size:0.85rem;" aria-label="🔍 Search Asset ID, specification / model, or serial...">
               </div>
               <select id="instockInventoryFullCategoryFilter" class="form-select" onchange="window.ITApp.filterFullInventoryView()" style="width:auto; min-width:140px; border-radius:8px; font-size:0.85rem;">
                 <option value="all">All Categories</option>
@@ -2263,7 +2263,7 @@
               <!-- Top Row: Search Box and Action Buttons -->
               <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;">
                 <div style="position:relative; flex:1; min-width:260px;">
-                  <input type="text" id="instockAssignedSearch" class="form-control" placeholder="🔍 Search Employee, Model, Serial Number, Allocation ID, Reason..." oninput="window.ITApp.filterAssignedItems()" style="padding-left:14px; width:100%; border-radius:8px; font-size:0.85rem;">
+                  <input type="text" id="instockAssignedSearch" class="form-control" placeholder="🔍 Search Employee, Model, Serial Number, Allocation ID, Reason..." oninput="window.ITApp.filterAssignedItems()" style="padding-left:14px; width:100%; border-radius:8px; font-size:0.85rem;" aria-label="🔍 Search Employee, Model, Serial Number, Allocation ID, Reason...">
                 </div>
                 <div style="display:flex; align-items:center; gap:10px;">
                   <span id="instockAssignedCountBadge" class="badge" style="background:#2563eb; color:#fff; font-size:0.8rem; padding:6px 14px; border-radius:20px; font-weight:600;">
@@ -2332,7 +2332,7 @@
                 <!-- Assigned Date Filter -->
                 <div>
                   <label style="display:block; font-size:0.72rem; font-weight:700; color:#475569; margin-bottom:4px; text-transform:uppercase;">Assigned Date</label>
-                  <input type="date" id="instockFilterDate" class="form-control" onchange="window.ITApp.filterAssignedItems()" style="width:100%; border-radius:8px; font-size:0.82rem; padding:5px 10px;">
+                  <input type="date" id="instockFilterDate" aria-label="Filter stock by purchase or allocation date" class="form-control" onchange="window.ITApp.filterAssignedItems()" style="width:100%; border-radius:8px; font-size:0.82rem; padding:5px 10px;">
                 </div>
               </div>
             </div>
@@ -2532,7 +2532,7 @@
 
             <div style="display:flex; gap:16px; align-items:flex-end; margin-bottom: 24px; flex-wrap:wrap;">
               <div class="form-group" style="min-width: 260px;">
-                <label class="form-label">Select Report Template</label>
+                <label class="form-label" for="empHistorySearchInput">Select Report Template</label>
                 <select class="form-control" id="reportTypeSelect" onchange="window.ITApp.navTo('reports')">
                   <option value="total-asset">Total Asset Report</option>
                   <option value="assigned-asset">Assigned Asset Report</option>
@@ -2690,7 +2690,7 @@
               <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; flex:1;">
                 <!-- Search -->
                 <div style="position:relative; min-width:240px; flex:1; max-width:320px;">
-                  <input type="text" class="filter-input" id="assetLifecycleSearchInput" placeholder="Search by Asset ID, Serial, MAC, or IP..." oninput="window.ITApp.handleAssetLifecycleFilterChange()" style="width:100%; padding-left:32px;">
+                  <input type="text" class="filter-input" id="assetLifecycleSearchInput" placeholder="Search by Asset ID, Serial, MAC, or IP..." oninput="window.ITApp.handleAssetLifecycleFilterChange()" style="width:100%; padding-left:32px;" aria-label="Search by Asset ID, Serial, MAC, or IP...">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" style="position:absolute; left:10px; top:50%; transform:translateY(-50%);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 </div>
 
@@ -2764,11 +2764,11 @@
             <form id="systemSettingsForm">
               <div class="form-grid-2">
                 <div class="form-group">
-                  <label class="form-label">Organization Name</label>
+                  <label class="form-label" for="settingsCompanyName">Organization Name</label>
                   <input type="text" class="form-control" id="settingsCompanyName">
                 </div>
                 <div class="form-group">
-                  <label class="form-label">System Administrator Name</label>
+                  <label class="form-label" for="settingsAdminName">System Administrator Name</label>
                   <input type="text" class="form-control" id="settingsAdminName">
                 </div>
               </div>
@@ -2788,7 +2788,7 @@
 
             <!-- Add New Department Form -->
             <form onsubmit="event.preventDefault(); const val = document.getElementById('newTeamInput').value; window.ITApp.addNewTeam(val); document.getElementById('newTeamInput').value = '';" style="display:flex; gap:12px; margin-bottom: 20px; max-width:540px;">
-              <input type="text" class="form-control" id="newTeamInput" placeholder="Enter department name (e.g. DEVOPS, SECURITY)..." required>
+              <input type="text" class="form-control" id="newTeamInput" placeholder="Enter department name (e.g. DEVOPS, SECURITY)..." required aria-label="Enter department name (e.g. DEVOPS, SECURITY)...">
               <button type="submit" class="btn btn-primary" style="white-space:nowrap;">+ Add Department</button>
             </form>
 
@@ -2939,61 +2939,61 @@
             <div class="form-grid-3">
               <!-- CPU -->
               <div class="form-group">
-                <label class="form-label">CPU Configuration <span class="req">*</span></label>
+                <label class="form-label" for="editAssetCpu">CPU Configuration <span class="req">*</span></label>
                 <input type="text" class="form-control" name="editCpu" id="editAssetCpu" list="cpuPresetList" placeholder="e.g. Intel Core i7-13700 3.4GHz" required>
               </div>
 
               <!-- RAM -->
               <div class="form-group">
-                <label class="form-label">RAM Memory <span class="req">*</span></label>
+                <label class="form-label" for="editAssetRam">RAM Memory <span class="req">*</span></label>
                 <input type="text" class="form-control" name="editRam" id="editAssetRam" list="ramPresetList" placeholder="e.g. 32GB DDR5" required>
               </div>
 
               <!-- Primary Storage SSD -->
               <div class="form-group">
-                <label class="form-label">Solid State Drive (SSD)</label>
+                <label class="form-label" for="editAssetSsd">Solid State Drive (SSD)</label>
                 <input type="text" class="form-control" name="editSsd" id="editAssetSsd" list="ssdPresetList" placeholder="e.g. 512GB NVMe M.2">
               </div>
 
               <!-- Secondary Storage HDD -->
               <div class="form-group">
-                <label class="form-label">Hard Disk Drive (HDD)</label>
+                <label class="form-label" for="editAssetHdd">Hard Disk Drive (HDD)</label>
                 <input type="text" class="form-control" name="editHdd" id="editAssetHdd" list="hddPresetList" placeholder="e.g. 1TB HDD (or None)">
               </div>
 
               <!-- Monitor Model -->
               <div class="form-group">
-                <label class="form-label">Monitor Model &amp; Display</label>
+                <label class="form-label" for="editAssetMonitor">Monitor Model &amp; Display</label>
                 <input type="text" class="form-control" name="editMonitor" id="editAssetMonitor" list="monitorPresetList" placeholder="e.g. Dell UltraSharp 27&quot; 4K / Dual LG 27&quot;">
               </div>
 
               <!-- Asset Hardware Type -->
               <div class="form-group">
-                <label class="form-label">Asset Type <span class="req">*</span></label>
+                <label class="form-label" for="editAssetType">Asset Type <span class="req">*</span></label>
                 <input type="text" class="form-control" name="editType" id="editAssetType" placeholder="Select or type Asset Type..." required list="assetTypeList" autocomplete="off" value="Desktop">
               </div>
 
               <!-- Asset ID / Tag -->
               <div class="form-group">
-                <label class="form-label">Asset ID / Tag <span class="req">*</span></label>
+                <label class="form-label" for="editAssetId">Asset ID / Tag <span class="req">*</span></label>
                 <input type="text" class="form-control" name="editAssetId" id="editAssetId" required>
               </div>
 
               <!-- MAC Address -->
               <div class="form-group">
-                <label class="form-label">MAC Address</label>
+                <label class="form-label" for="editAssetSerialNumber">MAC Address</label>
                 <input type="text" class="form-control" name="editSerialNumber" id="editAssetSerialNumber" placeholder="e.g. 00:7c:6c:83:44:74" autocomplete="off">
               </div>
 
               <!-- IP Address -->
               <div class="form-group">
-                <label class="form-label">IP Address</label>
+                <label class="form-label" for="editAssetIpAddress">IP Address</label>
                 <input type="text" class="form-control" name="editIpAddress" id="editAssetIpAddress" placeholder="e.g. 192.168.10.45 or DHCP">
               </div>
 
               <!-- Operating System -->
               <div class="form-group">
-                <label class="form-label">Operating System</label>
+                <label class="form-label" for="editAssetUser">Operating System</label>
                 <select class="form-control" name="editOs" id="editAssetOs">
                   <option value="Windows 11 Pro">Windows 11 Pro</option>
                   <option value="Windows 11 (Original)">Windows 11 (Original)</option>
@@ -3028,19 +3028,19 @@
 
               <!-- Department / Team -->
               <div class="form-group">
-                <label class="form-label">Department / Team <span class="req">*</span></label>
+                <label class="form-label" for="editAssetTeam">Department / Team <span class="req">*</span></label>
                 <input type="text" class="form-control" name="editTeam" id="editAssetTeam" placeholder="Enter department / team name..." required list="teamsDatalist" autocomplete="off">
               </div>
               <!-- Team Leader (TL) -->
               <div class="form-group">
-                <label class="form-label">Team Leader (TL)</label>
+                <label class="form-label" for="editAssetTl">Team Leader (TL)</label>
                 <input type="text" class="form-control" name="editTl" id="editAssetTl" placeholder="e.g. Sundar Sir, Ram Kumar R, Management">
               </div>
 
 
               <!-- Status -->
               <div class="form-group">
-                <label class="form-label">System Status <span class="req">*</span></label>
+                <label class="form-label" for="editAssetLocation">System Status <span class="req">*</span></label>
                 <select class="form-control" name="editStatus" id="editAssetStatus" required onchange="window.ITApp && window.ITApp.handleSystemStatusChange ? window.ITApp.handleSystemStatusChange(this.value) : null">
                   <option value="">-- Select System Status --</option>
                   <option value="Assigned">Assigned</option>
@@ -3074,7 +3074,7 @@
 
               <!-- Condition -->
               <div class="form-group">
-                <label class="form-label">Hardware Condition</label>
+                <label class="form-label" for="editAssetOldUsername">Hardware Condition</label>
                 <select class="form-control" name="editCondition" id="editAssetCondition">
                   <option value="Brand New">Brand New</option>
                   <option value="Excellent">Excellent</option>
@@ -3093,7 +3093,7 @@
 
               <!-- User Exit Date -->
               <div class="form-group" id="groupEditAssetExitDate">
-                <label class="form-label" style="display:flex; align-items:center; gap:6px;">
+                <label class="form-label" for="editAssetExitDate" style="display:flex; align-items:center; gap:6px;">
                   <span>User Exit Date</span>
                   <span style="font-size:0.7rem; color:#e11d48; font-weight:600; background:#fff1f2; padding:1px 6px; border-radius:4px; border:1px solid #fecdd3;">Exit Record</span>
                 </label>
@@ -3378,29 +3378,7 @@
   </div>
 
 
-  <!-- ======================================================================
-       VIEW SYSTEM SWAP TRANSACTION EXTRACT MODAL
-       ====================================================================== -->
-  <div class="modal-overlay" id="modalViewSwapExtract" style="z-index: 1050;">
-    <div class="modal-dialog modal-lg" style="max-width: 780px;">
-      <div class="modal-header">
-        <h3 class="modal-title" id="swapExtractModalTitle">Swap Transaction Extract</h3>
-        <button class="modal-close-btn" data-close-modal>✕</button>
-      </div>
-      <div class="modal-body" id="viewSwapExtractModalBody">
-        <!-- Rendered dynamically by app.js viewSwapExtract() -->
-      </div>
-      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-size:0.82rem; color:var(--text-muted);" id="swapExtractFooterDate"></span>
-        <div style="display:flex; gap:10px;">
-          <button type="button" class="btn btn-secondary" data-close-modal>Close</button>
-          <button type="button" class="btn btn-primary" id="btnExtractModalEditInFacility" style="display:inline-flex; align-items:center; gap:6px;">
-            ✏️ Edit in System Swap Facility
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+
 
   <!-- 2. New Requirement Modal -->
   <div class="modal-overlay" id="modalNewRequirement">
@@ -3413,7 +3391,7 @@
         <div class="modal-body">
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">Employee Name <span class="req">*</span></label>
+              <label class="form-label" for="reqTeamSelect">Employee Name <span class="req">*</span></label>
               <input type="text" class="form-control" name="reqName" required>
             </div>
             <div class="form-group">
@@ -3421,7 +3399,7 @@
               <input type="text" class="form-control" name="reqTeam" id="reqTeamSelect" placeholder="Enter department / team..." list="teamsDatalist" autocomplete="off">
             </div>
             <div class="form-group">
-              <label class="form-label">Team Lead (TL)</label>
+              <label class="form-label" for="qaTargetAssetId">Team Lead (TL)</label>
               <input type="text" class="form-control" name="reqTl" placeholder="e.g. Manish Verma">
             </div>
             <div class="form-group">
@@ -3586,17 +3564,17 @@
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
             <div class="form-group">
-              <label class="form-label">New User Name <span class="req" style="color:#e11d48;">*</span></label>
+              <label class="form-label" for="qaUserName">New User Name <span class="req" style="color:#e11d48;">*</span></label>
               <input type="text" class="form-control" id="qaUserName" name="qaUserName" placeholder="e.g. Karthick" required autocomplete="off">
             </div>
 
             <div class="form-group">
-              <label class="form-label">Employee ID</label>
+              <label class="form-label" for="qaEmployeeId">Employee ID</label>
               <input type="text" class="form-control" id="qaEmployeeId" name="qaEmployeeId" placeholder="e.g. EMP1025" autocomplete="off">
             </div>
 
             <div class="form-group">
-              <label class="form-label">Team / Department</label>
+              <label class="form-label" for="qaTeam">Team / Department</label>
               <input type="text" class="form-control" id="qaTeam" name="qaTeam" placeholder="e.g. Development" list="qaTeamSuggestions">
               <datalist id="qaTeamSuggestions">
                 <option value="PHP">
@@ -3612,12 +3590,12 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Assigned Date <span class="req" style="color:#e11d48;">*</span></label>
+              <label class="form-label" for="qaAssignedDate">Assigned Date <span class="req" style="color:#e11d48;">*</span></label>
               <input type="date" class="form-control" id="qaAssignedDate" name="qaAssignedDate" required>
             </div>
 
             <div class="form-group" style="grid-column: 1 / -1;">
-              <label class="form-label">Work Station Status</label>
+              <label class="form-label" for="qaRemarks">Work Station Status</label>
               <select class="form-control" id="qaWorkStatus" name="qaWorkStatus">
                 <option value="Currently Working">🟢 Currently Working</option>
                 <option value="Work From Home">🔵 Work From Home</option>
@@ -3664,7 +3642,7 @@
         <!-- History Toolbar -->
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
           <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <input type="text" class="filter-input" id="historySearchInput" placeholder="Search Asset ID, User, Emp ID, Team..." oninput="window.ITApp.renderAssignmentHistoryTable()" style="width: 280px;">
+            <input type="text" class="filter-input" id="historySearchInput" placeholder="Search Asset ID, User, Emp ID, Team..." oninput="window.ITApp.renderAssignmentHistoryTable()" style="width: 280px;" aria-label="Search Asset ID, User, Emp ID, Team...">
             <select class="filter-input" id="historyTypeFilter" onchange="window.ITApp.renderAssignmentHistoryTable()">
               <option value="all">All Asset Types</option>
               <option value="Desktop">🖥️ Desktops</option>
@@ -3734,13 +3712,13 @@
           <div class="form-grid-2">
             <!-- 1. Device Name -->
             <div class="form-group" style="grid-column: 1 / -1;">
-              <label class="form-label">Device Name <span class="req">*</span></label>
+              <label class="form-label" for="switchNameInput">Device Name <span class="req">*</span></label>
               <input type="text" class="form-control" name="switchName" id="switchNameInput" placeholder="e.g. Core Distribution Switch - Rack 1" required>
             </div>
 
             <!-- 2. Device Type -->
             <div class="form-group">
-              <label class="form-label">Device Type <span class="req">*</span></label>
+              <label class="form-label" for="switchBrandInput">Device Type <span class="req">*</span></label>
               <select class="form-control" name="switchType" id="switchTypeSelect" required>
                 <option value="Managed L3 Switch">Managed L3 Switch</option>
                 <option value="PoE+ Switch">PoE+ Switch (CCTV &amp; APs)</option>
@@ -3760,43 +3738,43 @@
 
             <!-- 4. Model -->
             <div class="form-group">
-              <label class="form-label">Model Number</label>
+              <label class="form-label" for="switchModelInput">Model Number</label>
               <input type="text" class="form-control" name="switchModel" id="switchModelInput" placeholder="e.g. C9300-48P-A / 2930F-24G">
             </div>
 
             <!-- 5. Management IP -->
             <div class="form-group">
-              <label class="form-label">Management IP Address <span class="req">*</span></label>
+              <label class="form-label" for="switchIpInput">Management IP Address <span class="req">*</span></label>
               <input type="text" class="form-control" name="switchIp" id="switchIpInput" placeholder="e.g. 192.168.1.2 or 10.0.0.1" required>
             </div>
 
             <!-- 6. MAC Address -->
             <div class="form-group">
-              <label class="form-label">MAC Address</label>
+              <label class="form-label" for="switchMacInput">MAC Address</label>
               <input type="text" class="form-control" name="switchMac" id="switchMacInput" placeholder="e.g. 00:2A:10:FA:88:01">
             </div>
 
             <!-- 7. Physical Location -->
             <div class="form-group">
-              <label class="form-label">Installation Location <span class="req">*</span></label>
+              <label class="form-label" for="switchLocationInput">Installation Location <span class="req">*</span></label>
               <input type="text" class="form-control" name="switchLocation" id="switchLocationInput" placeholder="e.g. Server Room Rack 1, Floor 2 IDF Closet" required>
             </div>
 
             <!-- 8. Port Count -->
             <div class="form-group">
-              <label class="form-label">Total Ports <span class="req">*</span></label>
+              <label class="form-label" for="switchPortCountInput">Total Ports <span class="req">*</span></label>
               <input type="number" class="form-control" name="switchPortCount" id="switchPortCountInput" min="1" max="128" value="48" required>
             </div>
 
             <!-- 9. Used Ports -->
             <div class="form-group">
-              <label class="form-label">Active / Used Ports <span class="req">*</span></label>
+              <label class="form-label" for="switchUsedPortsInput">Active / Used Ports <span class="req">*</span></label>
               <input type="number" class="form-control" name="switchUsedPorts" id="switchUsedPortsInput" min="0" max="128" value="20" required>
             </div>
 
             <!-- 10. Status -->
             <div class="form-group">
-              <label class="form-label">Operating Status <span class="req">*</span></label>
+              <label class="form-label" for="switchRemarkInput">Operating Status <span class="req">*</span></label>
               <select class="form-control" name="switchStatus" id="switchStatusSelect" required>
                 <option value="Operational">Operational (Live)</option>
                 <option value="Standby / Redundant">Standby / Redundant</option>
@@ -3849,37 +3827,37 @@
         <div class="modal-body">
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">Static IP Address <span class="req">*</span></label>
+              <label class="form-label" for="bypassIpInput">Static IP Address <span class="req">*</span></label>
               <input type="text" class="form-control" name="bypassIp" id="bypassIpInput" placeholder="e.g. 192.168.1.185" required>
             </div>
 
             <div class="form-group">
-              <label class="form-label">User / Owner Name <span class="req">*</span></label>
+              <label class="form-label" for="bypassUserInput">User / Owner Name <span class="req">*</span></label>
               <input type="text" class="form-control" name="bypassUser" id="bypassUserInput" placeholder="e.g. Balakrishnan R" required>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Machine Name</label>
+              <label class="form-label" for="bypassSystemInput">Machine Name</label>
               <input type="text" class="form-control" name="bypassSystem" id="bypassSystemInput" placeholder="e.g. DEV-STATION-08">
             </div>
 
             <div class="form-group">
-              <label class="form-label">MAC Address</label>
+              <label class="form-label" for="bypassMacInput">MAC Address</label>
               <input type="text" class="form-control" name="bypassMac" id="bypassMacInput" placeholder="e.g. 98:90:96:D1:8E:9B">
             </div>
 
             <div class="form-group" style="grid-column: 1 / -1;">
-              <label class="form-label">Purpose / Justification <span class="req">*</span></label>
+              <label class="form-label" for="bypassPurposeInput">Purpose / Justification <span class="req">*</span></label>
               <input type="text" class="form-control" name="bypassPurpose" id="bypassPurposeInput" placeholder="e.g. Docker container registries and external API webhook listener" required>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Approved By <span class="req">*</span></label>
+              <label class="form-label" for="bypassApprovedByInput">Approved By <span class="req">*</span></label>
               <input type="text" class="form-control" name="bypassApprovedBy" id="bypassApprovedByInput" value="Sundar Pichai (SysAdmin)" required>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Whitelist Status <span class="req">*</span></label>
+              <label class="form-label" for="bypassStartDateInput">Whitelist Status <span class="req">*</span></label>
               <select class="form-control" name="bypassStatus" id="bypassStatusSelect" required>
                 <option value="Active">Active</option>
                 <option value="Pending Approval">Pending Approval</option>
@@ -3894,12 +3872,12 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Expiry Date</label>
+              <label class="form-label" for="bypassExpiryDateInput">Expiry Date</label>
               <input type="date" class="form-control" name="bypassExpiryDate" id="bypassExpiryDateInput">
             </div>
 
             <div class="form-group" style="grid-column: 1 / -1;">
-              <label class="form-label">Administrative Remark / Notes</label>
+              <label class="form-label" for="bypassRemarkInput">Administrative Remark / Notes</label>
               <input type="text" class="form-control" name="bypassRemark" id="bypassRemarkInput" placeholder="e.g. Whitelisted on FortiGate policy ID 42">
             </div>
           </div>
@@ -3941,17 +3919,17 @@
         <div class="modal-body">
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">Assigned User / Custodian <span class="req">*</span></label>
+              <label class="form-label" for="antivirusUserInput">Assigned User / Custodian <span class="req">*</span></label>
               <input type="text" class="form-control" name="antivirusUser" id="antivirusUserInput" placeholder="e.g. Vikram Seth" required>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Asset ID <span class="req">*</span></label>
+              <label class="form-label" for="antivirusAssetIdInput">Asset ID <span class="req">*</span></label>
               <input type="text" class="form-control" name="antivirusAssetId" id="antivirusAssetIdInput" placeholder="e.g. AST-DSK-1001" required>
             </div>
 
             <div class="form-group" style="grid-column: 1 / -1;">
-              <label class="form-label">EDR / Antivirus Solution <span class="req">*</span></label>
+              <label class="form-label" for="antivirusVersionInput">EDR / Antivirus Solution <span class="req">*</span></label>
               <select class="form-control" name="antivirusSolution" id="antivirusSolutionSelect" required>
                 <option value="CrowdStrike Falcon Sensor">CrowdStrike Falcon Sensor</option>
                 <option value="SentinelOne Complete Endpoint">SentinelOne Complete Endpoint</option>
@@ -3967,7 +3945,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Sensor Status <span class="req">*</span></label>
+              <label class="form-label" for="antivirusInstallDateInput">Sensor Status <span class="req">*</span></label>
               <select class="form-control" name="antivirusStatus" id="antivirusStatusSelect" required>
                 <option value="Active">Active (Protected)</option>
                 <option value="Expiring Soon">Expiring Soon (&lt; 30d)</option>
@@ -3982,7 +3960,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">License Expiry Date <span class="req">*</span></label>
+              <label class="form-label" for="antivirusExpiryDateInput">License Expiry Date <span class="req">*</span></label>
               <input type="date" class="form-control" name="antivirusExpiryDate" id="antivirusExpiryDateInput" required>
             </div>
           </div>
@@ -4024,37 +4002,37 @@
         <div class="modal-body">
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">Asset ID <span class="req">*</span></label>
+              <label class="form-label" for="repairAssetIdInput">Asset ID <span class="req">*</span></label>
               <input type="text" class="form-control" name="repairAssetId" id="repairAssetIdInput" placeholder="e.g. AST-LPT-2008" required>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Employee / Custodian <span class="req">*</span></label>
+              <label class="form-label" for="repairUserInput">Employee / Custodian <span class="req">*</span></label>
               <input type="text" class="form-control" name="repairUser" id="repairUserInput" placeholder="e.g. Divya Krishnan" required>
             </div>
 
             <div class="form-group" style="grid-column: 1 / -1;">
-              <label class="form-label">Reported Issue / Fault Description <span class="req">*</span></label>
+              <label class="form-label" for="repairIssueInput">Reported Issue / Fault Description <span class="req">*</span></label>
               <input type="text" class="form-control" name="repairIssue" id="repairIssueInput" placeholder="e.g. LCD display cracked after accidental drop, keyboard backlight flickering" required>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Sent Date <span class="req">*</span></label>
+              <label class="form-label" for="repairDateInput">Sent Date <span class="req">*</span></label>
               <input type="date" class="form-control" name="repairDate" id="repairDateInput" required>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Vendor / Authorized Service Center <span class="req">*</span></label>
+              <label class="form-label" for="repairVendorInput">Vendor / Authorized Service Center <span class="req">*</span></label>
               <input type="text" class="form-control" name="repairVendor" id="repairVendorInput" placeholder="e.g. Dell Authorized Service Center" required>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Repair Cost</label>
+              <label class="form-label" for="repairCostInput">Repair Cost</label>
               <input type="text" class="form-control" name="repairCost" id="repairCostInput" placeholder="e.g. $180 or Under Warranty ($0)">
             </div>
 
             <div class="form-group">
-              <label class="form-label">Repair Status <span class="req">*</span></label>
+              <label class="form-label" for="repairExpectedReturnInput">Repair Status <span class="req">*</span></label>
               <select class="form-control" name="repairStatus" id="repairStatusSelect" required>
                 <option value="Under Repair">Under Repair</option>
                 <option value="In Diagnosis">In Diagnosis</option>
@@ -4070,12 +4048,12 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Actual Return Date</label>
+              <label class="form-label" for="repairActualReturnInput">Actual Return Date</label>
               <input type="date" class="form-control" name="repairActualReturn" id="repairActualReturnInput">
             </div>
 
             <div class="form-group" style="grid-column: 1 / -1;">
-              <label class="form-label">Technician Notes / Remarks</label>
+              <label class="form-label" for="repairRemarkInput">Technician Notes / Remarks</label>
               <input type="text" class="form-control" name="repairRemark" id="repairRemarkInput" placeholder="e.g. Replaced display assembly under Dell ProSupport">
             </div>
           </div>
@@ -4117,17 +4095,17 @@
         <div class="modal-body">
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">Asset ID</label>
+              <label class="form-label" for="warrantyAssetDisplay">Asset ID</label>
               <input type="text" class="form-control" id="warrantyAssetDisplay" readonly style="background:var(--bg-card-muted); font-weight:700;">
             </div>
 
             <div class="form-group">
-              <label class="form-label">User / Custodian</label>
+              <label class="form-label" for="warrantyUserDisplay">User / Custodian</label>
               <input type="text" class="form-control" id="warrantyUserDisplay" readonly style="background:var(--bg-card-muted);">
             </div>
 
             <div class="form-group">
-              <label class="form-label">Warranty Component / Type</label>
+              <label class="form-label" for="warrantyEndDateInput">Warranty Component / Type</label>
               <select class="form-control" name="warrantyType" id="warrantyTypeInput" onchange="window.ITApp.handleDedicatedWarrantyTypeChange(this.value)">
                 <option value="Component Lifecycle Tracking">Component Lifecycle Tracking</option>
                 <option value="RAM">RAM</option>
@@ -4157,7 +4135,7 @@
             </div>
 
             <div class="form-group" style="grid-column: 1 / -1;">
-              <label class="form-label">Quick Extend / Renew Presets</label>
+              <label class="form-label" for="warrantyRemarkInput">Quick Extend / Renew Presets</label>
               <div style="display:flex; gap:8px; margin-top:4px;">
                 <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.extendWarrantyPreset(1)">+ 1 Year</button>
                 <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.extendWarrantyPreset(2)">+ 2 Years</button>
@@ -4181,8 +4159,8 @@
       </form>
     </div>
   <!-- Modal: Confirm Delete Hardware Component -->
-  <div class="modal-backdrop" id="modalConfirmDeleteComponent" style="display: none; z-index: 10050;" role="dialog" aria-modal="true" aria-labelledby="deleteComponentModalTitle">
-    <div class="modal-dialog modal-sm" style="max-width: 440px; margin: 80px auto; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.08);">
+  <div class="modal-overlay" id="modalConfirmDeleteComponent" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); z-index: 10050; align-items: center; justify-content: center; backdrop-filter: blur(2px);" role="dialog" aria-modal="true" aria-labelledby="deleteComponentModalTitle">
+    <div class="modal-dialog modal-sm" style="max-width: 440px; margin: auto; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.08);">
       <div class="modal-content" style="border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
         <div class="modal-header" style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; background: #ffffff;">
           <div style="display: flex; align-items: center; gap: 10px;">
@@ -4231,7 +4209,7 @@
         <div class="modal-body" style="padding: 20px; display:flex; flex-direction:column; gap:14px; background:#ffffff;">
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">Component Type <span style="color:#ef4444;">*</span></label>
+              <label class="form-label" for="addComponentModel">Component Type <span style="color:#ef4444;">*</span></label>
               <select class="form-control" id="addComponentType" name="component_type" required onchange="window.ITApp.handleAddComponentTypeChange(this.value)">
                 <option value="RAM">🧠 RAM</option>
                 <option value="SSD">💾 SSD</option>
@@ -4255,22 +4233,22 @@
 
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">Manufacturer / Brand</label>
+              <label class="form-label" for="addComponentManufacturer">Manufacturer / Brand</label>
               <input type="text" class="form-control" id="addComponentManufacturer" name="manufacturer" placeholder="e.g. Kingston / Dell / Intel">
             </div>
             <div class="form-group">
-              <label class="form-label">Serial Number</label>
+              <label class="form-label" for="addComponentSerial">Serial Number</label>
               <input type="text" class="form-control font-mono" id="addComponentSerial" name="serial_number" placeholder="e.g. SN-RAM-2025-019">
             </div>
           </div>
 
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">Installation / Assigned Date <span style="color:#ef4444;">*</span></label>
+              <label class="form-label" for="addComponentAssignedDate">Installation / Assigned Date <span style="color:#ef4444;">*</span></label>
               <input type="date" class="form-control" id="addComponentAssignedDate" name="assigned_date" required>
             </div>
             <div class="form-group">
-              <label class="form-label">Warranty Status</label>
+              <label class="form-label" for="addComponentWarrantyStart">Warranty Status</label>
               <select class="form-control" id="addComponentWarrantyStatusSelect" onchange="window.ITApp.toggleAddComponentWarrantyDate(this.value)">
                 <option value="warranty">Under Warranty</option>
                 <option value="non-warranty">Non-Warranty / Expired</option>
@@ -4284,13 +4262,13 @@
               <input type="date" class="form-control" id="addComponentWarrantyStart" name="warranty_start">
             </div>
             <div class="form-group">
-              <label class="form-label">Warranty Expiry Date</label>
+              <label class="form-label" for="addComponentWarrantyExpiry">Warranty Expiry Date</label>
               <input type="date" class="form-control" id="addComponentWarrantyExpiry" name="warranty_expiry">
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Notes / Remarks</label>
+            <label class="form-label" for="addComponentNotes">Notes / Remarks</label>
             <input type="text" class="form-control" id="addComponentNotes" name="notes" placeholder="e.g. Installed during initial procurement or upgrade">
           </div>
         </div>
@@ -4323,33 +4301,33 @@
         <div class="modal-body" style="padding: 20px; display:flex; flex-direction:column; gap:14px; background:#ffffff;">
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">Component Type</label>
+              <label class="form-label" for="editComponentType">Component Type</label>
               <input type="text" class="form-control" id="editComponentType" name="component_type" readonly style="background:#f1f5f9; font-weight:600;">
             </div>
             <div class="form-group">
-              <label class="form-label">Model / Specification <span style="color:#ef4444;">*</span></label>
+              <label class="form-label" for="editComponentModel">Model / Specification <span style="color:#ef4444;">*</span></label>
               <input type="text" class="form-control" id="editComponentModel" name="model" required>
             </div>
           </div>
 
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">Manufacturer / Brand</label>
+              <label class="form-label" for="editComponentManufacturer">Manufacturer / Brand</label>
               <input type="text" class="form-control" id="editComponentManufacturer" name="manufacturer">
             </div>
             <div class="form-group">
-              <label class="form-label">Serial Number</label>
+              <label class="form-label" for="editComponentSerial">Serial Number</label>
               <input type="text" class="form-control font-mono" id="editComponentSerial" name="serial_number">
             </div>
           </div>
 
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">Installation / Assigned Date</label>
+              <label class="form-label" for="editComponentAssignedDate">Installation / Assigned Date</label>
               <input type="date" class="form-control" id="editComponentAssignedDate" name="assigned_date">
             </div>
             <div class="form-group">
-              <label class="form-label">Current Status</label>
+              <label class="form-label" for="editComponentWarrantyStart">Current Status</label>
               <select class="form-control" id="editComponentStatus" name="status">
                 <option value="Active">Active</option>
                 <option value="Installed">Installed</option>
@@ -4365,13 +4343,13 @@
               <input type="date" class="form-control" id="editComponentWarrantyStart" name="warranty_start">
             </div>
             <div class="form-group">
-              <label class="form-label">Warranty Expiry Date</label>
+              <label class="form-label" for="editComponentWarrantyExpiry">Warranty Expiry Date</label>
               <input type="date" class="form-control" id="editComponentWarrantyExpiry" name="warranty_expiry">
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Notes / Remarks</label>
+            <label class="form-label" for="editComponentNotes">Notes / Remarks</label>
             <input type="text" class="form-control" id="editComponentNotes" name="notes">
           </div>
         </div>
@@ -4425,28 +4403,28 @@
 
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">New Model / Specification <span style="color:#ef4444;">*</span></label>
+              <label class="form-label" for="replaceNewModel">New Model / Specification <span style="color:#ef4444;">*</span></label>
               <input type="text" class="form-control" id="replaceNewModel" name="model" placeholder="e.g. 16GB DDR4 3200MHz" required>
             </div>
             <div class="form-group">
-              <label class="form-label">New Serial Number <span style="color:#ef4444;">*</span></label>
+              <label class="form-label" for="replaceNewSerial">New Serial Number <span style="color:#ef4444;">*</span></label>
               <input type="text" class="form-control font-mono" id="replaceNewSerial" name="serial_number" placeholder="e.g. SN-RAM-2026-991" required>
             </div>
           </div>
 
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">New Manufacturer</label>
+              <label class="form-label" for="replaceNewManufacturer">New Manufacturer</label>
               <input type="text" class="form-control" id="replaceNewManufacturer" name="manufacturer" placeholder="e.g. Crucial / Samsung / Dell">
             </div>
             <div class="form-group">
-              <label class="form-label">Replacement Date <span style="color:#ef4444;">*</span></label>
+              <label class="form-label" for="replaceDateInput">Replacement Date <span style="color:#ef4444;">*</span></label>
               <input type="date" class="form-control" id="replaceDateInput" name="assigned_date" required>
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Replacement Reason <span style="color:#ef4444;">*</span></label>
+            <label class="form-label" for="replaceNewWarrantyExpiry">Replacement Reason <span style="color:#ef4444;">*</span></label>
             <select class="form-control" id="replaceReasonSelect" name="replacement_reason" required>
               <option value="Hardware Upgrade">⚡ Hardware Upgrade (Capacity / Speed Boost)</option>
               <option value="Hardware Failure / DOA">⚠️ Hardware Failure / Defective / DOA</option>
@@ -4462,7 +4440,7 @@
               <input type="date" class="form-control" id="replaceNewWarrantyExpiry" name="warranty_expiry">
             </div>
             <div class="form-group">
-              <label class="form-label">Admin Notes</label>
+              <label class="form-label" for="replaceNotes">Admin Notes</label>
               <input type="text" class="form-control" id="replaceNotes" name="notes" placeholder="e.g. Tested and burned-in successfully">
             </div>
           </div>
@@ -5161,11 +5139,11 @@
             </label>
             <div style="display:flex; gap:20px; align-items:center;">
               <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:#16a34a; font-size:0.9rem;">
-                <input type="radio" name="instockStatusRadio" id="instockStatusPending" value="Pending" checked onchange="window.ITApp.toggleInstockAssignmentFields()" style="accent-color:#16a34a; transform:scale(1.2);">
+                <input type="radio" name="instockStatusRadio" id="instockStatusPending" aria-label="Filter stock by pending status" value="Pending" checked onchange="window.ITApp.toggleInstockAssignmentFields()" style="accent-color:#16a34a; transform:scale(1.2);">
                 <span>📦 Pending (In Store Room Stock)</span>
               </label>
               <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:#2563eb; font-size:0.9rem;">
-                <input type="radio" name="instockStatusRadio" id="instockStatusAssigned" value="Assigned" onchange="window.ITApp.toggleInstockAssignmentFields()" style="accent-color:#2563eb; transform:scale(1.2);">
+                <input type="radio" name="instockStatusRadio" id="instockStatusAssigned" aria-label="Filter stock by assigned status" value="Assigned" onchange="window.ITApp.toggleInstockAssignmentFields()" style="accent-color:#2563eb; transform:scale(1.2);">
                 <span>👤 Assigned (Allocated to User)</span>
               </label>
             </div>

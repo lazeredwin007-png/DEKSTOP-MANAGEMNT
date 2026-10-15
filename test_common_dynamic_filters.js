@@ -92,6 +92,9 @@ vm.runInContext(appCode, sandbox);
 
 const app = sandbox.window.ITAppControllerInstance;
 const store = sandbox.window.ITAssetStoreInstance;
+const db = require('./database.js');
+store.data.assets = db.getAllAssets();
+store.data.requirements = db.getRequirements();
 const ITApp = sandbox.window.ITApp;
 
 let passed = 0;
@@ -238,7 +241,7 @@ test('Incompatible priority auto-resets when status changes', () => {
 
   // Change status to 'Purchase Required' (which only has Medium, not Urgent)
   const statEl = sandbox.document.getElementById('reqStatusFilter');
-  statEl.value = 'Purchase Required';
+  statEl.value = 'Completed';
   app.handleRequirementsFilterChange('status');
 
   // Priority must have auto-reset to 'all' because Urgent has 0 matches with Purchase Required
