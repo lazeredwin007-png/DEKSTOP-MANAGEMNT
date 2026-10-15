@@ -2426,31 +2426,6 @@
         const filterRes = this.updateDependentAssignedUsersFilters();
         list = filterRes.finalFilteredList;
       }
-      const tbody = document.getElementById('assignedUsersTableBody');
-      if (!tbody) return;
-
-      const search = (document.getElementById('assignedUsersSearch')?.value || '').toLowerCase().trim();
-      const teamFilter = document.getElementById('assignedUsersTeamFilter')?.value || 'all';
-      const typeFilter = document.getElementById('assignedUsersTypeFilter')?.value || 'all';
-      const workStatusFilter = document.getElementById('assignedUsersWorkStatusFilter')?.value || 'all';
-
-      // Join assigned assets with user records
-      const assignedAssets = store.data.assets.filter(a => a.status === 'Assigned' && a.user);
-
-      let list = assignedAssets.filter(item => {
-        const matchesSearch = !search ||
-          item.user.toLowerCase().includes(search) ||
-          item.id.toLowerCase().includes(search) ||
-          item.team.toLowerCase().includes(search);
-
-        const matchesTeam = teamFilter === 'all' || item.team === teamFilter;
-        const matchesType = typeFilter === 'all' || item.type === typeFilter;
-        const matchesWorkStatus = workStatusFilter === 'all' ||
-          (item.workStatus && item.workStatus.toLowerCase() === workStatusFilter.toLowerCase()) ||
-          (!item.workStatus && workStatusFilter === 'Currently Working');
-
-        return matchesSearch && matchesTeam && matchesType && matchesWorkStatus;
-      });
 
       if (list.length === 0) {
         tbody.innerHTML = `<tr><td colspan="15" class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">No assigned users match filter</div></td></tr>`;
@@ -3491,24 +3466,6 @@
         const res = this.updateDependentRequirementsFilters();
         list = res.finalFilteredList;
       }
-      const tbody = document.getElementById('requirementsTableBody');
-      if (!tbody) return;
-
-      const search = (document.getElementById('reqSearchInput')?.value || '').toLowerCase().trim();
-      const statusFilter = document.getElementById('reqStatusFilter')?.value || 'all';
-      const priorityFilter = document.getElementById('reqPriorityFilter')?.value || 'all';
-
-      let list = store.data.requirements.filter(r => {
-        const matchesSearch = !search ||
-          r.id.toLowerCase().includes(search) ||
-          r.name.toLowerCase().includes(search) ||
-          r.requirement.toLowerCase().includes(search);
-
-        const matchesStatus = statusFilter === 'all' || r.status.toLowerCase() === statusFilter.toLowerCase();
-        const matchesPriority = priorityFilter === 'all' || r.priority.toLowerCase() === priorityFilter.toLowerCase();
-
-        return matchesSearch && matchesStatus && matchesPriority;
-      });
 
       if (list.length === 0) {
         tbody.innerHTML = `<tr><td colspan="11" class="empty-state">No requirements match current filter.</td></tr>`;
