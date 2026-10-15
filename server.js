@@ -44,12 +44,20 @@ function parseJsonBody(req) {
   });
 }
 
+function extractAuthToken(req) {
+  const authHeader = req.headers['authorization'] || '';
+  if (authHeader.startsWith('Bearer ')) {
+    return authHeader.substring(7).trim();
+  }
+  return req.headers['x-auth-token'] || '';
+}
+
 function sendJson(res, statusCode, data) {
   res.writeHead(statusCode, {
     'Content-Type': 'application/json; charset=UTF-8',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type'
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-auth-token'
   });
   res.end(JSON.stringify(data));
 }
@@ -65,7 +73,7 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-auth-token'
     });
     res.end();
     return;
@@ -76,6 +84,34 @@ const server = http.createServer(async (req, res) => {
   // =========================================================================
   if (pathname.startsWith('/api/')) {
     try {
+      // 0. Authentication Endpoints (PBKDF2 SHA-512 validated against SQLite)
+      if ((pathname === '/api/auth/login' || pathname === '/api/login') && method === 'POST') {
+        const body = await parseJsonBody(req);
+        const { username, password } = body;
+        const result = db.verifyUser(username, password);
+        if (result.success) {
+          db.addActivity('Admin Sign-In', 'Auth', result.user.displayName || result.user.username, 'Success');
+          return sendJson(res, 200, result);
+        } else {
+          return sendJson(res, 401, result);
+        }
+      }
+
+      if ((pathname === '/api/auth/me' || pathname === '/api/me') && method === 'GET') {
+        const token = extractAuthToken(req);
+        const user = db.validateSession(token);
+        if (user) {
+          return sendJson(res, 200, { success: true, user });
+        }
+        return sendJson(res, 401, { success: false, message: 'Invalid or expired session token.' });
+      }
+
+      if ((pathname === '/api/auth/logout' || pathname === '/api/logout') && method === 'POST') {
+        const token = extractAuthToken(req);
+        db.deleteSession(token);
+        return sendJson(res, 200, { success: true, message: 'Successfully logged out.' });
+      }
+
       // 1. System Health & Database Driver Info
       if (pathname === '/api/status' && method === 'GET') {
         return sendJson(res, 200, {
@@ -104,7 +140,7 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
-      // 4. Assets API
+      // 4. Assets API & Component Lifecycle Management
       if (pathname === '/api/assets') {
         if (method === 'GET') {
           return sendJson(res, 200, db.getAllAssets());
@@ -120,23 +156,111 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (pathname.startsWith('/api/assets/')) {
-        const id = decodeURIComponent(pathname.replace('/api/assets/', ''));
-        if (method === 'GET') {
-          const all = db.getAllAssets();
-          const asset = all.find(a => a.id === id);
-          if (asset) {
-            return sendJson(res, 200, asset);
+        const sub = pathname.replace('/api/assets/', '');
+        const parts = sub.split('/');
+        const assetId = decodeURIComponent(parts[0]);
+
+        // Lifecycle Events for Asset: GET /api/assets/:id/lifecycle-events
+        if (parts.length === 2 && parts[1] === 'lifecycle-events' && method === 'GET') {
+          const events = db.getAssetComponentEvents(assetId);
+          return sendJson(res, 200, events);
+        }
+
+        // Component endpoints: /api/assets/:id/components...
+        if (parts[1] === 'components') {
+          // GET /api/assets/:id/components
+          if (parts.length === 2 && method === 'GET') {
+            const comps = db.getAssetComponents(assetId);
+            return sendJson(res, 200, comps);
           }
-          return sendJson(res, 404, { error: `Asset ${id} not found` });
+          // POST /api/assets/:id/components
+          if (parts.length === 2 && method === 'POST') {
+            const body = await parseJsonBody(req);
+            const token = extractAuthToken(req);
+            const sessionUser = db.validateSession(token);
+            const created = db.insertAssetComponent({
+              ...body,
+              asset_id: assetId,
+              created_by: sessionUser ? sessionUser.username : (body.created_by || 'admin')
+            });
+            db.addActivity(`Added Component (${created.component_type})`, assetId, sessionUser ? sessionUser.displayName : 'Admin', 'Success');
+            return sendJson(res, 201, created);
+          }
+
+          // Component operations with componentId
+          if (parts.length >= 3) {
+            const componentId = decodeURIComponent(parts[2]);
+
+            // POST /api/assets/:id/components/:componentId/replace
+            if (parts.length === 4 && parts[3] === 'replace' && method === 'POST') {
+              const body = await parseJsonBody(req);
+              const token = extractAuthToken(req);
+              const sessionUser = db.validateSession(token);
+              const adminUser = sessionUser ? sessionUser.username : (body.admin_user || 'admin');
+              const replaceRes = db.replaceAssetComponent(componentId, body, adminUser);
+              if (replaceRes) {
+                db.addActivity(`Replaced Component (${body.component_type || 'Hardware'})`, assetId, sessionUser ? sessionUser.displayName : adminUser, 'Success');
+                return sendJson(res, 200, { success: true, ...replaceRes });
+              }
+              return sendJson(res, 404, { error: `Component ${componentId} not found` });
+            }
+
+            // GET single component: /api/assets/:id/components/:componentId
+            if (parts.length === 3 && method === 'GET') {
+              const comp = db.getAssetComponent(componentId);
+              if (comp) return sendJson(res, 200, comp);
+              return sendJson(res, 404, { error: `Component ${componentId} not found` });
+            }
+
+            // PUT /api/assets/:id/components/:componentId
+            if (parts.length === 3 && method === 'PUT') {
+              const body = await parseJsonBody(req);
+              const token = extractAuthToken(req);
+              const sessionUser = db.validateSession(token);
+              const updated = db.updateAssetComponent(componentId, {
+                ...body,
+                admin_user: sessionUser ? sessionUser.username : (body.admin_user || 'admin')
+              });
+              if (updated) {
+                db.addActivity(`Updated Component (${updated.component_type})`, assetId, sessionUser ? sessionUser.displayName : 'Admin', 'Success');
+                return sendJson(res, 200, updated);
+              }
+              return sendJson(res, 404, { error: `Component ${componentId} not found` });
+            }
+
+            // DELETE /api/assets/:id/components/:componentId
+            if (parts.length === 3 && method === 'DELETE') {
+              const token = extractAuthToken(req);
+              const sessionUser = db.validateSession(token);
+              const ok = db.deleteAssetComponent(componentId, sessionUser ? sessionUser.username : 'admin');
+              if (ok) {
+                db.addActivity(`Deleted Component (${componentId})`, assetId, sessionUser ? sessionUser.displayName : 'Admin', 'Success');
+                return sendJson(res, 200, { success: true, message: `Component ${componentId} deleted` });
+              }
+              return sendJson(res, 404, { error: `Component ${componentId} not found` });
+            }
+          }
         }
-        if (method === 'PUT') {
-          const body = await parseJsonBody(req);
-          const updated = db.updateAsset(id, body);
-          return sendJson(res, 200, updated);
-        }
-        if (method === 'DELETE') {
-          db.deleteAsset(id);
-          return sendJson(res, 200, { success: true, message: `Asset ${id} deleted` });
+
+        // Standard Asset CRUD: /api/assets/:id
+        if (parts.length === 1) {
+          if (method === 'GET') {
+            const all = db.getAllAssets();
+            const asset = all.find(a => a.id === assetId);
+            if (asset) {
+              return sendJson(res, 200, asset);
+            }
+            return sendJson(res, 404, { error: `Asset ${assetId} not found` });
+          }
+          if (method === 'PUT') {
+            const body = await parseJsonBody(req);
+            const updated = db.updateAsset(assetId, body);
+            return sendJson(res, 200, updated);
+          }
+          if (method === 'DELETE') {
+            db.deleteAsset(assetId);
+            return sendJson(res, 200, { success: true, message: `Asset ${assetId} deleted` });
+          }
         }
       }
 
@@ -245,6 +369,62 @@ const server = http.createServer(async (req, res) => {
 
       if (pathname === '/api/hardware/assigned' && method === 'GET') {
         return sendJson(res, 200, db.getAssignedHardware());
+      }
+
+      // 9b. INSTOCK Hardware Management API
+      // 9b. INSTOCK Hardware Management & Allocations API
+      if (pathname === '/api/instock/allocations' && method === 'GET') {
+        return sendJson(res, 200, db.getInstockAllocations());
+      }
+      if (pathname === '/api/instock/allocations' && method === 'POST') {
+        const body = await parseJsonBody(req);
+        const saved = db.insertInstockAllocation(body);
+        return sendJson(res, 201, saved);
+      }
+      if (pathname.startsWith('/api/instock/allocations/') && pathname.endsWith('/return') && method === 'POST') {
+        const allocId = decodeURIComponent(pathname.replace('/api/instock/allocations/', '').replace('/return', ''));
+        const body = await parseJsonBody(req);
+        const result = db.returnInstockAsset(allocId, body.return_date, body.remark);
+        return sendJson(res, 200, result);
+      }
+      if (pathname.startsWith('/api/instock/allocations/') && method === 'PUT') {
+        const allocId = decodeURIComponent(pathname.replace('/api/instock/allocations/', ''));
+        const body = await parseJsonBody(req);
+        const result = db.updateInstockAllocation(allocId, body);
+        return sendJson(res, 200, result);
+      }
+      if (pathname.startsWith('/api/instock/allocations/') && method === 'DELETE') {
+        const allocId = decodeURIComponent(pathname.replace('/api/instock/allocations/', ''));
+        db.deleteInstockAllocation(allocId);
+        return sendJson(res, 200, { success: true });
+      }
+      if (pathname.startsWith('/api/instock/user-history/')) {
+        const userName = decodeURIComponent(pathname.replace('/api/instock/user-history/', ''));
+        return sendJson(res, 200, db.getUserAllocationHistory(userName));
+      }
+
+      if (pathname === '/api/instock') {
+        if (method === 'GET') {
+          return sendJson(res, 200, db.getInstockHardware());
+        }
+        if (method === 'POST') {
+          const body = await parseJsonBody(req);
+          const item = db.insertInstockHardware(body);
+          return sendJson(res, 201, item);
+        }
+      }
+
+      if (pathname.startsWith('/api/instock/')) {
+        const id = decodeURIComponent(pathname.replace('/api/instock/', ''));
+        if (method === 'PUT') {
+          const body = await parseJsonBody(req);
+          const updated = db.updateInstockHardware(id, body);
+          return sendJson(res, 200, updated);
+        }
+        if (method === 'DELETE') {
+          db.deleteInstockHardware(id);
+          return sendJson(res, 200, { success: true });
+        }
       }
 
       // 10. Network & Maintenance
@@ -407,7 +587,12 @@ const server = http.createServer(async (req, res) => {
     const ext = path.extname(safePath).toLowerCase();
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-    res.writeHead(200, { 'Content-Type': contentType });
+    res.writeHead(200, {
+      'Content-Type': contentType,
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
     fs.createReadStream(safePath).pipe(res);
   });
 });

@@ -3322,3 +3322,1533 @@ td.cell-work-status {
   }
 }
 
+/* ==========================================================================
+   VIEW MODAL - WARRANTY & COMPONENT LIFECYCLE CARDS
+   ========================================================================== */
+.warranty-item-view-card {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.warranty-item-view-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+  border-color: #cbd5e1;
+}
+
+/* Component Lifecycle Tracking Specific Cards & Actions */
+.component-lifecycle-row-item {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.component-lifecycle-row-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+  border-color: #cbd5e1;
+}
+
+.component-lifecycle-row-item.is-replaced {
+  background: #fffdfa;
+  border-color: #fde68a;
+  opacity: 0.95;
+}
+
+.component-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.component-action-btn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.component-action-btn.btn-action-replace {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.component-action-btn.btn-action-replace:hover {
+  background: #fef3c7;
+  border-color: #f59e0b;
+}
+
+.component-action-btn.btn-action-delete {
+  color: #dc2626;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.component-action-btn.btn-action-delete:hover {
+  background: #fee2e2;
+  border-color: #ef4444;
+}
+
+.badge-lifecycle-replaced {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge-lifecycle-active {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge-lifecycle-repaired {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge-lifecycle-retired {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ==========================================================================
+   ENTERPRISE IT ASSET MANAGEMENT - HARDWARE ASSET SPECIFICATION POPUP
+   Premium, Clean, Compact, View-Only Enterprise Modal Design System
+   ========================================================================== */
+
+.itam-spec-dialog {
+  max-width: 1040px !important;
+  width: 95vw !important;
+  max-height: 90vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(199, 210, 254, 0.8) !important;
+  border-radius: 16px !important;
+  box-shadow: 
+    0 25px 60px -15px rgba(30, 58, 138, 0.16),
+    0 10px 25px -5px rgba(124, 58, 237, 0.07),
+    0 0 0 1px rgba(255, 255, 255, 0.9) inset !important;
+  overflow: hidden !important;
+}
+
+#modalViewAsset.modal-overlay {
+  background: rgba(15, 23, 42, 0.5) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+.itam-spec-dialog .modal-header {
+  padding: 13px 22px !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f8faff 60%, #f5f3ff 100%) !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  flex-shrink: 0 !important;
+}
+
+.itam-spec-dialog .modal-body {
+  padding: 13px 20px !important;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+.itam-spec-dialog .modal-footer {
+  padding: 11px 22px !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%) !important;
+  border-top: 1px solid rgba(226, 232, 240, 0.8) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+}
+
+#viewAssetEditModalBtn {
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #3b82f6 !important;
+  box-shadow: 0 2px 6px -1px rgba(37, 99, 235, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+#viewAssetEditModalBtn:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #4338ca 100%) !important;
+  box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.45) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Top responsive 2-column layout */
+.itam-spec-top-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: stretch;
+}
+
+@media (max-width: 860px) {
+  .itam-spec-top-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Base Card */
+.itam-spec-card {
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.itam-spec-card:hover {
+  border-color: rgba(199, 210, 254, 0.7);
+  box-shadow: 0 4px 12px -2px rgba(30, 58, 138, 0.05);
+}
+
+.itam-spec-card-header {
+  padding: 8px 14px;
+  background: linear-gradient(135deg, #ffffff 0%, #fbfcfe 100%);
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.itam-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.itam-title-icon-box {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 100%);
+  border: 1px solid #dbeafe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.05);
+}
+
+.itam-card-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.2px;
+  margin: 0;
+}
+
+.itam-spec-card-body {
+  padding: 12px 14px;
+}
+
+/* Grid & Info Rows */
+.itam-info-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+}
+
+@media (max-width: 560px) {
+  .itam-info-grid-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.itam-info-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.itam-info-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.itam-info-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  word-break: break-word;
+}
+
+/* Hardware Specs Tiles */
+.itam-hw-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+}
+
+@media (max-width: 600px) {
+  .itam-hw-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.itam-hw-tile {
+  background: #f8fafc;
+  border: 1px solid #edf2f7;
+  border-radius: 7px;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  transition: all 0.15s ease;
+  min-height: 46px;
+}
+
+.itam-hw-tile:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+}
+
+.itam-hw-tile.span-full {
+  grid-column: 1 / -1;
+}
+
+.itam-hw-tile .itam-info-label {
+  font-size: 0.63rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.itam-hw-tile .itam-info-value {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.25;
+  word-break: break-word;
+  white-space: normal;
+}
+
+/* Status Badges */
+.itam-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.itam-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.itam-badge-working {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+.itam-badge-working .itam-badge-dot {
+  background: #10b981;
+}
+
+.itam-badge-exit {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+.itam-badge-exit .itam-badge-dot {
+  background: #ef4444;
+}
+
+.itam-badge-stock {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+.itam-badge-stock .itam-badge-dot {
+  background: #3b82f6;
+}
+
+.itam-badge-assigned {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+.itam-badge-assigned .itam-badge-dot {
+  background: #22c55e;
+}
+
+.itam-badge-neutral {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+.itam-badge-neutral .itam-badge-dot {
+  background: #94a3b8;
+}
+
+.itam-badge-warning {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+.itam-badge-warning .itam-badge-dot {
+  background: #f59e0b;
+}
+
+/* Component Lifecycle Table */
+.itam-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  width: 100%;
+  scrollbar-width: thin;
+}
+
+.itam-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  text-align: left;
+  table-layout: auto;
+}
+
+.itam-table th {
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #475569;
+  font-size: 0.69rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.itam-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+.itam-table tr:last-child td {
+  border-bottom: none;
+}
+
+.itam-table tr:hover td {
+  background: #f8faff;
+}
+
+/* User Allocation Panels (Previous vs Current) */
+.itam-user-panels-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 680px) {
+  .itam-user-panels-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.itam-user-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+
+.itam-user-panel.is-current {
+  border-color: #bfdbfe;
+  background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.04);
+}
+
+.itam-user-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 4px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* Timeline List */
+.itam-timeline-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  padding-left: 20px;
+  border-left: 2px solid #e2e8f0;
+  margin-left: 10px;
+}
+
+.itam-timeline-item {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.itam-timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -27px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #2563eb;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 2px #bfdbfe;
+}
+
+.itam-timeline-item.is-prev::before {
+  background: #94a3b8;
+  box-shadow: 0 0 0 2px #e2e8f0;
+}
+
+/* ==========================================================================
+   ENTERPRISE ASSET MANAGEMENT - DEDICATED TRACKING CARDS & HISTORY VIEWS
+   Card 1: Employee Asset History | Card 2: Asset Lifecycle History
+   ========================================================================== */
+
+/* 1. Dashboard Dedicated Tracking Hub Cards */
+.dashboard-tracking-hub {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 860px) {
+  .dashboard-tracking-hub {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tracking-hub-card {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 18px 22px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.tracking-hub-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 100%;
+  background: var(--card-accent, #2563eb);
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+
+.tracking-hub-card:hover {
+  transform: translateY(-3px);
+  border-color: #cbd5e1;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+}
+
+.tracking-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.tracking-card-header-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tracking-card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  width: fit-content;
+}
+
+.tracking-card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.2px;
+  margin: 0;
+}
+
+.tracking-card-desc {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.tracking-card-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+
+.tracking-hub-card:hover .tracking-card-icon-box {
+  transform: scale(1.08);
+}
+
+.tracking-card-stats-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 10px 0 14px 0;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 8px;
+}
+
+.tracking-card-stat-num {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.tracking-card-stat-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.tracking-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 0.78rem;
+}
+
+.tracking-card-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 700;
+  color: var(--card-accent, #2563eb);
+}
+
+/* 2. Master-Detail Two-Column History Layout */
+.history-master-detail-layout {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .history-master-detail-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.history-list-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  max-height: calc(100vh - 220px);
+}
+
+.history-list-header {
+  padding: 12px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.history-list-scroll {
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.history-item-card {
+  padding: 12px 14px;
+  border: 1px solid #f1f5f9;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.history-item-card:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateX(2px);
+}
+
+.history-item-card.is-active {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.08);
+}
+
+.history-detail-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 22px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 480px;
+}
+
+/* Detail Sub-Cards */
+.custody-card-current {
+  background: #ffffff;
+  border: 1px solid #a7f3d0;
+  border-left: 4px solid #10b981;
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.custody-card-past {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #94a3b8;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Chronological Timeline V2 */
+.timeline-v2 {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding-left: 24px;
+  border-left: 2px solid #e2e8f0;
+  margin-left: 14px;
+  gap: 16px;
+}
+
+.timeline-v2-node {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 0.15s ease;
+}
+
+.timeline-v2-node:hover {
+  border-color: #bfdbfe;
+}
+
+.timeline-v2-dot {
+  position: absolute;
+  left: -31px;
+  top: 14px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 2px #e2e8f0;
+}
+
+.timeline-dot-assign {
+  background: #2563eb;
+  box-shadow: 0 0 0 2px #bfdbfe;
+}
+
+.timeline-dot-swap {
+  background: #f59e0b;
+  box-shadow: 0 0 0 2px #fde68a;
+}
+
+.timeline-dot-upgrade {
+  background: #10b981;
+  box-shadow: 0 0 0 2px #a7f3d0;
+}
+
+.timeline-dot-repair {
+  background: #ef4444;
+  box-shadow: 0 0 0 2px #fecaca;
+}
+
+.timeline-dot-init {
+  background: #64748b;
+  box-shadow: 0 0 0 2px #cbd5e1;
+}
+
+/* ==========================================================================
+   HIDE NON-IT ASSETS MANAGEMENT PAGE & SUBMENU (AS REQUESTED)
+   ========================================================================== */
+[data-target-view="non-it-assets"],
+a[href="#non-it-assets"],
+#view-non-it-assets,
+#modalAddNonItAsset {
+  display: none !important;
+}
+
+/* ==========================================================================
+   INSTOCK HARDWARE MANAGEMENT & COMPONENT CARDS
+   ========================================================================== */
+.instock-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.instock-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+.instock-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #2563eb, #38bdf8);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.instock-card:hover {
+  transform: translateY(-4px);
+  border-color: #93c5fd;
+  box-shadow: 0 12px 24px -4px rgba(37, 99, 235, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+}
+
+.instock-card:hover::before {
+  opacity: 1;
+}
+
+.instock-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.instock-card-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.instock-icon-cpu { background: #eff6ff; color: #2563eb; }
+.instock-icon-ssd { background: #f0fdf4; color: #16a34a; }
+.instock-icon-ram { background: #faf5ff; color: #9333ea; }
+.instock-icon-smps { background: #fff7ed; color: #ea580c; }
+.instock-icon-monitor { background: #fdf2f8; color: #db2777; }
+.instock-icon-other { background: #f8fafc; color: #475569; }
+
+.instock-card-title {
+  font-size: 1.12rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.instock-card-subtitle {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin: 2px 0 0 0;
+}
+
+.instock-card-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #f1f5f9;
+}
+
+.instock-stat-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.instock-stat-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.instock-stat-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin-top: 2px;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.instock-stat-pending {
+  color: #16a34a;
+}
+
+.instock-stat-assigned {
+  color: #2563eb;
+}
+
+.instock-progress-wrap {
+  margin: 12px 0 16px 0;
+}
+
+.instock-progress-label-bar {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.74rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.instock-progress-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+  display: flex;
+}
+
+.instock-progress-fill-assigned {
+  background: #2563eb;
+  transition: width 0.4s ease;
+}
+
+.instock-progress-fill-pending {
+  background: #22c55e;
+  transition: width 0.4s ease;
+}
+
+.instock-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid #f1f5f9;
+  margin-top: auto;
+}
+
+.instock-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.instock-status-badge.status-pending {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.instock-status-badge.status-assigned {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+/* ==========================================================================
+   INSTOCK 4 SUMMARY CARDS (CLICKABLE & FILTERABLE)
+   ========================================================================== */
+.instock-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.instock-summary-card {
+  border-radius: 14px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.instock-summary-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+}
+
+.instock-summary-card.active-filter {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* Card 1: Total Assets */
+.instock-summary-card.total {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: #ffffff;
+  border: 1px solid #334155;
+}
+.instock-summary-card.total .summary-label {
+  color: #94a3b8;
+}
+.instock-summary-card.total .summary-count {
+  color: #ffffff;
+}
+.instock-summary-card.total .summary-subtext {
+  color: #38bdf8;
+}
+.instock-summary-card.total .summary-icon-box {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+.instock-summary-card.total .summary-click-hint {
+  color: #7dd3fc;
+}
+
+/* Card 2: Available Assets */
+.instock-summary-card.available {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #14532d;
+}
+.instock-summary-card.available .summary-label {
+  color: #15803d;
+}
+.instock-summary-card.available .summary-count {
+  color: #16a34a;
+}
+.instock-summary-card.available .summary-subtext {
+  color: #166534;
+}
+.instock-summary-card.available .summary-icon-box {
+  background: #dcfce7;
+  color: #16a34a;
+}
+.instock-summary-card.available .summary-click-hint {
+  color: #15803d;
+}
+
+/* Card 3: Assigned Assets */
+.instock-summary-card.assigned {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e3a8a;
+}
+.instock-summary-card.assigned .summary-label {
+  color: #1d4ed8;
+}
+.instock-summary-card.assigned .summary-count {
+  color: #2563eb;
+}
+.instock-summary-card.assigned .summary-subtext {
+  color: #1e40af;
+}
+.instock-summary-card.assigned .summary-icon-box {
+  background: #dbeafe;
+  color: #2563eb;
+}
+.instock-summary-card.assigned .summary-click-hint {
+  color: #2563eb;
+}
+
+/* Card 4: Under Maintenance & Request Hardware Items */
+.instock-summary-card.maintenance {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #78350f;
+}
+.instock-summary-card.maintenance .summary-label {
+  color: #b45309;
+}
+.instock-summary-card.maintenance .summary-count {
+  color: #d97706;
+}
+.instock-summary-card.maintenance .summary-subtext {
+  color: #92400e;
+}
+.instock-summary-card.maintenance .summary-icon-box {
+  background: #fef3c7;
+  color: #d97706;
+}
+.instock-summary-card.maintenance .summary-click-hint {
+  color: #b45309;
+}
+
+/* Card 4 (Updated): Request Hardware Items */
+.instock-summary-card.requests {
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  color: #581c87;
+}
+.instock-summary-card.requests .summary-label {
+  color: #7e22ce;
+}
+.instock-summary-card.requests .summary-count {
+  color: #9333ea;
+}
+.instock-summary-card.requests .summary-subtext {
+  color: #6b21a8;
+}
+.instock-summary-card.requests .summary-icon-box {
+  background: #f3e8ff;
+  color: #9333ea;
+}
+.instock-summary-card.requests .summary-click-hint {
+  color: #7e22ce;
+}
+
+/* Common Card Typography & Elements */
+.summary-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.summary-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.summary-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+}
+
+.summary-count {
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin: 6px 0 4px 0;
+  letter-spacing: -0.02em;
+}
+
+.summary-subtext {
+  font-size: 0.78rem;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.summary-click-hint {
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.instock-summary-card.total .summary-click-hint {
+  border-top-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Status Badges */
+.instock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.instock-badge-assigned {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.instock-badge-returned {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+.instock-badge-available {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.instock-badge-maintenance {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.instock-badge-pending {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+/* ==========================================================================
+   6 CATEGORY CARDS (REFERENCE IMAGE STYLE: 3-COLUMN GRID)
+   ========================================================================== */
+.instock-category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 26px;
+}
+@media (max-width: 1100px) {
+  .instock-category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .instock-category-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.instock-cat-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px 22px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  user-select: none;
+}
+.instock-cat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px -4px rgba(37, 99, 235, 0.12);
+  border-color: #93c5fd;
+}
+.instock-cat-card.active-cat {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px #2563eb, 0 10px 24px rgba(37, 99, 235, 0.15);
+  background: #f8faff;
+}
+.instock-cat-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.instock-cat-icon-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+}
+.instock-cat-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+.instock-cat-stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 14px 10px;
+  margin-bottom: 16px;
+  border: 1px solid #f1f5f9;
+}
+.instock-cat-stat {
+  text-align: center;
+  flex: 1;
+  padding: 8px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+  user-select: none;
+  position: relative;
+}
+.instock-cat-stat:hover {
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+.instock-cat-stat.cat-stat-stock:hover {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+.instock-cat-stat.cat-stat-assigned:hover {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+.instock-cat-stat.active-stock-stat {
+  background: #ecfdf5 !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25) !important;
+}
+.instock-cat-stat.active-stock-stat .stat-number {
+  color: #047857 !important;
+}
+.instock-cat-stat.active-stock-stat .stat-label {
+  color: #065f46 !important;
+  font-weight: 800;
+}
+.instock-cat-stat.active-assigned-stat {
+  background: #eff6ff !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25) !important;
+}
+.instock-cat-stat.active-assigned-stat .stat-number {
+  color: #1d4ed8 !important;
+}
+.instock-cat-stat.active-assigned-stat .stat-label {
+  color: #1e40af !important;
+  font-weight: 800;
+}
+.stat-pill-hint {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-top: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  transition: color 0.15s ease;
+}
+.instock-cat-stat:hover .stat-pill-hint {
+  color: #2563eb;
+}
+.instock-cat-stat.cat-stat-stock:hover .stat-pill-hint {
+  color: #16a34a;
+}
+.instock-cat-stat.active-stock-stat .stat-pill-hint {
+  color: #047857;
+  font-weight: 800;
+}
+.instock-cat-stat.active-assigned-stat .stat-pill-hint {
+  color: #1d4ed8;
+  font-weight: 800;
+}
+.instock-cat-stat .stat-number {
+  font-size: 1.95rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.1;
+  transition: color 0.15s ease;
+}
+.instock-cat-stat .stat-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+  transition: color 0.15s ease;
+}
+.instock-cat-divider {
+  width: 1px;
+  height: 40px;
+  background: #cbd5e1;
+}
+.btn-instock-new-entry {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  width: 100%;
+}
+.btn-instock-new-entry:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+}
+
+
+

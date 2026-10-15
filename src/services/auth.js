@@ -43,7 +43,7 @@ window.PixelAuth = (function () {
     }
   }
 
-  function handleLoginSubmit(e) {
+  async function handleLoginSubmit(e) {
     if (e) e.preventDefault();
     const usernameInput = document.getElementById('loginUsername');
     const passwordInput = document.getElementById('loginPassword');
@@ -56,30 +56,48 @@ window.PixelAuth = (function () {
     const password = (passwordInput ? passwordInput.value : '').trim();
     const rememberMe = rememberMeInput ? rememberMeInput.checked : true;
 
-    // Validate credentials: admin / admin
-    if (username.toLowerCase() === 'admin' && password === 'admin') {
-      if (errorAlert) errorAlert.classList.add('hidden');
-      
-      // Loading state
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = `
-          <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <span>Signing In...</span>
-        `;
+    if (!username || !password) {
+      if (errorAlert && errorMessage) {
+        errorMessage.textContent = 'Please enter both username and password.';
+        errorAlert.classList.remove('hidden');
       }
+      return;
+    }
 
-      setTimeout(() => {
-        if (rememberMe) {
-          localStorage.setItem(AUTH_KEY, 'true');
-          localStorage.setItem(USER_KEY, username);
-        } else {
-          sessionStorage.setItem(AUTH_KEY, 'true');
-          sessionStorage.setItem(USER_KEY, username);
-        }
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span>Verifying...</span>
+      `;
+    }
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, rememberMe })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        if (errorAlert) errorAlert.classList.add('hidden');
+        const token = data.token;
+        const user = data.user;
+
+        const targetStorage = rememberMe ? localStorage : sessionStorage;
+        const otherStorage = rememberMe ? sessionStorage : localStorage;
+
+        targetStorage.setItem(AUTH_KEY, 'true');
+        targetStorage.setItem('pixel_auth_token', token);
+        targetStorage.setItem(USER_KEY, JSON.stringify(user));
+
+        otherStorage.removeItem(AUTH_KEY);
+        otherStorage.removeItem('pixel_auth_token');
+        otherStorage.removeItem(USER_KEY);
 
         const loginView = document.getElementById('loginView');
         const appContainer = document.getElementById('portalAppContainer');
@@ -97,32 +115,52 @@ window.PixelAuth = (function () {
               window.PixelApp.init();
             }
             if (window.PixelApp && window.PixelApp.showToast) {
-              window.PixelApp.showToast("Welcome back! Signed in as System Administrator.", "success");
+              window.PixelApp.showToast(`Welcome back, ${user.displayName || user.username}!`, 'success');
             }
           }, 300);
         }
-
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = `<i data-lucide="log-in" class="w-4 h-4"></i><span>Sign In</span>`;
-          if (window.lucide) window.lucide.createIcons();
+      } else {
+        if (errorAlert && errorMessage) {
+          errorMessage.textContent = data.message || 'Invalid username or password.';
+          errorAlert.classList.remove('hidden');
+          if (passwordInput) {
+            passwordInput.value = '';
+            passwordInput.focus();
+          }
         }
-      }, 500);
-
-    } else {
+      }
+    } catch (err) {
       if (errorAlert && errorMessage) {
-        errorMessage.textContent = "Invalid username or password. Default credentials are admin / admin.";
+        errorMessage.textContent = 'Server connection error. Please ensure backend is active.';
         errorAlert.classList.remove('hidden');
-        if (passwordInput) passwordInput.value = '';
-        if (passwordInput) passwordInput.focus();
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i data-lucide="log-in" class="w-4 h-4"></i><span>Sign In</span>`;
+        if (window.lucide) window.lucide.createIcons();
       }
     }
   }
 
-  function logout() {
+  async function logout() {
+    const token = localStorage.getItem('pixel_auth_token') || sessionStorage.getItem('pixel_auth_token');
+    if (token) {
+      try {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      } catch (e) { }
+    }
     localStorage.removeItem(AUTH_KEY);
+    localStorage.removeItem('pixel_auth_token');
     localStorage.removeItem(USER_KEY);
     sessionStorage.removeItem(AUTH_KEY);
+    sessionStorage.removeItem('pixel_auth_token');
     sessionStorage.removeItem(USER_KEY);
 
     const loginView = document.getElementById('loginView');

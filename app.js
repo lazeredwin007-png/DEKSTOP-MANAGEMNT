@@ -607,12 +607,34 @@
         remark: 'Old laptop wiped and archived into spare pool'
       }
     ],
-    activityLogs: [
+     activityLogs: [
       { date: '2026-10-04 17:30', user: 'Sundar Pichai (SysAdmin)', asset: 'AST-LPT-2006', action: 'System Returned & Reformatted', status: 'Success' },
       { date: '2026-10-03 14:15', user: 'Arvind Swamy', asset: 'AST-DSK-1007', action: 'System Swap Ticket Raised', status: 'Pending' },
       { date: '2026-10-02 11:20', user: 'Naveen Kumar', asset: 'REQ-101', action: 'New Asset Requirement Filed', status: 'Under Review' },
       { date: '2026-09-30 09:45', user: 'Meera Nambiar', asset: 'AST-LPT-2004', action: 'Laptop Deployed & Enrolled', status: 'Success' },
       { date: '2026-09-27 16:10', user: 'Divya Krishnan', asset: 'AST-LPT-2008', action: 'Dispatched for Display Repair', status: 'In Repair' }
+    ],
+    instockHardware: [
+      { id: 'STK-CPU-101', component_type: 'CPU', spec: 'Intel Core i7-12700 12th Gen', serial_number: 'SN-CPU-99481', purchase_date: '2025-01-10', status: 'Assigned', remark: 'High performance processor for system upgrade' },
+      { id: 'STK-CPU-102', component_type: 'CPU', spec: 'Intel Core i5-11400 11th Gen', serial_number: 'SN-CPU-99482', purchase_date: '2025-02-14', status: 'Available', remark: 'Brand new in stock ready for allotment' },
+      { id: 'STK-SSD-201', component_type: 'SSD', spec: 'Samsung 980 1TB NVMe M.2', serial_number: 'SN-SSD-44821', purchase_date: '2025-01-08', status: 'Assigned', remark: 'High speed storage upgrade' },
+      { id: 'STK-SSD-202', component_type: 'SSD', spec: 'Crucial MX500 500GB 2.5" SATA', serial_number: 'SN-SSD-44822', purchase_date: '2025-02-01', status: 'Available', remark: 'In store cabinet A2' },
+      { id: 'STK-RAM-301', component_type: 'RAM', spec: 'Corsair Vengeance 16GB DDR4 3200MHz', serial_number: 'SN-RAM-33101', purchase_date: '2025-01-20', status: 'Assigned', remark: 'App development workstation' },
+      { id: 'STK-RAM-302', component_type: 'RAM', spec: 'Kingston Fury 32GB DDR5 5600MHz', serial_number: 'SN-RAM-33102', purchase_date: '2025-02-10', status: 'Available', remark: 'Spare memory for LLM system' },
+      { id: 'STK-SMPS-401', component_type: 'SMPS', spec: 'Corsair CV650 650W 80 Plus Bronze', serial_number: 'SN-PSU-77201', purchase_date: '2025-01-05', status: 'Assigned', remark: 'Server rack support PSU' },
+      { id: 'STK-SMPS-402', component_type: 'SMPS', spec: 'Cooler Master MWE 550W', serial_number: 'SN-PSU-77202', purchase_date: '2025-02-18', status: 'Available', remark: 'Tested and verified working' },
+      { id: 'STK-MON-501', component_type: 'MONITOR', spec: 'Dell 24" IPS FHD P2419H', serial_number: 'SN-MON-66101', purchase_date: '2025-01-15', status: 'Available', remark: 'Returned to stock after project completion' },
+      { id: 'STK-MON-502', component_type: 'MONITOR', spec: 'LG UltraWide 29" IPS HDR', serial_number: 'SN-MON-66102', purchase_date: '2025-02-05', status: 'Available', remark: 'In Stock Box 4' },
+      { id: 'STK-OTH-601', component_type: 'OTHER', spec: 'Logitech MK295 Silent Wireless Combo', serial_number: 'SN-PER-11001', purchase_date: '2025-01-12', status: 'Assigned', remark: 'Finance desk peripheral set' },
+      { id: 'STK-OTH-602', component_type: 'OTHER', spec: 'APC Back-UPS 1100VA / 660W', serial_number: 'SN-UPS-88001', purchase_date: '2025-02-12', status: 'Under Maintenance', remark: 'Battery cell service in progress' }
+    ],
+    instockAllocations: [
+      { id: 'ALC-1001', asset_id: 'STK-CPU-101', user_name: 'VIMAL', tl_name: 'Sundar Pichai', component_type: 'CPU', spec: 'Intel Core i7-12700 12th Gen', serial_number: 'SN-CPU-99481', assigned_date: '2026-10-12', return_date: null, purpose: 'Development work', status: 'Assigned', assigned_by: 'Sundar Pichai (SysAdmin)', remark: 'High performance processor for system upgrade' },
+      { id: 'ALC-1002', asset_id: 'STK-SSD-201', user_name: 'VIMAL', tl_name: 'Sundar Pichai', component_type: 'SSD', spec: 'Samsung 980 1TB NVMe M.2', serial_number: 'SN-SSD-44821', assigned_date: '2026-10-14', return_date: null, purpose: 'Storage upgrade', status: 'Assigned', assigned_by: 'Sundar Pichai (SysAdmin)', remark: 'Secondary NVMe SSD for fast model loading' },
+      { id: 'ALC-1003', asset_id: 'STK-MON-501', user_name: 'VIMAL', tl_name: 'Sundar Pichai', component_type: 'MONITOR', spec: 'Dell 24" IPS FHD P2419H', serial_number: 'SN-MON-66101', assigned_date: '2026-08-20', return_date: '2026-09-30', purpose: 'Office use', status: 'Returned', assigned_by: 'Sundar Pichai (SysAdmin)', remark: 'Returned in good working condition' },
+      { id: 'ALC-1004', asset_id: 'STK-RAM-301', user_name: 'Rahul V', tl_name: 'Anand Kumar', component_type: 'RAM', spec: 'Corsair Vengeance 16GB DDR4 3200MHz', serial_number: 'SN-RAM-33101', assigned_date: '2025-01-25', return_date: null, purpose: 'Development work', status: 'Assigned', assigned_by: 'Sundar Pichai (SysAdmin)', remark: 'App development workstation' },
+      { id: 'ALC-1005', asset_id: 'STK-SMPS-401', user_name: 'Vignesh K', tl_name: 'Sundar Pichai', component_type: 'SMPS', spec: 'Corsair CV650 650W 80 Plus Bronze', serial_number: 'SN-PSU-77201', assigned_date: '2025-01-18', return_date: null, purpose: 'Replacement of faulty hardware', status: 'Assigned', assigned_by: 'Sundar Pichai (SysAdmin)', remark: 'Server rack support PSU' },
+      { id: 'ALC-1006', asset_id: 'STK-OTH-601', user_name: 'Karthik N', tl_name: 'Ramesh B', component_type: 'OTHER', spec: 'Logitech MK295 Silent Wireless Combo', serial_number: 'SN-PER-11001', assigned_date: '2025-01-16', return_date: null, purpose: 'Office use', status: 'Assigned', assigned_by: 'Sundar Pichai (SysAdmin)', remark: 'Finance desk peripheral set' }
     ]
   };
 
@@ -655,6 +677,8 @@
                 this.data.nonItAssets = remoteData.nonItAssets;
                 this.data.hardwareStock = remoteData.hardwareStock;
                 this.data.assignedHardware = remoteData.assignedHardware;
+                this.data.instockHardware = remoteData.instockHardware || [];
+                this.data.instockAllocations = remoteData.instockAllocations || [];
                 this.data.networkSwitches = remoteData.networkSwitches;
                 this.data.bypassIps = remoteData.bypassIps;
                 this.data.antivirus = remoteData.antivirus;
@@ -798,6 +822,7 @@
   }
 
   const store = new AssetStore();
+  window.ITAssetStoreInstance = store;
 
   // Helper Utility Functions
   const Utils = {
@@ -878,99 +903,17 @@
   const AuthService = {
     AUTH_TOKEN_KEY: 'it_asset_auth_active',
     USER_INFO_KEY: 'it_asset_auth_user',
-
-    // Predefined accounts with passwords and permission matrix
-    ACCOUNTS: {
-      admin: {
-        username: 'admin',
-        password: ['admin', 'admin123'],
-        displayName: 'Sundar Pichai',
-        role: 'Admin',
-        avatar: 'SP',
-        permissions: {
-          manageUsers: true,
-          editAssets: true,
-          deleteAssets: true,
-          assignSystems: true,
-          systemSwap: true,
-          repairs: true,
-          warranty: true,
-          network: true,
-          antivirus: true,
-          reports: true,
-          settings: true,
-          exportImport: true
-        }
-      },
-      support: {
-        username: 'support',
-        password: ['support', 'support123'],
-        displayName: 'IT Support Engineer',
-        role: 'IT Support',
-        avatar: 'IT',
-        permissions: {
-          manageUsers: false,
-          editAssets: true,
-          deleteAssets: false,
-          assignSystems: true,
-          systemSwap: true,
-          repairs: true,
-          warranty: true,
-          network: true,
-          antivirus: true,
-          reports: true,
-          settings: false,
-          exportImport: true
-        }
-      },
-      itsupport: {
-        username: 'itsupport',
-        password: ['support', 'support123'],
-        displayName: 'IT Support Engineer',
-        role: 'IT Support',
-        avatar: 'IT',
-        permissions: {
-          manageUsers: false,
-          editAssets: true,
-          deleteAssets: false,
-          assignSystems: true,
-          systemSwap: true,
-          repairs: true,
-          warranty: true,
-          network: true,
-          antivirus: true,
-          reports: true,
-          settings: false,
-          exportImport: true
-        }
-      },
-      viewer: {
-        username: 'viewer',
-        password: ['viewer', 'viewer123'],
-        displayName: 'Asset Auditor / Viewer',
-        role: 'Viewer',
-        avatar: 'VW',
-        permissions: {
-          readOnly: true,
-          manageUsers: false,
-          editAssets: false,
-          deleteAssets: false,
-          assignSystems: false,
-          systemSwap: false,
-          repairs: false,
-          warranty: false,
-          network: false,
-          antivirus: false,
-          reports: true,
-          settings: false,
-          exportImport: false
-        }
-      }
-    },
+    SESSION_TOKEN_KEY: 'it_asset_session_token',
 
     isAuthenticated() {
-      return localStorage.getItem(this.AUTH_TOKEN_KEY) === 'true' ||
+      const isAuth = localStorage.getItem(this.AUTH_TOKEN_KEY) === 'true' ||
         sessionStorage.getItem(this.AUTH_TOKEN_KEY) === 'true';
+      const token = this.getToken();
+      return !!(isAuth && token);
+    },
+
+    getToken() {
+      return localStorage.getItem(this.SESSION_TOKEN_KEY) || sessionStorage.getItem(this.SESSION_TOKEN_KEY) || '';
     },
 
     getCurrentUser() {
@@ -983,43 +926,85 @@
       return null;
     },
 
-    login(username, password, remember = true) {
-      const u = (username || '').trim().toLowerCase();
+    async login(username, password, remember = true) {
+      const u = (username || '').trim();
       const p = (password || '').trim();
 
-      const account = this.ACCOUNTS[u];
-      if (!account) {
-        return { success: false, message: 'Invalid username. Use "admin", "support", or "viewer".' };
+      if (!u || !p) {
+        return { success: false, message: 'Username and password are required.' };
       }
 
-      if (!account.password.includes(p)) {
-        return { success: false, message: 'Incorrect password. Please verify and try again.' };
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            username: u,
+            password: p,
+            rememberMe: remember
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          const sessionUser = {
+            id: data.user.id,
+            username: data.user.username,
+            displayName: data.user.displayName || data.user.username,
+            role: data.user.role || 'Admin',
+            avatar: data.user.avatar || 'SP',
+            permissions: data.user.permissions || {},
+            loginTime: new Date().toISOString()
+          };
+
+          const targetStorage = remember ? localStorage : sessionStorage;
+          const otherStorage = remember ? sessionStorage : localStorage;
+
+          targetStorage.setItem(this.AUTH_TOKEN_KEY, 'true');
+          targetStorage.setItem(this.SESSION_TOKEN_KEY, data.token);
+          targetStorage.setItem(this.USER_INFO_KEY, JSON.stringify(sessionUser));
+
+          otherStorage.removeItem(this.AUTH_TOKEN_KEY);
+          otherStorage.removeItem(this.SESSION_TOKEN_KEY);
+          otherStorage.removeItem(this.USER_INFO_KEY);
+
+          return { success: true, user: sessionUser, token: data.token };
+        } else {
+          return {
+            success: false,
+            message: data.message || 'Invalid username or password. Please verify credentials.'
+          };
+        }
+      } catch (err) {
+        console.error('Login network error:', err);
+        return {
+          success: false,
+          message: 'Unable to connect to the authentication server. Please ensure the backend is running.'
+        };
       }
-
-      const sessionData = {
-        username: account.username,
-        displayName: account.displayName,
-        role: account.role,
-        avatar: account.avatar,
-        permissions: account.permissions,
-        loginTime: new Date().toISOString()
-      };
-
-      if (remember) {
-        localStorage.setItem(this.AUTH_TOKEN_KEY, 'true');
-        localStorage.setItem(this.USER_INFO_KEY, JSON.stringify(sessionData));
-      } else {
-        sessionStorage.setItem(this.AUTH_TOKEN_KEY, 'true');
-        sessionStorage.setItem(this.USER_INFO_KEY, JSON.stringify(sessionData));
-      }
-
-      return { success: true, user: sessionData };
     },
 
-    logout() {
+    async logout() {
+      const token = this.getToken();
+      if (token) {
+        try {
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          });
+        } catch (e) { }
+      }
       localStorage.removeItem(this.AUTH_TOKEN_KEY);
+      localStorage.removeItem(this.SESSION_TOKEN_KEY);
       localStorage.removeItem(this.USER_INFO_KEY);
       sessionStorage.removeItem(this.AUTH_TOKEN_KEY);
+      sessionStorage.removeItem(this.SESSION_TOKEN_KEY);
       sessionStorage.removeItem(this.USER_INFO_KEY);
     }
   };
@@ -1102,7 +1087,7 @@
       }
     }
 
-    handleLoginSubmit(e) {
+    async handleLoginSubmit(e) {
       if (e) e.preventDefault();
       const usernameInput = document.getElementById('loginUsername');
       const passwordInput = document.getElementById('loginPassword');
@@ -1115,28 +1100,41 @@
       const password = passwordInput ? passwordInput.value : '';
       const remember = rememberInput ? rememberInput.checked : true;
 
-      const result = AuthService.login(username, password, remember);
-
-      if (!result.success) {
+      if (!username.trim() || !password.trim()) {
         if (errorAlert && errorMessage) {
-          errorMessage.textContent = result.message;
+          errorMessage.textContent = 'Please enter both username and password.';
           errorAlert.style.display = 'flex';
-        }
-        if (passwordInput) {
-          passwordInput.value = '';
-          passwordInput.focus();
         }
         return;
       }
 
-      // Valid Credentials: Animate sign in
-      if (errorAlert) errorAlert.style.display = 'none';
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span>Signing In...</span> <span class="spinner" style="display:inline-block; animation:spin 1s linear infinite;">⏳</span>';
+        submitBtn.innerHTML = '<span>Verifying credentials...</span> <span class="spinner" style="display:inline-block; animation:spin 1s linear infinite;">⏳</span>';
       }
 
-      setTimeout(() => {
+      try {
+        const result = await AuthService.login(username, password, remember);
+
+        if (!result.success) {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span>Sign In to Dashboard</span> <span>→</span>';
+          }
+          if (errorAlert && errorMessage) {
+            errorMessage.textContent = result.message || 'Invalid username or password.';
+            errorAlert.style.display = 'flex';
+          }
+          if (passwordInput) {
+            passwordInput.value = '';
+            passwordInput.focus();
+          }
+          return;
+        }
+
+        // Valid Credentials: Animate sign in
+        if (errorAlert) errorAlert.style.display = 'none';
+
         if (submitBtn) {
           submitBtn.disabled = false;
           submitBtn.innerHTML = '<span>Sign In to Dashboard</span> <span>→</span>';
@@ -1154,7 +1152,16 @@
         Utils.showToast('Login Successful', `Welcome back, ${result.user.displayName}! Signed in as ${result.user.role}.`);
         this.navigateTo('dashboard');
         this.updateDashboardMetrics();
-      }, 350);
+      } catch (err) {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span>Sign In to Dashboard</span> <span>→</span>';
+        }
+        if (errorAlert && errorMessage) {
+          errorMessage.textContent = 'Authentication error. Please check server connection.';
+          errorAlert.style.display = 'flex';
+        }
+      }
     }
 
     togglePasswordVisibility() {
@@ -1190,7 +1197,7 @@
       }
     }
 
-    logout() {
+    async logout() {
       if (!confirm('Are you sure you want to sign out of the Asset Management Portal?')) {
         return;
       }
@@ -1198,7 +1205,7 @@
       const currentUser = AuthService.getCurrentUser();
       const name = currentUser ? currentUser.displayName : 'User';
 
-      AuthService.logout();
+      await AuthService.logout();
       store.addActivity('User Signed Out', currentUser ? currentUser.role : 'Portal', name, 'Warning');
 
       document.body.classList.remove('role-admin', 'role-support', 'role-viewer');
@@ -1446,6 +1453,10 @@
         'purchase-required': 'Purchase & Procurement',
         'assigned-hardware': 'Assigned Hardware Items',
         'hardware-stock': 'Hardware Stock & Accessories',
+        'instock': 'IN-STOCK Dashboard',
+        'instock-dashboard': 'IN-STOCK Dashboard',
+        'instock-inventory': 'Stock Inventory',
+        'instock-assigned': 'Assigned Details',
         'accessories': 'IT Accessories Inventory',
         'switch-modem': 'Network Switches & Gateways',
         'bypass-ip': 'Bypass IP Whitelist',
@@ -1558,6 +1569,16 @@
           break;
         case 'new-user':
           this.populateOldUsernamesList();
+          break;
+        case 'instock':
+        case 'instock-dashboard':
+          this.renderInstockDashboard();
+          break;
+        case 'instock-inventory':
+          this.renderInstockInventoryView();
+          break;
+        case 'instock-assigned':
+          this.renderAssignedItemsTable();
           break;
       }
     }
@@ -3317,10 +3338,10 @@
       )).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
       // Only rebuild options if options have changed or only 1 option exists
-      const existingOptions = Array.from(cpuFilter.options).map(o => o.value).filter(v => v !== 'all');
+      const existingOptions = Array.from(cpuFilter.options || []).map(o => o.value).filter(v => v !== 'all');
       const hasSameOptions = existingOptions.length === cpus.length && existingOptions.every((v, i) => v === cpus[i]);
 
-      if (!hasSameOptions || cpuFilter.options.length <= 1) {
+      if (!hasSameOptions || (cpuFilter.options ? cpuFilter.options.length : 0) <= 1) {
         cpuFilter.innerHTML = `<option value="all">All CPUs</option>` +
           cpus.map(cpu => `<option value="${Utils.escapeHtml(cpu)}">${Utils.escapeHtml(cpu)}</option>`).join('');
         if (currentVal && (currentVal === 'all' || cpus.includes(currentVal))) {
@@ -5070,6 +5091,509 @@ Remarks: ${r.remark || 'None'}`);
       this.updateDashboardMetrics();
     }
 
+    /* -------------------------------------------------------------
+       COMPONENT LIFECYCLE CONTROLLER METHODS (API-BACKED)
+       ------------------------------------------------------------- */
+    calculateComponentWarranty(assignedDate, expiryDate) {
+      if (!expiryDate || expiryDate === 'Non-Warranty' || expiryDate === 'None' || expiryDate === 'Nil' || expiryDate === '—') {
+        return {
+          status: 'Not Available',
+          badgeClass: 'badge-muted',
+          badgeColor: '#64748b',
+          badgeBg: '#f1f5f9',
+          badgeBorder: '#cbd5e1',
+          daysText: 'No Warranty Registered',
+          daysRemaining: null
+        };
+      }
+
+      const exp = new Date(expiryDate);
+      if (isNaN(exp.getTime())) {
+        return {
+          status: 'Not Available',
+          badgeClass: 'badge-muted',
+          badgeColor: '#64748b',
+          badgeBg: '#f1f5f9',
+          badgeBorder: '#cbd5e1',
+          daysText: 'Invalid Date',
+          daysRemaining: null
+        };
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      exp.setHours(0, 0, 0, 0);
+
+      const diffTime = exp.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays <= 0) {
+        const expiredAgo = Math.abs(diffDays);
+        return {
+          status: 'Expired',
+          badgeClass: 'badge-expired',
+          badgeColor: '#dc2626',
+          badgeBg: '#fef2f2',
+          badgeBorder: '#fecaca',
+          daysText: expiredAgo === 0 ? 'Expired today' : `Expired ${expiredAgo} day${expiredAgo === 1 ? '' : 's'} ago`,
+          daysRemaining: diffDays
+        };
+      } else if (diffDays <= 30) {
+        return {
+          status: 'Expiring Soon',
+          badgeClass: 'badge-warning',
+          badgeColor: '#b45309',
+          badgeBg: '#fffbeb',
+          badgeBorder: '#fde68a',
+          daysText: `${diffDays} day${diffDays === 1 ? '' : 's'} left (Expiring Soon)`,
+          daysRemaining: diffDays
+        };
+      } else {
+        const years = Math.floor(diffDays / 365);
+        const months = Math.floor((diffDays % 365) / 30);
+        let readablePeriod = '';
+        if (years > 0) {
+          readablePeriod = `${years} yr${years > 1 ? 's' : ''} ${months > 0 ? months + ' mo' : ''} (${diffDays} days left)`.trim();
+        } else if (months > 0) {
+          readablePeriod = `${months} mo (${diffDays} days left)`;
+        } else {
+          readablePeriod = `${diffDays} days remaining`;
+        }
+
+        return {
+          status: 'Active',
+          badgeClass: 'badge-active',
+          badgeColor: '#16a34a',
+          badgeBg: '#f0fdf4',
+          badgeBorder: '#bbf7d0',
+          daysText: readablePeriod,
+          daysRemaining: diffDays
+        };
+      }
+    }
+
+    getComponentIcon(type) {
+      const t = (type || '').toLowerCase();
+      if (t.includes('ram')) return '🧠';
+      if (t.includes('ssd')) return '💾';
+      if (t.includes('hdd') || t.includes('hard')) return '💽';
+      if (t.includes('cpu') || t.includes('processor')) return '⚡';
+      if (t.includes('motherboard') || t.includes('board')) return '🖲️';
+      if (t.includes('monitor') || t.includes('display')) return '🖥️';
+      if (t.includes('keyboard')) return '⌨️';
+      if (t.includes('mouse')) return '🖱️';
+      if (t.includes('battery')) return '🔋';
+      if (t.includes('gpu') || t.includes('graphic')) return '🎮';
+      if (t.includes('psu') || t.includes('smps') || t.includes('power')) return '🔌';
+      return '📦';
+    }
+
+    openAddComponentModal(assetId) {
+      if (this.currentRole === 'Viewer') {
+        Utils.showToast('Access Denied', 'Viewer role has read-only access.', 'error');
+        return;
+      }
+      const asset = store.data.assets.find(a => a.id === assetId);
+      if (!asset) return;
+
+      const form = document.getElementById('formAddComponent');
+      if (form) form.reset();
+
+      document.getElementById('addComponentAssetId').value = assetId;
+      document.getElementById('addComponentAssignedDate').value = new Date().toISOString().substring(0, 10);
+      document.getElementById('addComponentWarrantyStart').value = new Date().toISOString().substring(0, 10);
+      const defaultExp = new Date();
+      defaultExp.setFullYear(defaultExp.getFullYear() + 2);
+      document.getElementById('addComponentWarrantyExpiry').value = defaultExp.toISOString().substring(0, 10);
+
+      this.openModal('modalAddComponent');
+    }
+
+    handleAddComponentTypeChange(type) {
+      const modelInput = document.getElementById('addComponentModel');
+      if (!modelInput) return;
+      if (!modelInput.value) {
+        if (type === 'RAM') modelInput.placeholder = 'e.g. 16GB DDR4 3200MHz';
+        else if (type === 'SSD') modelInput.placeholder = 'e.g. 512GB NVMe M.2';
+        else if (type === 'HDD') modelInput.placeholder = 'e.g. 1TB 7200RPM SATA';
+        else if (type === 'CPU') modelInput.placeholder = 'e.g. Intel Core i5-12400F';
+        else if (type === 'Monitor') modelInput.placeholder = 'e.g. Dell 24" FHD IPS';
+        else if (type === 'Keyboard') modelInput.placeholder = 'e.g. Dell Pro Wireless KM5221W';
+        else if (type === 'Mouse') modelInput.placeholder = 'e.g. Logitech B100 USB Optical';
+        else if (type === 'Battery') modelInput.placeholder = 'e.g. 4-Cell 56Wh Lithium-Ion';
+      }
+    }
+
+    toggleAddComponentWarrantyDate(mode) {
+      const row = document.getElementById('addComponentWarrantyDatesRow');
+      if (!row) return;
+      row.style.display = mode === 'non-warranty' ? 'none' : 'grid';
+    }
+
+    async handleSaveNewComponent(e) {
+      if (e) e.preventDefault();
+      const assetId = document.getElementById('addComponentAssetId').value;
+      const type = document.getElementById('addComponentType').value;
+      const model = document.getElementById('addComponentModel').value.trim();
+      const manufacturer = document.getElementById('addComponentManufacturer').value.trim();
+      const serial = document.getElementById('addComponentSerial').value.trim();
+      const assignedDate = document.getElementById('addComponentAssignedDate').value;
+      const warrantyStatus = document.getElementById('addComponentWarrantyStatusSelect').value;
+      const warrantyStart = document.getElementById('addComponentWarrantyStart').value;
+      const warrantyExpiry = warrantyStatus === 'non-warranty' ? 'Non-Warranty' : document.getElementById('addComponentWarrantyExpiry').value;
+      const notes = document.getElementById('addComponentNotes').value.trim();
+
+      if (!type || !model || !assignedDate) {
+        alert('Please fill in Component Type, Model / Specification, and Installation Date.');
+        return;
+      }
+
+      const compData = {
+        asset_id: assetId,
+        component_type: type,
+        component_name: `${type} (${model})`,
+        model,
+        manufacturer: manufacturer || 'Enterprise OEM',
+        serial_number: serial || `SN-${type.substring(0, 3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`,
+        assigned_date: assignedDate,
+        warranty_start: warrantyStart || assignedDate,
+        warranty_expiry: warrantyExpiry,
+        status: 'Active',
+        notes
+      };
+
+      try {
+        const res = await fetch(`/api/assets/${encodeURIComponent(assetId)}/components`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${AuthService.getToken()}`
+          },
+          body: JSON.stringify(compData)
+        });
+
+        if (res.ok) {
+          this.closeModal('modalAddComponent');
+          Utils.showToast('Component Added', `${type} (${model}) registered to ${assetId}.`, 'success');
+          await store.initApiSync();
+          await this.viewAsset(assetId);
+        } else {
+          const err = await res.json();
+          alert('Failed to save component: ' + (err.error || 'Server error'));
+        }
+      } catch (err) {
+        alert('Connection error saving component.');
+      }
+    }
+
+    async openEditComponentModal(componentId, assetId) {
+      if (this.currentRole === 'Viewer') {
+        Utils.showToast('Access Denied', 'Viewer role has read-only access.', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/assets/${encodeURIComponent(assetId)}/components/${encodeURIComponent(componentId)}`);
+        if (!res.ok) {
+          alert('Component not found');
+          return;
+        }
+        const comp = await res.json();
+
+        document.getElementById('editComponentId').value = comp.id;
+        document.getElementById('editComponentAssetId').value = assetId;
+        document.getElementById('editComponentType').value = comp.component_type;
+        document.getElementById('editComponentModel').value = comp.model || comp.component_name || '';
+        document.getElementById('editComponentManufacturer').value = comp.manufacturer || '';
+        document.getElementById('editComponentSerial').value = comp.serial_number || '';
+        document.getElementById('editComponentAssignedDate').value = comp.assigned_date || '';
+        document.getElementById('editComponentStatus').value = comp.status || 'Active';
+        document.getElementById('editComponentWarrantyStart').value = comp.warranty_start || '';
+        document.getElementById('editComponentWarrantyExpiry').value = comp.warranty_expiry || '';
+        document.getElementById('editComponentNotes').value = comp.notes || '';
+
+        this.openModal('modalEditComponent');
+      } catch (e) {
+        alert('Error loading component details');
+      }
+    }
+
+    async handleSaveEditComponent(e) {
+      if (e) e.preventDefault();
+      const componentId = document.getElementById('editComponentId').value;
+      const assetId = document.getElementById('editComponentAssetId').value;
+      const model = document.getElementById('editComponentModel').value.trim();
+      const manufacturer = document.getElementById('editComponentManufacturer').value.trim();
+      const serial = document.getElementById('editComponentSerial').value.trim();
+      const assignedDate = document.getElementById('editComponentAssignedDate').value;
+      const status = document.getElementById('editComponentStatus').value;
+      const warrantyStart = document.getElementById('editComponentWarrantyStart').value;
+      const warrantyExpiry = document.getElementById('editComponentWarrantyExpiry').value;
+      const notes = document.getElementById('editComponentNotes').value.trim();
+
+      const updates = {
+        model,
+        component_name: model,
+        manufacturer,
+        serial_number: serial,
+        assigned_date: assignedDate,
+        status,
+        warranty_start: warrantyStart,
+        warranty_expiry: warrantyExpiry,
+        notes
+      };
+
+      try {
+        const res = await fetch(`/api/assets/${encodeURIComponent(assetId)}/components/${encodeURIComponent(componentId)}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${AuthService.getToken()}`
+          },
+          body: JSON.stringify(updates)
+        });
+
+        if (res.ok) {
+          this.closeModal('modalEditComponent');
+          Utils.showToast('Component Updated', `Specifications updated successfully.`, 'success');
+          await store.initApiSync();
+          await this.viewAsset(assetId);
+        } else {
+          alert('Failed to update component');
+        }
+      } catch (err) {
+        alert('Network error updating component.');
+      }
+    }
+
+    async openReplaceComponentModal(componentId, assetId) {
+      if (this.currentRole === 'Viewer') {
+        Utils.showToast('Access Denied', 'Viewer role has read-only access.', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/assets/${encodeURIComponent(assetId)}/components/${encodeURIComponent(componentId)}`);
+        if (!res.ok) {
+          alert('Component not found');
+          return;
+        }
+        const comp = await res.json();
+
+        document.getElementById('replaceOldComponentId').value = comp.id;
+        document.getElementById('replaceAssetId').value = assetId;
+
+        document.getElementById('replaceOldCompTypeLabel').textContent = comp.component_type;
+        document.getElementById('replaceOldCompModelLabel').textContent = comp.model || comp.component_name || '';
+        document.getElementById('replaceOldCompSerialLabel').textContent = comp.serial_number || 'N/A';
+
+        // Clear and prefill new fields
+        document.getElementById('replaceNewModel').value = '';
+        document.getElementById('replaceNewSerial').value = '';
+        document.getElementById('replaceNewManufacturer').value = comp.manufacturer || '';
+        document.getElementById('replaceDateInput').value = new Date().toISOString().substring(0, 10);
+
+        const expDate = new Date();
+        expDate.setFullYear(expDate.getFullYear() + 2);
+        document.getElementById('replaceNewWarrantyExpiry').value = expDate.toISOString().substring(0, 10);
+        document.getElementById('replaceNotes').value = '';
+
+        this.openModal('modalReplaceComponent');
+      } catch (e) {
+        alert('Error loading component for replacement');
+      }
+    }
+
+    async handleSaveReplaceComponent(e) {
+      if (e) e.preventDefault();
+      const oldCompId = document.getElementById('replaceOldComponentId').value;
+      const assetId = document.getElementById('replaceAssetId').value;
+      const model = document.getElementById('replaceNewModel').value.trim();
+      const serial = document.getElementById('replaceNewSerial').value.trim();
+      const manufacturer = document.getElementById('replaceNewManufacturer').value.trim();
+      const replaceDate = document.getElementById('replaceDateInput').value;
+      const reason = document.getElementById('replaceReasonSelect').value;
+      const warrantyExpiry = document.getElementById('replaceNewWarrantyExpiry').value;
+      const notes = document.getElementById('replaceNotes').value.trim();
+
+      if (!model || !serial || !replaceDate) {
+        alert('Please fill in Model, Serial Number, and Replacement Date.');
+        return;
+      }
+
+      const payload = {
+        model,
+        component_name: model,
+        serial_number: serial,
+        manufacturer: manufacturer || 'Enterprise OEM',
+        assigned_date: replaceDate,
+        replacement_reason: reason,
+        warranty_start: replaceDate,
+        warranty_expiry: warrantyExpiry,
+        notes
+      };
+
+      try {
+        const res = await fetch(`/api/assets/${encodeURIComponent(assetId)}/components/${encodeURIComponent(oldCompId)}/replace`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${AuthService.getToken()}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          this.closeModal('modalReplaceComponent');
+          Utils.showToast('Component Replaced', `Replaced component. Previous record preserved in lifecycle history.`, 'success');
+          await store.initApiSync();
+          await this.viewAsset(assetId);
+        } else {
+          alert('Failed to execute replacement');
+        }
+      } catch (err) {
+        alert('Connection error replacing component.');
+      }
+    }
+
+    async openLifecycleHistoryModal(assetId) {
+      try {
+        const res = await fetch(`/api/assets/${encodeURIComponent(assetId)}/lifecycle-events`);
+        const events = res.ok ? await res.json() : [];
+
+        const container = document.getElementById('lifecycleHistoryContent');
+        const subtitle = document.getElementById('lifecycleHistoryAssetSubtitle');
+        if (subtitle) subtitle.textContent = `Asset ${assetId} • Complete chronological event log`;
+
+        if (!container) return;
+
+        if (events.length === 0) {
+          container.innerHTML = `
+            <div style="text-align:center; padding:32px 20px; color:#64748b; font-size:0.9rem;">
+              <span style="font-size:2rem; display:block; margin-bottom:8px;">📜</span>
+              No lifecycle events recorded for asset ${assetId} yet.
+            </div>
+          `;
+        } else {
+          container.innerHTML = `
+            <div class="timeline-feed" style="display:flex; flex-direction:column; gap:14px;">
+              ${events.map(ev => {
+                let badgeBg = '#eff6ff';
+                let badgeColor = '#1d4ed8';
+                let badgeBorder = '#bfdbfe';
+                let icon = '🔹';
+
+                if (ev.event_type === 'Installed') {
+                  badgeBg = '#ecfdf5'; badgeColor = '#065f46'; badgeBorder = '#a7f3d0'; icon = '🟢';
+                } else if (ev.event_type === 'Replaced') {
+                  badgeBg = '#fef3c7'; badgeColor = '#92400e'; badgeBorder = '#fde68a'; icon = '🔄';
+                } else if (ev.event_type === 'Repaired') {
+                  badgeBg = '#eff6ff'; badgeColor = '#1e40af'; badgeBorder = '#bfdbfe'; icon = '🔧';
+                } else if (ev.event_type === 'Retired') {
+                  badgeBg = '#fef2f2'; badgeColor = '#991b1b'; badgeBorder = '#fecaca'; icon = '🔴';
+                } else if (ev.event_type === 'Updated') {
+                  badgeBg = '#f8fafc'; badgeColor = '#334155'; badgeBorder = '#cbd5e1'; icon = '✏️';
+                }
+
+                return `
+                  <div style="display:flex; gap:14px; background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:14px 16px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
+                    <div style="width:36px; height:36px; border-radius:8px; background:${badgeBg}; border:1px solid ${badgeBorder}; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0;">
+                      ${icon}
+                    </div>
+                    <div style="flex:1;">
+                      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; margin-bottom:4px;">
+                        <span style="font-size:0.75rem; font-weight:700; color:${badgeColor}; background:${badgeBg}; border:1px solid ${badgeBorder}; padding:2px 8px; border-radius:999px;">
+                          ${Utils.escapeHtml(ev.event_type)}
+                        </span>
+                        <span class="font-mono" style="font-size:0.75rem; color:#64748b;">
+                          📅 ${Utils.formatDate(ev.event_date)} · 👤 ${Utils.escapeHtml(ev.admin_user || 'admin')}
+                        </span>
+                      </div>
+                      <p style="margin:4px 0 0 0; font-size:0.86rem; color:#1e293b; line-height:1.4;">
+                        ${Utils.escapeHtml(ev.description)}
+                      </p>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `;
+        }
+
+        this.openModal('modalLifecycleHistory');
+      } catch (e) {
+        alert('Error loading lifecycle events');
+      }
+    }
+
+    filterComponentsList(query) {
+      const q = (query || '').toLowerCase().trim();
+      const cards = document.querySelectorAll('.component-lifecycle-row-item');
+      let visibleCount = 0;
+      cards.forEach(card => {
+        const text = (card.getAttribute('data-search-text') || '').toLowerCase();
+        if (!q || text.includes(q)) {
+          card.style.display = 'flex';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+      const emptySearchEl = document.getElementById('componentSearchEmptyState');
+      if (emptySearchEl) {
+        emptySearchEl.style.display = visibleCount === 0 ? 'block' : 'none';
+      }
+    }
+
+    promptDeleteComponent(componentId, assetId) {
+      if (this.currentRole === 'Viewer') {
+        Utils.showToast('Access Denied', 'Viewer role has read-only access.', 'error');
+        return;
+      }
+      this.pendingDeleteComponentId = componentId;
+      this.pendingDeleteAssetId = assetId;
+      const modal = document.getElementById('modalConfirmDeleteComponent');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    cancelDeleteWarrantyComponent() {
+      this.pendingDeleteComponentId = null;
+      this.pendingDeleteAssetId = null;
+      const modal = document.getElementById('modalConfirmDeleteComponent');
+      if (modal) modal.style.display = 'none';
+    }
+
+    async confirmDeleteWarrantyComponent() {
+      const compId = this.pendingDeleteComponentId;
+      const assetId = this.pendingDeleteAssetId;
+      if (!compId || !assetId) return;
+
+      try {
+        const res = await fetch(`/api/assets/${encodeURIComponent(assetId)}/components/${encodeURIComponent(compId)}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${AuthService.getToken()}`
+          }
+        });
+        if (res.ok) {
+          this.cancelDeleteWarrantyComponent();
+          Utils.showToast('Component Removed', 'Hardware component deleted from lifecycle tracking.', 'info');
+          await store.initApiSync();
+          await this.viewAsset(assetId);
+        } else {
+          alert('Failed to delete component');
+        }
+      } catch (e) {
+        alert('Network error deleting component.');
+      }
+    }
+
+    async viewAsset(assetId) {
+      if (window.ITApp && typeof window.ITApp.viewAsset === 'function') {
+        return window.ITApp.viewAsset(assetId);
+      }
+    }
+
     /* ==========================================================================
        MODAL CONTROLLER
        ========================================================================== */
@@ -5078,7 +5602,10 @@ Remarks: ${r.remark || 'None'}`);
       document.querySelectorAll('.modal-close-btn, [data-close-modal]').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const overlay = btn.closest('.modal-overlay');
-          if (overlay) overlay.classList.remove('active');
+          if (overlay) {
+            overlay.classList.remove('active');
+            overlay.style.display = 'none';
+          }
         });
       });
 
@@ -5087,6 +5614,7 @@ Remarks: ${r.remark || 'None'}`);
         overlay.addEventListener('click', (e) => {
           if (e.target === overlay) {
             overlay.classList.remove('active');
+            overlay.style.display = 'none';
             if (overlay.id === 'modalConfirmSaveAsset') {
               this.pendingEditFormData = null;
             }
@@ -5100,12 +5628,18 @@ Remarks: ${r.remark || 'None'}`);
 
     openModal(modalId) {
       const modal = document.getElementById(modalId);
-      if (modal) modal.classList.add('active');
+      if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+      }
     }
 
     closeModal(modalId) {
       const modal = document.getElementById(modalId);
-      if (modal) modal.classList.remove('active');
+      if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+      }
     }
 
     populateEditAssetModal(asset) {
@@ -5289,64 +5823,7 @@ Remarks: ${r.remark || 'None'}`);
       if (remarkInput) remarkInput.value = asset.remark || '';
 
       // Initialize dynamic repeatable warranty component tracker
-      let components = [];
-      if (Array.isArray(asset.warrantyComponents) && asset.warrantyComponents.length > 0) {
-        components = JSON.parse(JSON.stringify(asset.warrantyComponents));
-      } else if (typeof asset.warrantyComponents === 'string' && asset.warrantyComponents.trim()) {
-        try {
-          const parsed = JSON.parse(asset.warrantyComponents);
-          if (Array.isArray(parsed) && parsed.length > 0) components = parsed;
-        } catch (e) {}
-      }
-
-      if (components.length === 0) {
-        const defaultAssigned = asset.assignedDate || new Date().toISOString().substring(0, 10);
-        const defaultExpiry = isNonWarranty ? '' : (asset.warrantyEnd && asset.warrantyEnd !== 'Non-Warranty' && asset.warrantyEnd !== 'None' ? asset.warrantyEnd : '');
-
-        // Prepopulate individual hardware components from specs if available
-        if (asset.ram && asset.ram.toLowerCase() !== 'none') {
-          components.push({
-            id: 'wc-' + Date.now() + '-ram',
-            type: 'RAM',
-            assignedDate: defaultAssigned,
-            expiryDate: defaultExpiry
-          });
-        }
-        if (asset.ssd && asset.ssd.toLowerCase() !== 'none') {
-          components.push({
-            id: 'wc-' + (Date.now() + 1) + '-ssd',
-            type: 'SSD',
-            assignedDate: defaultAssigned,
-            expiryDate: defaultExpiry
-          });
-        }
-        if (asset.hdd && asset.hdd.toLowerCase() !== 'none') {
-          components.push({
-            id: 'wc-' + (Date.now() + 2) + '-hdd',
-            type: 'HDD',
-            assignedDate: defaultAssigned,
-            expiryDate: defaultExpiry
-          });
-        }
-        if (asset.monitor && asset.monitor.toLowerCase() !== 'none') {
-          components.push({
-            id: 'wc-' + (Date.now() + 3) + '-mon',
-            type: 'Monitor',
-            assignedDate: defaultAssigned,
-            expiryDate: defaultExpiry
-          });
-        }
-
-        // Fallback to Full System if no individual component specs
-        if (components.length === 0) {
-          components.push({
-            id: 'wc-init-' + Date.now(),
-            type: asset.warrantyType || (isNonWarranty ? 'Non-Warranty' : 'Full System'),
-            assignedDate: defaultAssigned,
-            expiryDate: defaultExpiry
-          });
-        }
-      }
+      const components = this.getWarrantyComponentsForAsset(asset);
 
       this.renderWarrantyComponentRows(components);
 
@@ -5683,10 +6160,10 @@ Remarks: ${r.remark || 'None'}`);
         let finalWarrantyEnd = warrantyEnd;
 
         if (warrantyComponents.length > 0) {
-          const firstComp = warrantyComponents[0];
-          finalWarrantyType = firstComp.type || warrantyType;
+          const hasActiveWarranty = warrantyComponents.some(c => c.coverage === 'warranty' && c.expiryDate && c.expiryDate !== 'Non-Warranty');
+          finalWarrantyType = hasActiveWarranty ? 'Component Lifecycle Tracking' : 'Non-Warranty';
           const validExpiries = warrantyComponents
-            .filter(c => c.expiryDate && c.expiryDate !== 'Non-Warranty' && c.type !== 'Non-Warranty')
+            .filter(c => c.coverage === 'warranty' && c.expiryDate && c.expiryDate !== 'Non-Warranty' && c.type !== 'Non-Warranty')
             .map(c => c.expiryDate);
           if (validExpiries.length > 0) {
             finalWarrantyEnd = validExpiries[0];
@@ -6119,6 +6596,105 @@ Remarks: ${r.remark || 'None'}`);
     /* ==========================================================================
        DYNAMIC REPEATABLE WARRANTY COMPONENTS & SMART STATUS ENGINE
        ========================================================================== */
+    getWarrantyComponentsForAsset(asset) {
+      if (!asset) return [];
+      let components = [];
+      if (Array.isArray(asset.warrantyComponents) && asset.warrantyComponents.length > 0) {
+        components = JSON.parse(JSON.stringify(asset.warrantyComponents));
+      } else if (typeof asset.warrantyComponents === 'string' && asset.warrantyComponents.trim()) {
+        try {
+          const parsed = JSON.parse(asset.warrantyComponents);
+          if (Array.isArray(parsed) && parsed.length > 0) components = parsed;
+        } catch (e) {}
+      }
+
+      const isNonWarranty = !asset.warrantyEnd ||
+        asset.warrantyEnd === '-' ||
+        asset.warrantyEnd === '—' ||
+        asset.warrantyEnd.toLowerCase() === 'none' ||
+        asset.warrantyEnd.toLowerCase() === 'non-warranty' ||
+        asset.warrantyEnd.toLowerCase() === 'nil' ||
+        (asset.warrantyType && asset.warrantyType.toLowerCase() === 'non-warranty');
+
+      if (components.length === 0 && !isNonWarranty) {
+        const defaultAssigned = asset.assignedDate || new Date().toISOString().substring(0, 10);
+        const defaultExpiry = (asset.warrantyEnd && asset.warrantyEnd !== 'Non-Warranty' && asset.warrantyEnd !== 'None') ? asset.warrantyEnd : '';
+
+        // Prepopulate individual hardware components from specs if available
+        if (asset.ram && asset.ram.toLowerCase() !== 'none' && asset.ram.toLowerCase() !== 'nil') {
+          components.push({
+            id: 'wc-' + asset.id + '-ram',
+            type: 'RAM',
+            coverage: 'warranty',
+            assignedDate: defaultAssigned,
+            expiryDate: defaultExpiry
+          });
+        }
+        if (asset.ssd && asset.ssd.toLowerCase() !== 'none' && asset.ssd.toLowerCase() !== 'nil') {
+          components.push({
+            id: 'wc-' + asset.id + '-ssd',
+            type: 'SSD',
+            coverage: 'warranty',
+            assignedDate: defaultAssigned,
+            expiryDate: defaultExpiry
+          });
+        }
+        if (asset.hdd && asset.hdd.toLowerCase() !== 'none' && asset.hdd.toLowerCase() !== 'nil') {
+          components.push({
+            id: 'wc-' + asset.id + '-hdd',
+            type: 'HDD',
+            coverage: 'warranty',
+            assignedDate: defaultAssigned,
+            expiryDate: defaultExpiry
+          });
+        }
+        if (asset.monitor && asset.monitor.toLowerCase() !== 'none' && asset.monitor.toLowerCase() !== 'nil' && asset.monitor !== '-') {
+          components.push({
+            id: 'wc-' + asset.id + '-mon',
+            type: 'Monitor',
+            coverage: 'warranty',
+            assignedDate: defaultAssigned,
+            expiryDate: defaultExpiry
+          });
+        }
+      }
+
+      // Attach spec property to each component if not already present
+      components.forEach(c => {
+        if (!c.spec) {
+          c.spec = this.getComponentSpecText(asset, c.type);
+        }
+      });
+
+      return components;
+    }
+
+    getComponentIcon(type) {
+      const t = (type || '').toLowerCase();
+      if (t.includes('ram')) return '💾';
+      if (t.includes('ssd')) return '⚡';
+      if (t.includes('hdd') || t.includes('hard disk')) return '💽';
+      if (t.includes('mon') || t.includes('screen') || t.includes('display')) return '🖥️';
+      if (t.includes('cpu') || t.includes('processor')) return '⚙️';
+      if (t.includes('motherboard') || t.includes('board')) return '🖲️';
+      if (t.includes('smps') || t.includes('power')) return '🔌';
+      if (t.includes('gpu') || t.includes('graphics')) return '🎮';
+      if (t.includes('key') || t.includes('mouse')) return '⌨️';
+      if (t.includes('ups')) return '🔋';
+      return '🛡️';
+    }
+
+    getComponentSpecText(asset, type) {
+      if (!asset) return '';
+      const t = (type || '').toLowerCase();
+      if (t.includes('ram')) return (asset.ram && asset.ram !== 'None' && asset.ram !== 'Nil') ? asset.ram : '';
+      if (t.includes('ssd')) return (asset.ssd && asset.ssd !== 'None' && asset.ssd !== 'Nil') ? asset.ssd : '';
+      if (t.includes('hdd')) return (asset.hdd && asset.hdd !== 'None' && asset.hdd !== 'Nil') ? asset.hdd : '';
+      if (t.includes('mon')) return (asset.monitor && asset.monitor !== 'None' && asset.monitor !== '-' && asset.monitor !== 'Nil') ? asset.monitor : '';
+      if (t.includes('cpu')) return (asset.cpu && asset.cpu !== 'None' && asset.cpu !== 'Nil') ? asset.cpu : '';
+      return '';
+    }
+
     calculateWarrantyStatus(assignedDate, expiryDate, componentType) {
       if (!componentType || componentType === 'Non-Warranty' || !expiryDate || expiryDate === 'Non-Warranty' || expiryDate === 'None' || expiryDate === '-') {
         return {
@@ -6657,6 +7233,1608 @@ Remarks: ${r.remark || 'None'}`);
         firstExpiryInput.dispatchEvent(new Event('change'));
       }
     }
+
+    // ========================================================================
+    // INSTOCK HARDWARE MANAGEMENT & USER-WISE ASSET TRACKING CONTROLLER
+    // ========================================================================
+    getInstockItems() {
+      return store.data.instockHardware || [];
+    }
+
+    getInstockAllocations() {
+      return store.data.instockAllocations || [];
+    }
+
+    renderInstockDashboard() {
+      const items = this.getInstockItems();
+      const total = items.length;
+      const availableCount = items.filter(i => (i.status || 'Available') === 'Available').length;
+      const assignedCount = items.filter(i => i.status === 'Assigned').length;
+      const maintenanceCount = items.filter(i => i.status === 'Under Maintenance').length;
+
+      // Update the 4 top summary cards with live database counts
+      const totalEl = document.getElementById('instockTotalCount');
+      const availEl = document.getElementById('instockAvailableCount');
+      const assignedEl = document.getElementById('instockAssignedCount');
+      const maintEl = document.getElementById('instockMaintenanceCount');
+
+      if (totalEl) totalEl.textContent = total;
+      if (availEl) availEl.textContent = availableCount;
+      if (assignedEl) assignedEl.textContent = assignedCount;
+      if (maintEl) maintEl.textContent = maintenanceCount;
+
+      // Calculate live Stock & Assigned counts for the 6 Category Cards (Follow Reference Image)
+      const categories = ['CPU', 'SSD', 'RAM', 'SMPS', 'MONITOR', 'OTHER'];
+      categories.forEach(cat => {
+        const catItems = items.filter(i => (i.component_type || 'OTHER').toUpperCase() === cat);
+        const catStock = catItems.length;
+        const catAssigned = catItems.filter(i => i.status === 'Assigned').length;
+
+        const stockEl = document.getElementById(`instockCatStock${cat}`);
+        const assignedEl = document.getElementById(`instockCatAssigned${cat}`);
+        if (stockEl) stockEl.textContent = catStock;
+        if (assignedEl) assignedEl.textContent = catAssigned;
+      });
+
+      // Render the hardware stock inventory overview table below the category cards
+      this.renderInstockInventoryTable();
+    }
+
+    filterInventoryByCategory(cat) {
+      const catSelect = document.getElementById('instockInventoryCategoryFilter');
+      if (catSelect) {
+        if (catSelect.value === cat) {
+          catSelect.value = 'all';
+        } else {
+          catSelect.value = cat;
+        }
+      }
+
+      // Toggle active class visually on category cards
+      const categories = ['CPU', 'SSD', 'RAM', 'SMPS', 'MONITOR', 'OTHER'];
+      categories.forEach(c => {
+        const card = document.getElementById(`catCard${c}`);
+        if (card) {
+          if (catSelect && catSelect.value === c) {
+            card.classList.add('active-cat');
+          } else {
+            card.classList.remove('active-cat');
+          }
+        }
+      });
+
+      this.renderInstockInventoryTable();
+    }
+
+    renderInstockInventoryTable() {
+      const items = this.getInstockItems();
+      const searchInput = document.getElementById('instockInventorySearch');
+      const catSelect = document.getElementById('instockInventoryCategoryFilter');
+      const statSelect = document.getElementById('instockInventoryStatusFilter');
+
+      const searchVal = (searchInput?.value || '').toLowerCase().trim();
+      const catVal = catSelect?.value || 'all';
+      const statVal = statSelect?.value || 'all';
+
+      const filtered = items.filter(item => {
+        if (catVal !== 'all' && (item.component_type || '').toUpperCase() !== catVal) {
+          return false;
+        }
+        if (statVal !== 'all' && (item.status || 'Available') !== statVal) {
+          return false;
+        }
+        if (searchVal) {
+          const match =
+            (item.id || '').toLowerCase().includes(searchVal) ||
+            (item.component_type || '').toLowerCase().includes(searchVal) ||
+            (item.spec || '').toLowerCase().includes(searchVal) ||
+            (item.serial_number || '').toLowerCase().includes(searchVal) ||
+            (item.remark || '').toLowerCase().includes(searchVal);
+          if (!match) return false;
+        }
+        return true;
+      });
+
+      const badge = document.getElementById('instockInventoryCountBadge');
+      if (badge) {
+        badge.textContent = `Showing ${filtered.length} of ${items.length} Items`;
+      }
+
+      const tbody = document.getElementById('instockInventoryTableBody');
+      if (!tbody) return;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align:center; padding:36px; color:#64748b; font-size:0.9rem;">
+              <div style="font-size:2rem; margin-bottom:8px;">🔍</div>
+              <strong>No hardware items match the selected filters.</strong>
+              <div style="font-size:0.8rem; margin-top:4px;">Try clearing filters or click "+ Add Stock" to add new inventory.</div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      const iconMap = {
+        'CPU': '💻',
+        'SSD': '⚡',
+        'RAM': '🧠',
+        'SMPS': '🔌',
+        'MONITOR': '🖥️',
+        'OTHER': '🧰'
+      };
+
+      tbody.innerHTML = filtered.map(item => {
+        const type = (item.component_type || 'OTHER').toUpperCase();
+        const icon = iconMap[type] || '📦';
+        const st = item.status || 'Available';
+
+        let statusBadge = '';
+        if (st === 'Available') {
+          statusBadge = `<span class="instock-badge instock-badge-available">🟢 Available</span>`;
+        } else if (st === 'Assigned') {
+          statusBadge = `<span class="instock-badge instock-badge-assigned">👤 Assigned</span>`;
+        } else {
+          statusBadge = `<span class="instock-badge instock-badge-maintenance">🛠️ Maintenance</span>`;
+        }
+
+        let actionBtns = '';
+        if (st === 'Available') {
+          actionBtns = `
+            <button type="button" class="btn btn-sm btn-primary" onclick="window.ITApp.openAssignAssetModal('${item.id}')" title="Assign this asset to a user" style="padding:4px 9px; border-radius:6px; font-size:0.75rem; font-weight:700;">
+              👤 Assign
+            </button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.setHardwareMaintenance('${item.id}')" title="Mark Under Maintenance" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
+              🛠️
+            </button>
+          `;
+        } else if (st === 'Assigned') {
+          actionBtns = `
+            <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.handleQuickReturn('${item.id}')" title="Return asset back to stock" style="padding:4px 9px; border-radius:6px; font-size:0.75rem; font-weight:700; color:#ea580c;">
+              ↩️ Return
+            </button>
+          `;
+        } else {
+          actionBtns = `
+            <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.markHardwareAvailable('${item.id}')" title="Repair completed, mark Available" style="padding:4px 9px; border-radius:6px; font-size:0.75rem; font-weight:700; color:#16a34a;">
+              🟢 Restore
+            </button>
+          `;
+        }
+
+        return `
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td>
+              <span class="font-mono" style="font-weight:700; color:#2563eb; font-size:0.84rem;">${Utils.escapeHtml(item.id)}</span>
+            </td>
+            <td>
+              <span class="badge" style="background:rgba(37,99,235,0.08); color:var(--primary); font-weight:700; font-size:0.75rem; padding:4px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">
+                <span>${icon}</span> <span>${type}</span>
+              </span>
+            </td>
+            <td>
+              <strong style="color:#0f172a; font-size:0.86rem;">${Utils.escapeHtml(item.spec || '—')}</strong>
+              ${item.remark ? `<div style="font-size:0.73rem; color:#64748b; margin-top:2px;">${Utils.escapeHtml(item.remark)}</div>` : ''}
+            </td>
+            <td>
+              <code style="background:#f8fafc; border:1px solid #e2e8f0; padding:2px 6px; border-radius:4px; font-size:0.78rem; color:#334155;">
+                ${Utils.escapeHtml(item.serial_number || '—')}
+              </code>
+            </td>
+            <td style="font-size:0.82rem; color:#475569;">
+              ${Utils.escapeHtml(item.purchase_date || '—')}
+            </td>
+            <td>${statusBadge}</td>
+            <td style="text-align:center; white-space:nowrap;">
+              <div style="display:inline-flex; gap:6px; align-items:center;">
+                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.viewInstockItem('${item.id}')" title="View Hardware Details" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
+                  👁️
+                </button>
+                ${actionBtns}
+                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.openInstockEntryModal(null, '${item.id}')" title="Edit Hardware Record" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
+                  ✏️
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.deleteInstockEntry('${item.id}')" title="Delete Hardware Record" style="padding:4px 8px; border-radius:6px; font-size:0.75rem; color:#ef4444;">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ========================================================================
+    // STOCK INVENTORY VIEW CONTROLLER (DEDICATED FULL SUBMENU PAGE)
+    // ========================================================================
+    renderInstockInventoryView() {
+      const items = this.getInstockItems();
+      const searchInput = document.getElementById('instockInventoryFullSearch');
+      const catSelect = document.getElementById('instockInventoryFullCategoryFilter');
+      const statSelect = document.getElementById('instockInventoryFullStatusFilter');
+
+      const searchVal = (searchInput?.value || '').toLowerCase().trim();
+      const catVal = catSelect?.value || 'all';
+      const statVal = statSelect?.value || 'all';
+
+      const filtered = items.filter(item => {
+        if (catVal !== 'all' && (item.component_type || '').toUpperCase() !== catVal) {
+          return false;
+        }
+        if (statVal !== 'all' && (item.status || 'Available') !== statVal) {
+          return false;
+        }
+        if (searchVal) {
+          const match =
+            (item.id || '').toLowerCase().includes(searchVal) ||
+            (item.component_type || '').toLowerCase().includes(searchVal) ||
+            (item.spec || '').toLowerCase().includes(searchVal) ||
+            (item.serial_number || '').toLowerCase().includes(searchVal) ||
+            (item.remark || '').toLowerCase().includes(searchVal);
+          if (!match) return false;
+        }
+        return true;
+      });
+
+      const badge = document.getElementById('instockInventoryFullCountBadge');
+      if (badge) {
+        badge.textContent = `Showing ${filtered.length} of ${items.length} Items`;
+      }
+
+      const tbody = document.getElementById('instockInventoryFullTableBody');
+      if (!tbody) return;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align:center; padding:36px; color:#64748b; font-size:0.9rem;">
+              <div style="font-size:2rem; margin-bottom:8px;">🔍</div>
+              <strong>No hardware items match the selected filters.</strong>
+              <div style="font-size:0.8rem; margin-top:4px;">Try clearing filters or click "+ Add Stock Item" to add new inventory.</div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      const iconMap = {
+        'CPU': '💻',
+        'SSD': '⚡',
+        'RAM': '🧠',
+        'SMPS': '🔌',
+        'MONITOR': '🖥️',
+        'OTHER': '🧰'
+      };
+
+      tbody.innerHTML = filtered.map(item => {
+        const type = (item.component_type || 'OTHER').toUpperCase();
+        const icon = iconMap[type] || '📦';
+        const st = item.status || 'Available';
+
+        let statusBadge = '';
+        if (st === 'Available') {
+          statusBadge = `<span class="instock-badge instock-badge-available">🟢 Available</span>`;
+        } else if (st === 'Assigned') {
+          statusBadge = `<span class="instock-badge instock-badge-assigned">👤 Assigned</span>`;
+        } else {
+          statusBadge = `<span class="instock-badge instock-badge-maintenance">🛠️ Maintenance</span>`;
+        }
+
+        let actionBtns = '';
+        if (st === 'Available') {
+          actionBtns = `
+            <button type="button" class="btn btn-sm btn-primary" onclick="window.ITApp.openAssignAssetModal('${item.id}')" title="Assign this asset" style="padding:4px 9px; border-radius:6px; font-size:0.75rem; font-weight:700;">
+              👤 Assign
+            </button>
+          `;
+        } else if (st === 'Assigned') {
+          actionBtns = `
+            <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.handleQuickReturn('${item.id}')" title="Return asset back to stock" style="padding:4px 9px; border-radius:6px; font-size:0.75rem; font-weight:700; color:#ea580c;">
+              ↩️ Return
+            </button>
+          `;
+        }
+
+        return `
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td>
+              <span class="font-mono" style="font-weight:700; color:#2563eb; font-size:0.84rem;">${Utils.escapeHtml(item.id)}</span>
+            </td>
+            <td>
+              <span class="badge" style="background:rgba(37,99,235,0.08); color:var(--primary); font-weight:700; font-size:0.75rem; padding:4px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">
+                <span>${icon}</span> <span>${type}</span>
+              </span>
+            </td>
+            <td>
+              <strong style="color:#0f172a; font-size:0.86rem;">${Utils.escapeHtml(item.spec || '—')}</strong>
+              ${item.remark ? `<div style="font-size:0.73rem; color:#64748b; margin-top:2px;">${Utils.escapeHtml(item.remark)}</div>` : ''}
+            </td>
+            <td>
+              <code style="background:#f8fafc; border:1px solid #e2e8f0; padding:2px 6px; border-radius:4px; font-size:0.78rem; color:#334155;">
+                ${Utils.escapeHtml(item.serial_number || '—')}
+              </code>
+            </td>
+            <td style="font-size:0.82rem; color:#475569;">
+              ${Utils.escapeHtml(item.purchase_date || '—')}
+            </td>
+            <td>${statusBadge}</td>
+            <td style="text-align:center; white-space:nowrap;">
+              <div style="display:inline-flex; gap:6px; align-items:center;">
+                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.viewInstockItem('${item.id}')" title="View Hardware Details" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
+                  👁️
+                </button>
+                ${actionBtns}
+                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.openInstockEntryModal(null, '${item.id}')" title="Edit Hardware Record" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
+                  ✏️
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.deleteInstockEntry('${item.id}')" title="Delete Hardware Record" style="padding:4px 8px; border-radius:6px; font-size:0.75rem; color:#ef4444;">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    filterFullInventoryView() {
+      this.renderInstockInventoryView();
+    }
+
+    resetFullInventoryViewFilters() {
+      const searchInput = document.getElementById('instockInventoryFullSearch');
+      const catSelect = document.getElementById('instockInventoryFullCategoryFilter');
+      const statSelect = document.getElementById('instockInventoryFullStatusFilter');
+
+      if (searchInput) searchInput.value = '';
+      if (catSelect) catSelect.value = 'all';
+      if (statSelect) statSelect.value = 'all';
+
+      this.renderInstockInventoryView();
+    }
+
+    // ========================================================================
+    // VIEW HARDWARE ITEM MODAL
+    // ========================================================================
+    viewInstockItem(id) {
+      const item = (store.data.instockHardware || []).find(i => i.id === id);
+      if (!item) return;
+
+      this.currentViewingHwId = id;
+      const assetIdEl = document.getElementById('viewHwAssetId');
+      const statusBadgeEl = document.getElementById('viewHwStatusBadge');
+      const catEl = document.getElementById('viewHwCategory');
+      const purchaseDateEl = document.getElementById('viewHwPurchaseDate');
+      const specEl = document.getElementById('viewHwSpec');
+      const serialEl = document.getElementById('viewHwSerial');
+      const remarkEl = document.getElementById('viewHwRemark');
+      const assignSection = document.getElementById('viewHwAssignmentSection');
+      const userEl = document.getElementById('viewHwAssignedUser');
+      const teamEl = document.getElementById('viewHwAssignedTeam');
+      const tlEl = document.getElementById('viewHwAssignedTl');
+      const dateEl = document.getElementById('viewHwAssignedDate');
+
+      if (assetIdEl) assetIdEl.textContent = item.id;
+      if (catEl) catEl.textContent = item.component_type || 'Hardware';
+      if (purchaseDateEl) purchaseDateEl.textContent = item.purchase_date || '—';
+      if (specEl) specEl.textContent = item.spec || '—';
+      if (serialEl) serialEl.textContent = item.serial_number || '—';
+      if (remarkEl) remarkEl.textContent = item.remark || 'None';
+
+      const st = item.status || 'Available';
+      if (statusBadgeEl) {
+        if (st === 'Available') {
+          statusBadgeEl.className = 'badge badge-success';
+          statusBadgeEl.textContent = '🟢 Available';
+        } else if (st === 'Assigned') {
+          statusBadgeEl.className = 'badge badge-primary';
+          statusBadgeEl.textContent = '👤 Assigned';
+        } else {
+          statusBadgeEl.className = 'badge badge-warning';
+          statusBadgeEl.textContent = '🛠️ Under Maintenance';
+        }
+      }
+
+      if (assignSection) {
+        if (st === 'Assigned' && (item.assigned_user || item.team || item.tl)) {
+          assignSection.style.display = 'flex';
+          if (userEl) userEl.textContent = item.assigned_user || '—';
+          if (teamEl) teamEl.textContent = item.team || '—';
+          if (tlEl) tlEl.textContent = item.tl || '—';
+          if (dateEl) dateEl.textContent = item.assigned_date || '—';
+        } else {
+          assignSection.style.display = 'none';
+        }
+      }
+
+      this.openModal('modalViewInstockItem');
+    }
+
+    openInstockEntryModalFromView() {
+      const id = this.currentViewingHwId;
+      this.closeModal('modalViewInstockItem');
+      if (id) {
+        this.openInstockEntryModal(null, id);
+      }
+    }
+
+    filterDashboardByStatus(status) {
+      const statSelect = document.getElementById('instockInventoryStatusFilter');
+      if (statSelect) {
+        statSelect.value = status;
+      }
+      document.querySelectorAll('.instock-summary-card').forEach(c => c.classList.remove('active-filter'));
+      if (status === 'all') {
+        document.querySelector('.instock-summary-card.total')?.classList.add('active-filter');
+      } else if (status === 'Available') {
+        document.querySelector('.instock-summary-card.available')?.classList.add('active-filter');
+      } else if (status === 'Assigned') {
+        document.querySelector('.instock-summary-card.assigned')?.classList.add('active-filter');
+      } else if (status === 'Under Maintenance') {
+        document.querySelector('.instock-summary-card.maintenance')?.classList.add('active-filter');
+      }
+      this.renderInstockInventoryTable();
+    }
+
+    navToAssignedWithFilter(status) {
+      this.navigateTo('instock-assigned');
+      const statusSelect = document.getElementById('instockFilterStatus');
+      if (statusSelect) {
+        statusSelect.value = status;
+      }
+      this.renderAssignedItemsTable();
+    }
+
+    filterInstockDashboard() {
+      this.renderInstockInventoryTable();
+    }
+
+    resetInstockDashboardFilters() {
+      const searchInput = document.getElementById('instockInventorySearch');
+      const catSelect = document.getElementById('instockInventoryCategoryFilter');
+      const statSelect = document.getElementById('instockInventoryStatusFilter');
+
+      if (searchInput) searchInput.value = '';
+      if (catSelect) catSelect.value = 'all';
+      if (statSelect) statSelect.value = 'all';
+
+      document.querySelectorAll('.instock-summary-card').forEach(c => c.classList.remove('active-filter'));
+      const categories = ['CPU', 'SSD', 'RAM', 'SMPS', 'MONITOR', 'OTHER'];
+      categories.forEach(c => {
+        document.getElementById(`catCard${c}`)?.classList.remove('active-cat');
+      });
+
+      this.renderInstockInventoryTable();
+    }
+
+    // ========================================================================
+    // ASSIGNED DETAILS CONTROLLER (SEPARATE SUBMENU & ALLOCATIONS AUDIT)
+    // ========================================================================
+    populateAssignedFilterDropdowns() {
+      const userSelect = document.getElementById('instockFilterUser');
+      const deptSelect = document.getElementById('instockFilterDepartment');
+      const tlSelect = document.getElementById('instockFilterTl');
+      if (!userSelect) return;
+
+      const currentSelectedUser = userSelect.value;
+      const currentSelectedDept = deptSelect?.value || 'all';
+      const currentSelectedTl = tlSelect?.value || 'all';
+
+      const allocations = this.getInstockAllocations();
+      const allUsers = store.data.users || [];
+
+      // Extract unique user names
+      const usersSet = new Set();
+      allocations.forEach(a => { if (a.user_name) usersSet.add(a.user_name.trim()); });
+      allUsers.forEach(u => { if (u.name) usersSet.add(u.name.trim()); });
+      const sortedUsers = Array.from(usersSet).sort((a, b) => a.localeCompare(b));
+
+      // Extract unique departments / teams
+      const deptSet = new Set();
+      allocations.forEach(a => { if (a.team) deptSet.add(a.team.trim()); });
+      ['PHP', 'AI', 'MOBIL TEAM', 'ACCOUNT', 'ADMIN', 'HR', 'SYSTEM ADMIN', 'Team 1', 'Team 2', 'Team 3'].forEach(d => deptSet.add(d));
+      const sortedDepts = Array.from(deptSet).sort((a, b) => a.localeCompare(b));
+
+      // Extract unique TL names
+      const tlSet = new Set();
+      allocations.forEach(a => { if (a.tl_name) tlSet.add(a.tl_name.trim()); });
+      ['Sundar Pichai', 'Kavitha R', 'Mohan K', 'Divya S', 'Anand Kumar', 'Ramesh B'].forEach(t => tlSet.add(t));
+      const sortedTls = Array.from(tlSet).sort((a, b) => a.localeCompare(b));
+
+      // Rebuild User options
+      let userOptionsHtml = '<option value="all">All Employees</option>';
+      sortedUsers.forEach(u => {
+        const selected = (u === currentSelectedUser) ? 'selected' : '';
+        userOptionsHtml += `<option value="${Utils.escapeHtml(u)}" ${selected}>${Utils.escapeHtml(u)}</option>`;
+      });
+      userSelect.innerHTML = userOptionsHtml;
+
+      // Rebuild Department options
+      if (deptSelect) {
+        let deptOptionsHtml = '<option value="all">All Departments</option>';
+        sortedDepts.forEach(d => {
+          const selected = (d === currentSelectedDept) ? 'selected' : '';
+          deptOptionsHtml += `<option value="${Utils.escapeHtml(d)}" ${selected}>${Utils.escapeHtml(d)}</option>`;
+        });
+        deptSelect.innerHTML = deptOptionsHtml;
+      }
+
+      // Rebuild TL options
+      if (tlSelect) {
+        let tlOptionsHtml = '<option value="all">All Team Leads</option>';
+        sortedTls.forEach(tl => {
+          const selected = (tl === currentSelectedTl) ? 'selected' : '';
+          tlOptionsHtml += `<option value="${Utils.escapeHtml(tl)}" ${selected}>${Utils.escapeHtml(tl)}</option>`;
+        });
+        tlSelect.innerHTML = tlOptionsHtml;
+      }
+    }
+
+    renderAssignedItemsTable() {
+      // Ensure filter dropdowns are populated dynamically from the database
+      this.populateAssignedFilterDropdowns();
+
+      const allocations = this.getInstockAllocations();
+      const searchInput = document.getElementById('instockAssignedSearch');
+      const userSelect = document.getElementById('instockFilterUser');
+      const deptSelect = document.getElementById('instockFilterDepartment');
+      const tlSelect = document.getElementById('instockFilterTl');
+      const catSelect = document.getElementById('instockFilterCategory');
+      const statSelect = document.getElementById('instockFilterStatus');
+      const dateInput = document.getElementById('instockFilterDate');
+
+      const searchVal = (searchInput?.value || '').toLowerCase().trim();
+      const userVal = (userSelect?.value || 'all').toLowerCase();
+      const deptVal = (deptSelect?.value || 'all').toLowerCase();
+      const tlVal = (tlSelect?.value || 'all').toLowerCase();
+      const catVal = (catSelect?.value || 'all').toUpperCase();
+      const statVal = statSelect?.value || 'all';
+      const dateVal = dateInput?.value || '';
+
+      // CRITICAL: Combined AND Logic across all filters
+      const filtered = allocations.filter(alloc => {
+        // User filter
+        if (userVal !== 'all' && (alloc.user_name || '').toLowerCase() !== userVal) {
+          return false;
+        }
+        // Department / Team filter
+        if (deptVal !== 'all' && (alloc.team || '').toLowerCase() !== deptVal) {
+          return false;
+        }
+        // TL filter
+        if (tlVal !== 'all' && (alloc.tl_name || '').toLowerCase() !== tlVal) {
+          return false;
+        }
+        // Category filter
+        if (catVal !== 'all' && (alloc.component_type || '').toUpperCase() !== catVal) {
+          return false;
+        }
+        // Status filter (Assigned / Pending In-Stock / Returned)
+        if (statVal !== 'all') {
+          if (statVal === 'Assigned' && alloc.status !== 'Assigned') return false;
+          if (statVal === 'Pending In-Stock' && alloc.status !== 'Pending In-Stock') return false;
+          if (statVal === 'Returned' && alloc.status !== 'Returned') return false;
+        }
+        // Assigned Date filter
+        if (dateVal && (alloc.assigned_date || '') !== dateVal) {
+          return false;
+        }
+        // Multi-field search
+        if (searchVal) {
+          const match =
+            (alloc.id || '').toLowerCase().includes(searchVal) ||
+            (alloc.asset_id || '').toLowerCase().includes(searchVal) ||
+            (alloc.user_name || '').toLowerCase().includes(searchVal) ||
+            (alloc.team || '').toLowerCase().includes(searchVal) ||
+            (alloc.tl_name || '').toLowerCase().includes(searchVal) ||
+            (alloc.component_type || '').toLowerCase().includes(searchVal) ||
+            (alloc.spec || '').toLowerCase().includes(searchVal) ||
+            (alloc.serial_number || '').toLowerCase().includes(searchVal) ||
+            (alloc.changing_reason || '').toLowerCase().includes(searchVal) ||
+            (alloc.purpose || '').toLowerCase().includes(searchVal);
+          if (!match) return false;
+        }
+        return true;
+      });
+
+      // Update badge count
+      const badge = document.getElementById('instockAssignedCountBadge');
+      if (badge) {
+        badge.textContent = `Showing ${filtered.length} of ${allocations.length} Records`;
+      }
+
+      const tbody = document.getElementById('instockAssignedTableBody');
+      if (!tbody) return;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" style="text-align:center; padding:36px; color:#64748b; font-size:0.9rem;">
+              <div style="font-size:2rem; margin-bottom:8px;">🔍</div>
+              <strong>No assigned details match the current filter selection.</strong>
+              <div style="font-size:0.8rem; margin-top:4px;">Try clicking "↺ Clear All" to reset filters.</div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(alloc => {
+        const isAssigned = (alloc.status === 'Assigned');
+        const isPending = (alloc.status === 'Pending In-Stock');
+
+        let statusBadge = '';
+        if (isAssigned) {
+          statusBadge = `<span class="instock-badge instock-badge-assigned">🟢 Assigned</span>`;
+        } else if (isPending) {
+          statusBadge = `<span class="instock-badge instock-badge-pending">🟠 Pending In-Stock</span>`;
+        } else {
+          statusBadge = `<span class="instock-badge instock-badge-returned">⚪ Returned</span>`;
+        }
+
+        return `
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td>
+              <span class="font-mono" style="font-weight:700; color:#2563eb; font-size:0.84rem;">${Utils.escapeHtml(alloc.asset_id || alloc.id)}</span>
+            </td>
+            <td>
+              <strong style="color:#0f172a; font-size:0.86rem;">${Utils.escapeHtml(alloc.spec || '—')}</strong>
+              <div style="font-size:0.72rem; color:#64748b; font-family:var(--font-mono, monospace);">S/N: ${Utils.escapeHtml(alloc.serial_number || '—')}</div>
+            </td>
+            <td>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div style="width:28px; height:28px; border-radius:50%; background:#eff6ff; color:#2563eb; font-weight:700; font-size:0.75rem; display:flex; align-items:center; justify-content:center; border:1px solid #bfdbfe; flex-shrink:0;">
+                  ${Utils.escapeHtml((alloc.user_name || 'U').substring(0, 2).toUpperCase())}
+                </div>
+                <strong style="color:#0f172a; font-size:0.86rem; cursor:pointer;" onclick="window.ITApp.openUserAssetHistoryModal('${Utils.escapeHtml(alloc.user_name)}')" title="Click to view full user history">
+                  ${Utils.escapeHtml(alloc.user_name || '—')}
+                </strong>
+              </div>
+            </td>
+            <td>
+              <span class="badge" style="background:#f1f5f9; color:#334155; font-weight:600; font-size:0.76rem; border:1px solid #e2e8f0; padding:3px 8px; border-radius:6px;">
+                ${Utils.escapeHtml(alloc.team || '—')}
+              </span>
+            </td>
+            <td style="font-size:0.84rem; font-weight:600; color:#334155;">
+              ${Utils.escapeHtml(alloc.tl_name || '—')}
+            </td>
+            <td>${statusBadge}</td>
+            <td style="font-size:0.82rem; color:#64748b; font-weight:500;">
+              ${Utils.escapeHtml(alloc.user_exit_date || '—')}
+            </td>
+            <td>
+              <span style="font-size:0.8rem; color:#1e40af; background:#eff6ff; border:1px solid #bfdbfe; padding:2px 8px; border-radius:6px; display:inline-block; font-weight:500;">
+                ${Utils.escapeHtml(alloc.changing_reason || alloc.purpose || '—')}
+              </span>
+            </td>
+            <td style="text-align:center; white-space:nowrap;">
+              <div style="display:inline-flex; gap:6px; align-items:center;">
+                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.viewAllocationDetails('${alloc.id}')" title="View Assignment Details" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
+                  👁️
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.openEditAllocationModal('${alloc.id}')" title="Edit Details" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
+                  ✏️ Edit
+                </button>
+                ${isAssigned ? `
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.openReturnAssetModal('${alloc.id}')" title="Return Asset" style="padding:4px 8px; border-radius:6px; font-size:0.75rem; font-weight:700; color:#ea580c;">
+                    ↩️ Return
+                  </button>
+                ` : ''}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    renderInstockAssignedTable() {
+      this.renderAssignedItemsTable();
+    }
+
+    filterAssignedItems() {
+      this.renderAssignedItemsTable();
+    }
+
+    resetAssignedItemsFilters() {
+      const searchInput = document.getElementById('instockAssignedSearch');
+      const userSelect = document.getElementById('instockFilterUser');
+      const deptSelect = document.getElementById('instockFilterDepartment');
+      const tlSelect = document.getElementById('instockFilterTl');
+      const catSelect = document.getElementById('instockFilterCategory');
+      const statSelect = document.getElementById('instockFilterStatus');
+      const dateInput = document.getElementById('instockFilterDate');
+
+      if (searchInput) searchInput.value = '';
+      if (userSelect) userSelect.value = 'all';
+      if (deptSelect) deptSelect.value = 'all';
+      if (tlSelect) tlSelect.value = 'all';
+      if (catSelect) catSelect.value = 'all';
+      if (statSelect) statSelect.value = 'all';
+      if (dateInput) dateInput.value = '';
+
+      this.renderAssignedItemsTable();
+    }
+
+    viewAllocationDetails(allocId) {
+      const alloc = (store.data.instockAllocations || []).find(a => a.id === allocId);
+      if (!alloc) return;
+
+      this.currentViewingAllocId = allocId;
+      const assetIdEl = document.getElementById('viewAllocAssetId');
+      const allocIdEl = document.getElementById('viewAllocId');
+      const statusBadgeEl = document.getElementById('viewAllocStatusBadge');
+      const userEl = document.getElementById('viewAllocUser');
+      const teamEl = document.getElementById('viewAllocTeam');
+      const tlEl = document.getElementById('viewAllocTl');
+      const specEl = document.getElementById('viewAllocSpec');
+      const serialEl = document.getElementById('viewAllocSerial');
+      const assignedDateEl = document.getElementById('viewAllocAssignedDate');
+      const exitDateEl = document.getElementById('viewAllocExitDate');
+      const reasonEl = document.getElementById('viewAllocReason');
+      const remarkEl = document.getElementById('viewAllocRemark');
+
+      if (assetIdEl) assetIdEl.textContent = alloc.asset_id || alloc.id;
+      if (allocIdEl) allocIdEl.textContent = alloc.id;
+      if (userEl) userEl.textContent = alloc.user_name || '—';
+      if (teamEl) teamEl.textContent = alloc.team || '—';
+      if (tlEl) tlEl.textContent = alloc.tl_name || '—';
+      if (specEl) specEl.textContent = alloc.spec || '—';
+      if (serialEl) serialEl.textContent = alloc.serial_number || '—';
+      if (assignedDateEl) assignedDateEl.textContent = alloc.assigned_date || '—';
+      if (exitDateEl) exitDateEl.textContent = alloc.user_exit_date || '—';
+      if (reasonEl) reasonEl.textContent = alloc.changing_reason || alloc.purpose || 'General Allocation';
+      if (remarkEl) remarkEl.textContent = alloc.remark || 'None';
+
+      if (statusBadgeEl) {
+        if (alloc.status === 'Assigned') {
+          statusBadgeEl.className = 'badge badge-success';
+          statusBadgeEl.textContent = '🟢 Assigned';
+        } else if (alloc.status === 'Pending In-Stock') {
+          statusBadgeEl.className = 'badge badge-warning';
+          statusBadgeEl.textContent = '🟠 Pending In-Stock';
+        } else {
+          statusBadgeEl.className = 'badge badge-secondary';
+          statusBadgeEl.textContent = '⚪ Returned';
+        }
+      }
+
+      this.openModal('modalViewAllocation');
+    }
+
+    openEditAllocationFromView() {
+      const id = this.currentViewingAllocId;
+      this.closeModal('modalViewAllocation');
+      if (id) {
+        this.openEditAllocationModal(id);
+      }
+    }
+
+    exportAssignedCsv() {
+      const allocations = this.getInstockAllocations();
+      if (!allocations || allocations.length === 0) {
+        Utils.showToast('Export Empty', 'No allocation records to export.', 'warning');
+        return;
+      }
+      const headers = ['Asset ID', 'Specification', 'Serial Number', 'Assigned Employee Name', 'Department / Team', 'Team Leader (TL)', 'System Status', 'User Exit Date', 'Hardware Changing Reason', 'Assigned Date', 'Remarks'];
+      const rows = allocations.map(a => [
+        `"${a.asset_id || a.id || ''}"`,
+        `"${(a.spec || '').replace(/"/g, '""')}"`,
+        `"${a.serial_number || ''}"`,
+        `"${(a.user_name || '').replace(/"/g, '""')}"`,
+        `"${(a.team || '').replace(/"/g, '""')}"`,
+        `"${(a.tl_name || '').replace(/"/g, '""')}"`,
+        `"${a.status || ''}"`,
+        `"${a.user_exit_date || ''}"`,
+        `"${(a.changing_reason || a.purpose || '').replace(/"/g, '""')}"`,
+        `"${a.assigned_date || ''}"`,
+        `"${(a.remark || '').replace(/"/g, '""')}"`
+      ]);
+
+      const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `INSTOCK_Assigned_Details_${new Date().toISOString().substring(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      Utils.showToast('CSV Exported', `Exported ${allocations.length} records.`, 'success');
+    }
+
+    // ========================================================================
+    // ASSET ASSIGNMENT FORM (REQUIREMENT 4)
+    // ========================================================================
+    openAssignAssetModal(preselectedAssetId = null) {
+      const userList = document.getElementById('assignAssetUserList');
+      const userInput = document.getElementById('assignAssetUser');
+      const tlSelect = document.getElementById('assignAssetTl');
+      const hwSelect = document.getElementById('assignAssetHardware');
+      const dateInput = document.getElementById('assignAssetDate');
+      const purposeSelect = document.getElementById('assignAssetPurposeSelect');
+      const purposeCustom = document.getElementById('assignAssetPurposeCustom');
+
+      // Populate User Datalist from existing users & history
+      if (userList) {
+        const userSet = new Set();
+        (store.data.users || []).forEach(u => { if (u.name) userSet.add(u.name.trim()); });
+        (store.data.instockAllocations || []).forEach(a => { if (a.user_name) userSet.add(a.user_name.trim()); });
+        userSet.add('VIMAL');
+        userList.innerHTML = Array.from(userSet).sort().map(name => `<option value="${Utils.escapeHtml(name)}">${Utils.escapeHtml(name)}</option>`).join('');
+      }
+
+      // Populate TL Select from system team leads
+      if (tlSelect) {
+        const tlList = ['Sundar Pichai', 'Kavitha R', 'Mohan K', 'Divya S', 'Anand Kumar', 'Ramesh B'];
+        tlSelect.innerHTML = `<option value="">Select Team Lead...</option>` +
+          tlList.map(tl => `<option value="${Utils.escapeHtml(tl)}">${Utils.escapeHtml(tl)}</option>`).join('');
+      }
+
+      // Populate Available Assets ONLY (from instockHardware where status === 'Available')
+      if (hwSelect) {
+        const availableItems = (store.data.instockHardware || []).filter(i => (i.status || 'Available') === 'Available');
+        if (availableItems.length === 0) {
+          hwSelect.innerHTML = `<option value="" disabled selected>⚠️ No available hardware items currently in stock</option>`;
+        } else {
+          hwSelect.innerHTML = `<option value="">Select available hardware item (${availableItems.length} available)...</option>` +
+            availableItems.map(item => `
+              <option value="${item.id}" ${preselectedAssetId === item.id ? 'selected' : ''}>
+                [${item.component_type}] ${item.spec} — S/N: ${item.serial_number} (${item.id})
+              </option>
+            `).join('');
+        }
+      }
+
+      if (userInput) userInput.value = '';
+      if (dateInput) dateInput.value = new Date().toISOString().substring(0, 10);
+      if (purposeSelect) purposeSelect.value = 'Development work';
+      if (purposeCustom) purposeCustom.value = '';
+
+      const adminLabel = document.getElementById('assignLoggedAdminLabel');
+      if (adminLabel) adminLabel.textContent = 'Sundar Pichai (SysAdmin)';
+
+      const timeLabel = document.getElementById('assignTimestampLabel');
+      if (timeLabel) timeLabel.textContent = new Date().toLocaleString();
+
+      this.openModal('modalAssignAsset');
+    }
+
+    autoSelectUserTl(userName) {
+      if (!userName) return;
+      const cleanName = userName.trim().toLowerCase();
+      const existingAlloc = (store.data.instockAllocations || []).find(a => (a.user_name || '').toLowerCase() === cleanName);
+      const existingUser = (store.data.users || []).find(u => (u.name || '').toLowerCase() === cleanName);
+
+      const targetTl = existingAlloc?.tl_name || existingUser?.teamLead || 'Sundar Pichai';
+      const tlSelect = document.getElementById('assignAssetTl');
+      if (tlSelect && targetTl) {
+        let found = false;
+        for (let opt of (tlSelect.options || [])) {
+          if ((opt.value || '').toLowerCase() === targetTl.toLowerCase()) {
+            opt.selected = true;
+            found = true;
+            break;
+          }
+        }
+        if (!found && typeof Option !== 'undefined') {
+          const newOpt = new Option(targetTl, targetTl, true, true);
+          tlSelect.add(newOpt);
+        }
+      }
+    }
+
+    handlePurposeChange() {
+      const select = document.getElementById('assignAssetPurposeSelect');
+      const customInput = document.getElementById('assignAssetPurposeCustom');
+      if (select && select.value === 'Custom Purpose') {
+        customInput?.focus();
+      }
+    }
+
+    async handleAssignAssetSubmit(event) {
+      if (event && event.preventDefault) event.preventDefault();
+
+      const userName = document.getElementById('assignAssetUser')?.value?.trim();
+      const tlName = document.getElementById('assignAssetTl')?.value;
+      const assetId = document.getElementById('assignAssetHardware')?.value;
+      const assignedDate = document.getElementById('assignAssetDate')?.value;
+      const purposeSelect = document.getElementById('assignAssetPurposeSelect')?.value;
+      const purposeCustom = document.getElementById('assignAssetPurposeCustom')?.value?.trim();
+
+      // Validation
+      if (!userName) {
+        Utils.showToast('Validation Error', 'Please specify a User Name for allocation.', 'error');
+        return;
+      }
+      if (!tlName) {
+        Utils.showToast('Validation Error', 'Please select a Team Lead (TL).', 'error');
+        return;
+      }
+      if (!assetId) {
+        Utils.showToast('Validation Error', 'Please select an Available hardware item.', 'error');
+        return;
+      }
+      if (!assignedDate) {
+        Utils.showToast('Validation Error', 'Please select the assignment date.', 'error');
+        return;
+      }
+
+      // Check asset is still available
+      const hwItem = (store.data.instockHardware || []).find(i => i.id === assetId);
+      if (!hwItem || hwItem.status === 'Assigned') {
+        Utils.showToast('Asset Unavailable', 'The selected asset is already allocated or unavailable.', 'error');
+        return;
+      }
+
+      // Extract existing user team if available
+      const existingUser = (store.data.users || []).find(u => (u.name || '').toLowerCase() === userName.toLowerCase());
+      const team = hwItem.team || existingUser?.team || 'Staff';
+
+      let finalPurpose = purposeSelect;
+      if (purposeSelect === 'Custom Purpose') {
+        finalPurpose = purposeCustom || 'Custom Purpose';
+      } else if (purposeCustom) {
+        finalPurpose = `${purposeSelect} (${purposeCustom})`;
+      }
+
+      const payload = {
+        asset_id: assetId,
+        user_name: userName,
+        team,
+        tl_name: tlName,
+        component_type: hwItem.component_type || 'OTHER',
+        spec: hwItem.spec || '',
+        serial_number: hwItem.serial_number || '',
+        assigned_date: assignedDate,
+        purpose: finalPurpose,
+        status: 'Assigned',
+        assigned_by: 'Sundar Pichai (SysAdmin)',
+        remark: ''
+      };
+
+      try {
+        const res = await fetch('/api/instock/allocations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          const newAlloc = await res.json();
+          if (!store.data.instockAllocations) store.data.instockAllocations = [];
+          store.data.instockAllocations.unshift(newAlloc);
+
+          hwItem.status = 'Assigned';
+          hwItem.assigned_user = userName;
+          hwItem.assigned_date = assignedDate;
+          hwItem.team = team;
+          hwItem.tl = tlName;
+          store.save();
+
+          Utils.showToast('Asset Assigned', `Successfully assigned ${hwItem.spec} to ${userName}.`, 'success');
+        } else {
+          const err = await res.json();
+          throw new Error(err.error || 'Server rejected allocation');
+        }
+      } catch (err) {
+        console.warn('API error, falling back to local state:', err);
+        const newAllocId = `ALC-${Math.floor(1000 + Math.random() * 9000)}`;
+        const localAlloc = {
+          id: newAllocId,
+          ...payload,
+          return_date: null,
+          created_at: new Date().toISOString()
+        };
+        if (!store.data.instockAllocations) store.data.instockAllocations = [];
+        store.data.instockAllocations.unshift(localAlloc);
+
+        hwItem.status = 'Assigned';
+        hwItem.assigned_user = userName;
+        hwItem.assigned_date = assignedDate;
+        hwItem.team = team;
+        hwItem.tl = tlName;
+        store.save();
+
+        Utils.showToast('Asset Assigned', `Assigned ${hwItem.spec} to ${userName}.`, 'success');
+      }
+
+      this.closeModal('modalAssignAsset');
+      this.renderInstockDashboard();
+      this.renderAssignedItemsTable();
+    }
+
+    // ========================================================================
+    // RETURN ASSET FUNCTIONALITY (PRESERVES HISTORY)
+    // ========================================================================
+    openReturnAssetModal(allocId) {
+      const alloc = (store.data.instockAllocations || []).find(a => a.id === allocId);
+      if (!alloc) {
+        Utils.showToast('Error', 'Allocation record not found.', 'error');
+        return;
+      }
+
+      document.getElementById('returnAllocId').value = alloc.id;
+      document.getElementById('returnAllocUser').textContent = alloc.user_name || '—';
+      document.getElementById('returnAllocIdLabel').textContent = alloc.id;
+      document.getElementById('returnAllocSpec').textContent = alloc.spec || '—';
+      document.getElementById('returnAllocSerial').textContent = alloc.serial_number || '—';
+      document.getElementById('returnAssetDate').value = new Date().toISOString().substring(0, 10);
+      document.getElementById('returnHardwareNextStatus').value = 'Available';
+      document.getElementById('returnAssetRemark').value = '';
+
+      this.openModal('modalReturnAsset');
+    }
+
+    async handleReturnAssetSubmit(event) {
+      if (event && event.preventDefault) event.preventDefault();
+
+      const allocId = document.getElementById('returnAllocId')?.value;
+      const returnDate = document.getElementById('returnAssetDate')?.value;
+      const nextStatus = document.getElementById('returnHardwareNextStatus')?.value || 'Available';
+      const returnRemark = document.getElementById('returnAssetRemark')?.value?.trim() || '';
+
+      if (!allocId || !returnDate) {
+        Utils.showToast('Validation Error', 'Return Date is required.', 'error');
+        return;
+      }
+
+      const alloc = (store.data.instockAllocations || []).find(a => a.id === allocId);
+
+      try {
+        const res = await fetch(`/api/instock/allocations/${encodeURIComponent(allocId)}/return`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            return_date: returnDate,
+            return_remark: returnRemark,
+            hardware_status: nextStatus
+          })
+        });
+
+        if (res.ok) {
+          const updatedAlloc = await res.json();
+          if (alloc) {
+            Object.assign(alloc, updatedAlloc);
+          }
+          if (alloc && alloc.asset_id) {
+            const hw = (store.data.instockHardware || []).find(i => i.id === alloc.asset_id);
+            if (hw) {
+              hw.status = nextStatus;
+              hw.assigned_user = '';
+              hw.assigned_date = '';
+              hw.tl = '';
+            }
+          }
+          store.save();
+          Utils.showToast('Asset Returned', `Asset returned successfully and status updated to ${nextStatus}.`, 'success');
+        } else {
+          throw new Error('Return endpoint failed');
+        }
+      } catch (e) {
+        console.warn('Fallback local return handling:', e);
+        if (alloc) {
+          alloc.status = 'Returned';
+          alloc.return_date = returnDate;
+          if (returnRemark) alloc.remark = `${alloc.remark ? alloc.remark + ' | ' : ''}Return: ${returnRemark}`;
+          const hw = (store.data.instockHardware || []).find(i => i.id === alloc.asset_id);
+          if (hw) {
+            hw.status = nextStatus;
+            hw.assigned_user = '';
+            hw.assigned_date = '';
+            hw.tl = '';
+          }
+          store.save();
+        }
+        Utils.showToast('Asset Returned', 'Return recorded in history.', 'info');
+      }
+
+      this.closeModal('modalReturnAsset');
+      this.renderInstockDashboard();
+      this.renderAssignedItemsTable();
+    }
+
+    handleQuickReturn(hardwareId) {
+      const activeAlloc = (store.data.instockAllocations || []).find(a => a.asset_id === hardwareId && a.status === 'Assigned');
+      if (activeAlloc) {
+        this.openReturnAssetModal(activeAlloc.id);
+      } else {
+        this.toggleInstockStatus(hardwareId);
+      }
+    }
+
+    // ========================================================================
+    // USER-WISE ASSET TRACKING VIEW (REQUIREMENT 5 - MAIN REQUIREMENT)
+    // ========================================================================
+    openUserAssetHistoryModal(userName) {
+      if (!userName) return;
+      this.activeHistoryUser = userName;
+
+      const allocations = this.getInstockAllocations();
+      const userAllocs = allocations.filter(a => (a.user_name || '').toLowerCase() === userName.toLowerCase());
+
+      const activeCount = userAllocs.filter(a => a.status === 'Assigned').length;
+      const totalCount = userAllocs.length;
+      const latestTl = userAllocs[0]?.tl_name || 'Sundar Pichai';
+
+      const nameEl = document.getElementById('userHistoryName');
+      const avatarEl = document.getElementById('userHistoryAvatar');
+      const tlEl = document.getElementById('userHistoryTl');
+      const activeEl = document.getElementById('userHistoryActiveCount');
+      const totalEl = document.getElementById('userHistoryTotalCount');
+
+      if (nameEl) nameEl.textContent = userName;
+      if (avatarEl) avatarEl.textContent = userName.substring(0, 2).toUpperCase();
+      if (tlEl) tlEl.textContent = latestTl;
+      if (activeEl) activeEl.textContent = `${activeCount} Assets Active`;
+      if (totalEl) totalEl.textContent = `${totalCount} Total Allocations`;
+
+      const tbody = document.getElementById('userHistoryTableBody');
+      if (tbody) {
+        if (userAllocs.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="8" style="text-align:center; padding:28px; color:#64748b;">
+                No historical allocation records found for <strong>${Utils.escapeHtml(userName)}</strong>.
+              </td>
+            </tr>
+          `;
+        } else {
+          const iconMap = {
+            'CPU': '💻',
+            'SSD': '⚡',
+            'RAM': '🧠',
+            'SMPS': '🔌',
+            'MONITOR': '🖥️',
+            'OTHER': '🧰'
+          };
+
+          tbody.innerHTML = userAllocs.map(alloc => {
+            const type = (alloc.component_type || 'OTHER').toUpperCase();
+            const icon = iconMap[type] || '📦';
+            const isAssigned = (alloc.status === 'Assigned');
+            const statusBadge = isAssigned
+              ? `<span class="instock-badge instock-badge-assigned">👤 Assigned</span>`
+              : `<span class="instock-badge instock-badge-returned">↩️ Returned</span>`;
+
+            const returnDisplay = alloc.return_date
+              ? `<span style="font-weight:600; color:#475569; font-size:0.82rem;">${Utils.escapeHtml(alloc.return_date)}</span>`
+              : `<span class="badge" style="background:#dcfce7; color:#15803d; font-size:0.75rem; font-weight:700;">🟢 Active (In Use)</span>`;
+
+            return `
+              <tr style="border-bottom:1px solid #f1f5f9;">
+                <td>
+                  <span class="badge" style="background:rgba(37,99,235,0.08); color:var(--primary); font-weight:700; font-size:0.75rem; padding:4px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">
+                    <span>${icon}</span> <span>${type}</span>
+                  </span>
+                </td>
+                <td>
+                  <strong style="color:#0f172a; font-size:0.86rem;">${Utils.escapeHtml(alloc.spec || '—')}</strong>
+                </td>
+                <td>
+                  <code style="background:#f8fafc; border:1px solid #e2e8f0; padding:2px 6px; border-radius:4px; font-size:0.78rem; color:#334155;">
+                    ${Utils.escapeHtml(alloc.serial_number || '—')}
+                  </code>
+                </td>
+                <td style="font-size:0.82rem; font-weight:600; color:#1e293b;">
+                  ${Utils.escapeHtml(alloc.assigned_date || '—')}
+                </td>
+                <td>${returnDisplay}</td>
+                <td>
+                  <span style="font-size:0.82rem; color:#334155; background:#f8fafc; border:1px solid #e2e8f0; padding:3px 8px; border-radius:6px; display:inline-block;">
+                    ${Utils.escapeHtml(alloc.purpose || 'Office use')}
+                  </span>
+                </td>
+                <td>${statusBadge}</td>
+                <td style="text-align:center;">
+                  ${isAssigned ? `
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.closeModal('modalUserAssetHistory'); window.ITApp.openReturnAssetModal('${alloc.id}')" title="Return this asset" style="padding:3px 8px; border-radius:6px; font-size:0.75rem; font-weight:700; color:#ea580c;">
+                      ↩️ Return
+                    </button>
+                  ` : `
+                    <span style="font-size:0.75rem; color:#94a3b8;">Archived</span>
+                  `}
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+
+      this.openModal('modalUserAssetHistory');
+    }
+
+    openAssignAssetForUser() {
+      const user = this.activeHistoryUser;
+      this.closeModal('modalUserAssetHistory');
+      this.openAssignAssetModal();
+      const userInput = document.getElementById('assignAssetUser');
+      if (userInput && user) {
+        userInput.value = user;
+        this.autoSelectUserTl(user);
+      }
+    }
+
+    // ========================================================================
+    // EDIT ALLOCATION MODAL (UPGRADED WITH ALL FIELDS)
+    // ========================================================================
+    openEditAllocationModal(allocId) {
+      const alloc = (store.data.instockAllocations || []).find(a => a.id === allocId);
+      if (!alloc) return;
+
+      document.getElementById('editAllocId').value = alloc.id;
+      const specDisplay = document.getElementById('editAllocSpecDisplay');
+      if (specDisplay) specDisplay.textContent = alloc.spec || '—';
+      const assetIdDisplay = document.getElementById('editAllocAssetIdDisplay');
+      if (assetIdDisplay) assetIdDisplay.textContent = alloc.asset_id || alloc.id;
+
+      const userEl = document.getElementById('editAllocUser');
+      if (userEl) userEl.value = alloc.user_name || '';
+
+      const teamEl = document.getElementById('editAllocTeam');
+      if (teamEl) teamEl.value = alloc.team || '';
+
+      const tlEl = document.getElementById('editAllocTl');
+      if (tlEl) tlEl.value = alloc.tl_name || '';
+
+      const statusEl = document.getElementById('editAllocStatus');
+      if (statusEl) statusEl.value = alloc.status || 'Assigned';
+
+      const exitDateEl = document.getElementById('editAllocExitDate');
+      if (exitDateEl) exitDateEl.value = alloc.user_exit_date || '';
+
+      const reasonEl = document.getElementById('editAllocReason');
+      if (reasonEl) reasonEl.value = alloc.changing_reason || '';
+
+      const purposeEl = document.getElementById('editAllocPurpose');
+      if (purposeEl) purposeEl.value = alloc.purpose || '';
+
+      const remarkEl = document.getElementById('editAllocRemark');
+      if (remarkEl) remarkEl.value = alloc.remark || '';
+
+      this.openModal('modalEditAllocation');
+    }
+
+    async handleEditAllocationSubmit(event) {
+      if (event && event.preventDefault) event.preventDefault();
+
+      const allocId = document.getElementById('editAllocId')?.value;
+      const userName = document.getElementById('editAllocUser')?.value?.trim();
+      const team = document.getElementById('editAllocTeam')?.value?.trim();
+      const tlName = document.getElementById('editAllocTl')?.value?.trim();
+      const status = document.getElementById('editAllocStatus')?.value || 'Assigned';
+      const userExitDate = document.getElementById('editAllocExitDate')?.value || '';
+      const changingReason = document.getElementById('editAllocReason')?.value?.trim() || '';
+      const purpose = document.getElementById('editAllocPurpose')?.value?.trim() || '';
+      const remark = document.getElementById('editAllocRemark')?.value?.trim() || '';
+
+      if (!userName) {
+        Utils.showToast('Validation Error', 'Assigned employee name is required.', 'error');
+        return;
+      }
+
+      const alloc = (store.data.instockAllocations || []).find(a => a.id === allocId);
+      if (!alloc) return;
+
+      const updates = {
+        user_name: userName,
+        team,
+        tl_name: tlName,
+        status,
+        user_exit_date: userExitDate,
+        changing_reason: changingReason,
+        purpose,
+        remark
+      };
+
+      try {
+        const res = await fetch(`/api/instock/allocations/${encodeURIComponent(allocId)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates)
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          Object.assign(alloc, updated);
+        } else {
+          Object.assign(alloc, updates);
+        }
+      } catch (e) {
+        Object.assign(alloc, updates);
+      }
+
+      // Sync user and team with physical hardware item
+      if (alloc.asset_id) {
+        const hw = (store.data.instockHardware || []).find(i => i.id === alloc.asset_id);
+        if (hw) {
+          if (status === 'Assigned') {
+            hw.status = 'Assigned';
+            hw.assigned_user = userName;
+            hw.team = team;
+            hw.tl = tlName;
+          } else if (status === 'Returned') {
+            hw.status = 'Available';
+            hw.assigned_user = '';
+            hw.team = '';
+            hw.tl = '';
+          }
+        }
+      }
+
+      store.save();
+      Utils.showToast('Updated', `Assignment record ${allocId} updated successfully.`, 'success');
+
+      this.closeModal('modalEditAllocation');
+      this.renderAssignedItemsTable();
+      this.renderInstockDashboard();
+    }
+
+    // Maintenance helper methods
+    async setHardwareMaintenance(id) {
+      const item = (store.data.instockHardware || []).find(i => i.id === id);
+      if (!item) return;
+
+      item.status = 'Under Maintenance';
+      try {
+        await fetch(`/api/instock/${encodeURIComponent(id)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'Under Maintenance' })
+        });
+      } catch (e) {}
+      store.save();
+      Utils.showToast('Maintenance', `${item.id} sent for maintenance.`, 'info');
+      this.renderInstockDashboard();
+    }
+
+    async markHardwareAvailable(id) {
+      const item = (store.data.instockHardware || []).find(i => i.id === id);
+      if (!item) return;
+
+      item.status = 'Available';
+      try {
+        await fetch(`/api/instock/${encodeURIComponent(id)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'Available' })
+        });
+      } catch (e) {}
+      store.save();
+      Utils.showToast('Restored', `${item.id} restored to Available stock.`, 'success');
+      this.renderInstockDashboard();
+    }
+
+    // ========================================================================
+    // HARDWARE STOCK ENTRY (CREATION OF RAW INVENTORY)
+    // ========================================================================
+    openInstockEntryModal(defaultType = null, editId = null) {
+      const modal = document.getElementById('modalInstockEntry');
+      if (!modal) return;
+
+      const editIdInput = document.getElementById('instockEditId');
+      const assetIdInput = document.getElementById('instockAssetId');
+      const titleEl = document.getElementById('instockModalTitle');
+      const typeSelect = document.getElementById('instockComponentType');
+      const specInput = document.getElementById('instockSpec');
+      const serialInput = document.getElementById('instockSerial');
+      const purchaseDateInput = document.getElementById('instockPurchaseDate');
+      const radioPending = document.getElementById('instockStatusPending');
+      const radioAssigned = document.getElementById('instockStatusAssigned');
+      const userInput = document.getElementById('instockAssignedUser');
+      const assignedDateInput = document.getElementById('instockAssignedDate');
+      const teamSelect = document.getElementById('instockAssignedTeam');
+      const tlInput = document.getElementById('instockAssignedTl');
+      const remarkInput = document.getElementById('instockRemark');
+
+      // Populate User Datalist
+      const userDatalist = document.getElementById('instockAllUsersDatalist');
+      if (userDatalist) {
+        userDatalist.innerHTML = (store.data.users || []).map(u => `<option value="${Utils.escapeHtml(u.name)}">${Utils.escapeHtml(u.name)} (${Utils.escapeHtml(u.team || 'Staff')})</option>`).join('');
+      }
+
+      if (editId) {
+        const item = (store.data.instockHardware || []).find(i => i.id === editId);
+        if (item) {
+          if (editIdInput) editIdInput.value = item.id;
+          if (assetIdInput) {
+            assetIdInput.value = item.id;
+            assetIdInput.disabled = true;
+          }
+          if (titleEl) titleEl.textContent = `Edit Hardware Entry (${item.id})`;
+          if (typeSelect) typeSelect.value = item.component_type || 'CPU';
+          if (specInput) specInput.value = item.spec || '';
+          if (serialInput) serialInput.value = item.serial_number || '';
+          if (purchaseDateInput) purchaseDateInput.value = item.purchase_date || '';
+          if (item.status === 'Assigned') {
+            if (radioAssigned) radioAssigned.checked = true;
+          } else {
+            if (radioPending) radioPending.checked = true;
+          }
+          if (userInput) userInput.value = item.assigned_user || '';
+          if (assignedDateInput) assignedDateInput.value = item.assigned_date || '';
+          if (teamSelect && item.team) teamSelect.value = item.team;
+          if (tlInput) tlInput.value = item.tl || '';
+          if (remarkInput) remarkInput.value = item.remark || '';
+        }
+      } else {
+        if (editIdInput) editIdInput.value = '';
+        if (assetIdInput) {
+          assetIdInput.value = '';
+          assetIdInput.disabled = false;
+        }
+        if (titleEl) titleEl.textContent = 'Add Hardware Item to In-Stock Inventory';
+        if (typeSelect && defaultType) typeSelect.value = defaultType.toUpperCase();
+        if (specInput) specInput.value = '';
+        if (serialInput) serialInput.value = `SN-${defaultType ? defaultType.toUpperCase() : 'HW'}-${Math.floor(10000 + Math.random() * 90000)}`;
+        if (purchaseDateInput) purchaseDateInput.value = new Date().toISOString().substring(0, 10);
+        if (radioPending) radioPending.checked = true;
+        if (userInput) userInput.value = '';
+        if (assignedDateInput) assignedDateInput.value = new Date().toISOString().substring(0, 10);
+        if (tlInput) tlInput.value = '';
+        if (remarkInput) remarkInput.value = '';
+      }
+
+      this.toggleInstockAssignmentFields();
+      this.openModal('modalInstockEntry');
+    }
+
+    toggleInstockAssignmentFields() {
+      const radioAssigned = document.getElementById('instockStatusAssigned');
+      const section = document.getElementById('instockAssignedFieldsSection');
+      const helpText = document.getElementById('instockPendingHelpText');
+      const isAssigned = radioAssigned && radioAssigned.checked;
+
+      if (section) section.style.display = isAssigned ? 'flex' : 'none';
+      if (helpText) helpText.style.display = isAssigned ? 'none' : 'block';
+    }
+
+    async handleInstockFormSubmit(event) {
+      if (event && event.preventDefault) event.preventDefault();
+
+      const editId = document.getElementById('instockEditId')?.value;
+      const customAssetId = document.getElementById('instockAssetId')?.value?.trim();
+      const component_type = document.getElementById('instockComponentType')?.value || 'OTHER';
+      const spec = document.getElementById('instockSpec')?.value?.trim() || '';
+      const serial_number = document.getElementById('instockSerial')?.value?.trim() || '';
+      const purchase_date = document.getElementById('instockPurchaseDate')?.value || '';
+      const isAssigned = document.getElementById('instockStatusAssigned')?.checked;
+      const status = isAssigned ? 'Assigned' : 'Available';
+      const assigned_user = isAssigned ? (document.getElementById('instockAssignedUser')?.value?.trim() || '') : '';
+      const assigned_date = isAssigned ? (document.getElementById('instockAssignedDate')?.value || '') : '';
+      const team = isAssigned ? (document.getElementById('instockAssignedTeam')?.value || '') : '';
+      const tl = isAssigned ? (document.getElementById('instockAssignedTl')?.value?.trim() || '') : '';
+      const remark = document.getElementById('instockRemark')?.value?.trim() || '';
+
+      // Required field validation
+      if (!spec) {
+        Utils.showToast('Validation Error', 'Hardware Specification / Model is required.', 'error');
+        return;
+      }
+      if (!serial_number) {
+        Utils.showToast('Validation Error', 'Serial Number is required.', 'error');
+        return;
+      }
+      if (!purchase_date) {
+        Utils.showToast('Validation Error', 'Purchasing Date is required.', 'error');
+        return;
+      }
+
+      const allItems = store.data.instockHardware || [];
+
+      // Validate duplicate Asset ID when creating new
+      if (!editId && customAssetId) {
+        const dupId = allItems.find(i => i.id.toLowerCase() === customAssetId.toLowerCase());
+        if (dupId) {
+          Utils.showToast('Duplicate Asset ID', `Asset ID "${customAssetId}" already exists in stock. Please specify a unique ID.`, 'error');
+          return;
+        }
+      }
+
+      // Validate duplicate Serial Number (excluding currently editing item)
+      const dupSerial = allItems.find(i =>
+        i.serial_number &&
+        i.serial_number.toLowerCase() === serial_number.toLowerCase() &&
+        i.id !== editId
+      );
+      if (dupSerial) {
+        Utils.showToast('Duplicate Serial Number', `Serial Number "${serial_number}" is already registered on asset ${dupSerial.id}. Serial numbers must be unique.`, 'error');
+        return;
+      }
+
+      const payload = {
+        component_type,
+        spec,
+        serial_number,
+        purchase_date,
+        status,
+        assigned_user,
+        assigned_date,
+        team,
+        tl,
+        remark
+      };
+
+      if (!editId && customAssetId) {
+        payload.id = customAssetId;
+      }
+
+      try {
+        if (editId) {
+          const res = await fetch(`/api/instock/${encodeURIComponent(editId)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (res.ok) {
+            const updated = await res.json();
+            const idx = (store.data.instockHardware || []).findIndex(i => i.id === editId);
+            if (idx !== -1) {
+              store.data.instockHardware[idx] = updated;
+            }
+            store.save();
+            Utils.showToast('Record Updated', `Hardware item ${editId} updated successfully.`, 'success');
+          }
+        } else {
+          const res = await fetch('/api/instock', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (res.ok) {
+            const saved = await res.json();
+            if (!store.data.instockHardware) store.data.instockHardware = [];
+            store.data.instockHardware.unshift(saved);
+            store.save();
+            Utils.showToast('Hardware Added', `${component_type} (${spec}) added to stock!`, 'success');
+          }
+        }
+      } catch (err) {
+        console.error('Failed to sync instock hardware with server:', err);
+        if (editId) {
+          const item = (store.data.instockHardware || []).find(i => i.id === editId);
+          if (item) Object.assign(item, payload);
+        } else {
+          const newId = customAssetId || `STK-${component_type}-${Math.floor(100 + Math.random() * 900)}`;
+          const newRecord = {
+            id: newId,
+            ...payload,
+            created_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
+          };
+          if (!store.data.instockHardware) store.data.instockHardware = [];
+          store.data.instockHardware.unshift(newRecord);
+        }
+        store.save();
+        Utils.showToast('Saved Locally', 'Hardware saved to store.', 'info');
+      }
+
+      this.closeModal('modalInstockEntry');
+      this.renderInstockDashboard();
+      this.renderAssignedItemsTable();
+    }
+
+    async toggleInstockStatus(id) {
+      const item = (store.data.instockHardware || []).find(i => i.id === id);
+      if (!item) return;
+
+      if (item.status === 'Assigned') {
+        this.handleQuickReturn(id);
+      } else {
+        this.openAssignAssetModal(id);
+      }
+    }
+
+    async deleteInstockEntry(id) {
+      if (confirm(`Permanently delete hardware stock entry ${id}?`)) {
+        try {
+          await fetch(`/api/instock/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        } catch (e) {}
+        store.data.instockHardware = (store.data.instockHardware || []).filter(i => i.id !== id);
+        store.save();
+        Utils.showToast('Deleted', `Hardware record ${id} removed.`, 'warning');
+        this.renderInstockDashboard();
+        this.renderAssignedItemsTable();
+      }
+    }
   }
 
   // Instantiate application controller
@@ -7038,11 +9216,22 @@ Remarks: ${r.remark || 'None'}`);
     },
 
     // View Modal
-    viewAsset(assetId) {
-      const asset = store.data.assets.find(a => a.id === assetId);
-      if (!asset) return;
+    async viewAsset(assetId) {
+      let asset = (store.data.assets || []).find(a => a.id === assetId || (a.id && a.id.toLowerCase() === (assetId || '').toLowerCase()));
+      if (!asset) {
+        try {
+          const res = await fetch(`/api/assets/${encodeURIComponent(assetId)}`);
+          if (res.ok) {
+            asset = await res.json();
+          }
+        } catch (e) {}
+      }
+      if (!asset) {
+        Utils.showToast('Asset Not Found', `Record for ${assetId} could not be found.`, 'error');
+        return;
+      }
 
-      app.currentViewAssetId = assetId;
+      app.currentViewAssetId = asset.id;
 
       // Status class calculation
       const statusClass = asset.status === 'Assigned' ? 'status-assigned' :
@@ -7067,27 +9256,41 @@ Remarks: ${r.remark || 'None'}`);
       const prevUserObj = (previousUserName && previousUserName !== 'None') ? (store.data.users || []).find(u => u.name.toLowerCase() === previousUserName.toLowerCase()) : null;
       const prevTeam = prevUserObj?.team || swapRecord?.oldTeam || '—';
 
-      // Warranty status logic
-      const isNoWarranty = !asset.warrantyEnd || asset.warrantyEnd === '-' || asset.warrantyEnd === '—' || asset.warrantyEnd.toLowerCase() === 'none' || asset.warrantyEnd.toLowerCase() === 'non-warranty' || asset.warrantyEnd.toLowerCase() === 'nil' || (asset.warrantyType && asset.warrantyType.toLowerCase() === 'non-warranty');
-
-      let warrantyBadgeHtml = '';
-      let warrantyRemainingHtml = '';
-
-      if (isNoWarranty) {
-        warrantyBadgeHtml = `<span class="warranty-badge badge-non-warranty">Non-Warranty</span>`;
-        warrantyRemainingHtml = `<span style="color:var(--text-muted); font-size:0.84rem;">Non-Warranty</span>`;
-      } else {
-        const days = Utils.getDaysRemaining(asset.warrantyEnd);
-        if (days !== null && days <= 0) {
-          warrantyBadgeHtml = `<span class="warranty-badge badge-expired">Expired</span>`;
-          warrantyRemainingHtml = `<span style="color:#dc2626; font-weight:700; font-size:0.85rem;">Expired (${Math.abs(days)} days ago)</span>`;
-        } else {
-          const isComponent = (asset.warrantyType && asset.warrantyType.toLowerCase().includes('component'));
-          const badgeLabel = isComponent ? 'Component Warranty' : 'Full System';
-          warrantyBadgeHtml = `<span class="warranty-badge badge-active">${badgeLabel}</span>`;
-          warrantyRemainingHtml = `<span style="color:#16a34a; font-weight:700; font-size:0.85rem;">Active (${days} Days Remaining)</span>`;
+      // Warranty status logic & Component Lifecycle Tracking
+      let components = [];
+      try {
+        const compRes = await fetch(`/api/assets/${encodeURIComponent(asset.id)}/components`);
+        if (compRes.ok) {
+          components = await compRes.json();
         }
+      } catch (e) {
+        components = [];
       }
+
+      // If backend components are empty, fallback to asset.warrantyComponents
+      if (components.length === 0 && asset.warrantyComponents && asset.warrantyComponents.length > 0) {
+        components = asset.warrantyComponents.map(c => ({
+          id: c.id || ('clc-' + asset.id + '-' + (c.type || 'RAM').toLowerCase()),
+          asset_id: asset.id,
+          component_type: c.type || 'Hardware',
+          component_name: c.spec ? `${c.type} (${c.spec})` : (c.type || 'Hardware'),
+          model: c.spec || c.type || '',
+          serial_number: c.serialNumber || 'SN-OEM',
+          manufacturer: c.manufacturer || 'Enterprise OEM',
+          assigned_date: c.assignedDate || asset.assignedDate || '',
+          warranty_start: c.assignedDate || asset.assignedDate || '',
+          warranty_expiry: c.expiryDate || asset.warrantyEnd || '',
+          status: 'Active',
+          notes: ''
+        }));
+      }
+
+      // Active under-warranty count
+      const underWarrantyCount = components.filter(c => {
+        if (c.status === 'Retired' || c.status === 'Replaced') return false;
+        const w = (app.calculateComponentWarranty || this.calculateComponentWarranty)(c.assigned_date, c.warranty_expiry);
+        return w.status === 'Active' || w.status === 'Expiring Soon';
+      }).length;
 
       const body = document.getElementById('viewAssetModalBody');
       if (body) {
@@ -7235,83 +9438,174 @@ Remarks: ${r.remark || 'None'}`);
             </div>
           </div>
 
-          <!-- 3. WARRANTY INFORMATION -->
+          <!-- 3. WARRANTY & HARDWARE LIFECYCLE (COMPONENT LIFECYCLE TRACKING) -->
           <div class="spec-card">
-            <div class="spec-card-header"${isNoWarranty ? ' style="border-bottom:none;"' : ''}>
-              <div class="spec-card-title">
-                <span>🛡️</span>
-                <span>Warranty Information</span>
+            <div class="spec-card-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 14px 20px; border-bottom: 1px solid #f1f5f9;">
+              <div class="warranty-brand-group" style="display: flex; align-items: center; gap: 10px;">
+                <svg class="warranty-brand-shield-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <path d="M12 22V2c-4 0-8 3-8 3v7c0 6 8 10 8 10z" fill="rgba(37,99,235,0.18)"/>
+                </svg>
+                <div style="display: flex; flex-direction: column;">
+                  <span class="warranty-brand-title" style="font-size: 1.02rem; font-weight: 700; color: #0f172a; line-height: 1.2;">Warranty &amp; Hardware Lifecycle</span>
+                  <span class="warranty-brand-sub" style="font-size: 0.75rem; color: #64748b; font-weight: 500;">Component-Level Lifecycle &amp; Warranty Registry</span>
+                </div>
               </div>
-              <div>${warrantyBadgeHtml}</div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="warranty-badge badge-active" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:4px 12px; border-radius:9999px; font-weight:700; font-size:0.75rem; display:inline-flex; align-items:center; gap:6px;">
+                  <span class="badge-dot" style="background:#2563eb; width:7px; height:7px; border-radius:50%; display:inline-block;"></span>
+                  <span>${components.length} Hardware Component${components.length === 1 ? '' : 's'} Tracked</span>
+                </span>
+                ${underWarrantyCount > 0 ? `
+                  <span class="warranty-badge badge-active" style="background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; padding:4px 12px; border-radius:9999px; font-weight:700; font-size:0.75rem; display:inline-flex; align-items:center; gap:6px;">
+                    <span class="badge-dot" style="background:#10b981; width:7px; height:7px; border-radius:50%; display:inline-block;"></span>
+                    <span>${underWarrantyCount} Under Warranty</span>
+                  </span>
+                ` : `
+                  <span class="badge-non-warranty" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-weight:700; padding:4px 12px; border-radius:9999px; font-size:0.75rem;">
+                    Non-Warranty / Expired
+                  </span>
+                `}
+              </div>
             </div>
-            ${isNoWarranty ? '' : `
-            <div class="spec-card-body">
-              ${(() => {
-                const rawComponents = (Array.isArray(asset.warrantyComponents) && asset.warrantyComponents.length > 0) ? asset.warrantyComponents : [];
-                // Filter out components that have 'No Warranty' (hide them from display)
-                const warrantedComponents = rawComponents.filter(c => {
-                  const statusObj = app.calculateWarrantyStatus(c.assignedDate, c.expiryDate, c.type);
-                  return statusObj && statusObj.status !== 'nowarranty';
-                });
 
-                if (rawComponents.length > 0) {
-                  if (warrantedComponents.length === 0) {
-                    return `
-                      <div style="padding:14px; text-align:center; color:var(--text-muted); font-size:0.85rem; background:#f8fafc; border-radius:6px; border:1px dashed #cbd5e1;">
-                        No individual hardware components currently under warranty.
-                      </div>
-                    `;
-                  }
-                  return `
-                    <div style="display:flex; flex-direction:column; gap:8px;">
-                      ${warrantedComponents.map(c => {
-                        const statusObj = app.calculateWarrantyStatus(c.assignedDate, c.expiryDate, c.type);
-                        return `
-                          <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:10px 14px; flex-wrap:wrap; gap:8px;">
-                            <div>
-                              <strong style="color:var(--text-main); font-size:0.88rem;">${Utils.escapeHtml(c.type)}</strong>
-                              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">
-                                Assigned: <strong>${Utils.formatDate(c.assignedDate)}</strong> • Expiry: <strong>${Utils.formatDate(c.expiryDate)}</strong>
-                              </div>
-                            </div>
-                            <span class="smart-warranty-badge ${statusObj.badgeClass}" style="height:28px; padding:4px 10px; font-size:0.75rem;">
-                              <span class="badge-dot"></span>
-                              <span>${Utils.escapeHtml(statusObj.text)}</span>
-                            </span>
-                          </div>
-                        `;
-                      }).join('')}
-                    </div>
-                  `;
-                }
+            <!-- Subsection: Component Lifecycle Tracking -->
+            <div class="spec-card-body" style="padding: 18px 20px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;">
+                <div>
+                  <h4 style="margin:0; font-size:0.92rem; font-weight:700; color:#0f172a; display:flex; align-items:center; gap:6px;">
+                    <span>🔧</span> Component Lifecycle Tracking
+                  </h4>
+                  <p style="margin:2px 0 0 0; font-size:0.76rem; color:#64748b;">
+                    Track component installation, replacement, repair, and retirement events without overwriting history.
+                  </p>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <input type="text" placeholder="🔍 Filter components..." oninput="window.ITApp.filterComponentsList(this.value)" style="padding:5px 12px; font-size:0.78rem; border:1px solid #cbd5e1; border-radius:6px; outline:none; width:160px; background:#f8fafc;">
+                  <button type="button" class="btn btn-primary btn-sm" onclick="window.ITApp.openAddComponentModal('${asset.id}')" style="padding:5px 12px; font-size:0.78rem; font-weight:600; display:inline-flex; align-items:center; gap:5px;">
+                    ➕ Add Component
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.openLifecycleHistoryModal('${asset.id}')" style="padding:5px 12px; font-size:0.78rem; font-weight:600; display:inline-flex; align-items:center; gap:5px;" title="View Lifecycle Audit Events">
+                    📜 Audit History
+                  </button>
+                </div>
+              </div>
 
-                return `
-                  <div class="spec-grid-2col">
-                    <div class="spec-col">
-                      <div class="spec-item">
-                        <span class="spec-label">Warranty Component</span>
-                        <span class="spec-value">${Utils.escapeHtml(asset.warrantyType || 'Full System')}</span>
-                      </div>
-                      <div class="spec-item">
-                        <span class="spec-label">Warranty Start Date</span>
-                        <span class="spec-value">${Utils.formatDate(asset.assignedDate || '2024-01-01')}</span>
-                      </div>
-                    </div>
-                    <div class="spec-col">
-                      <div class="spec-item">
-                        <span class="spec-label">Warranty Expiry Date</span>
-                        <span class="spec-value font-mono">${Utils.formatDate(asset.warrantyEnd)}</span>
-                      </div>
-                      <div class="spec-item">
-                        <span class="spec-label">Remaining Days</span>
-                        <div class="spec-value">${warrantyRemainingHtml}</div>
-                      </div>
+              <!-- Component Cards Container -->
+              <div id="componentLifecycleContainer" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:14px;">
+                ${components.length === 0 ? `
+                  <div style="grid-column: 1 / -1; padding:24px; text-align:center; color:#64748b; font-size:0.86rem; background:#f8fafc; border-radius:8px; border:1px dashed #cbd5e1;">
+                    <span style="font-size:1.6rem; display:block; margin-bottom:6px;">📦</span>
+                    No hardware component records currently associated with this asset.
+                    <div style="margin-top:8px;">
+                      <button type="button" class="btn btn-outline-primary btn-sm" onclick="window.ITApp.openAddComponentModal('${asset.id}')">
+                        ➕ Register First Component
+                      </button>
                     </div>
                   </div>
-                `;
-              })()}
+                ` : components.map(c => {
+                  const w = (app.calculateComponentWarranty || this.calculateComponentWarranty)(c.assigned_date, c.warranty_expiry);
+                  const icon = (app.getComponentIcon || this.getComponentIcon)(c.component_type);
+                  const isReplaced = c.status === 'Replaced';
+
+                  let statusBadgeClass = 'badge-lifecycle-active';
+                  if (c.status === 'Replaced') statusBadgeClass = 'badge-lifecycle-replaced';
+                  else if (c.status === 'Repaired') statusBadgeClass = 'badge-lifecycle-repaired';
+                  else if (c.status === 'Retired') statusBadgeClass = 'badge-lifecycle-retired';
+
+                  const searchText = `${c.component_type} ${c.model || ''} ${c.component_name || ''} ${c.serial_number || ''} ${c.manufacturer || ''} ${c.status || ''}`.toLowerCase();
+
+                  return `
+                    <div class="component-lifecycle-row-item ${isReplaced ? 'is-replaced' : ''}" data-search-text="${Utils.escapeHtml(searchText)}">
+                      <!-- Card Top Row: Icon + Type + Lifecycle Status -->
+                      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                          <div style="width:38px; height:38px; border-radius:8px; background:${isReplaced ? '#fef3c7' : '#eff6ff'}; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0; border:1px solid ${isReplaced ? '#fde68a' : '#dbeafe'};">
+                            ${icon}
+                          </div>
+                          <div>
+                            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                              <strong style="color:#0f172a; font-size:0.95rem; font-weight:700;">${Utils.escapeHtml(c.component_type)}</strong>
+                              <span class="${statusBadgeClass}">
+                                <span style="width:6px; height:6px; border-radius:50%; background:currentColor; display:inline-block;"></span>
+                                ${Utils.escapeHtml(c.status || 'Active')}
+                              </span>
+                            </div>
+                            <div style="font-size:0.84rem; color:#334155; font-weight:600; margin-top:2px;">
+                              ${Utils.escapeHtml(c.model || c.component_name || 'Standard Specification')}
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Calculated Warranty Badge -->
+                        <div>
+                          <span class="smart-warranty-badge ${w.badgeClass}" style="height:26px; padding:3px 10px; font-size:0.72rem; width:auto; border-radius:9999px; background:${w.badgeBg}; color:${w.badgeColor}; border:1px solid ${w.badgeBorder}; font-weight:700; display:inline-flex; align-items:center; gap:4px;">
+                            <span class="badge-dot" style="background:${w.badgeColor}; width:6px; height:6px; border-radius:50%; display:inline-block;"></span>
+                            <span>${Utils.escapeHtml(w.status)}</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      <!-- Specification & Warranty Metadata Grid -->
+                      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 12px; background:#f8fafc; border:1px solid #f1f5f9; border-radius:8px; padding:10px 12px; font-size:0.78rem;">
+                        <div class="spec-item" style="margin:0;">
+                          <span class="spec-label" style="font-size:0.65rem; font-weight:700; text-transform:uppercase; color:#64748b;">SERIAL NUMBER</span>
+                          <span class="spec-value font-mono" style="font-size:0.8rem; font-weight:600; color:#0f172a;">${Utils.escapeHtml(c.serial_number || 'N/A')}</span>
+                        </div>
+                        <div class="spec-item" style="margin:0;">
+                          <span class="spec-label" style="font-size:0.65rem; font-weight:700; text-transform:uppercase; color:#64748b;">MANUFACTURER</span>
+                          <span class="spec-value" style="font-size:0.8rem; font-weight:600; color:#0f172a;">${Utils.escapeHtml(c.manufacturer || 'OEM')}</span>
+                        </div>
+                        <div class="spec-item" style="margin:0;">
+                          <span class="spec-label" style="font-size:0.65rem; font-weight:700; text-transform:uppercase; color:#64748b;">ASSIGNED / INSTALLED</span>
+                          <span class="spec-value font-mono" style="font-size:0.8rem; font-weight:600; color:#334155;">${Utils.formatDate(c.assigned_date)}</span>
+                        </div>
+                        <div class="spec-item" style="margin:0;">
+                          <span class="spec-label" style="font-size:0.65rem; font-weight:700; text-transform:uppercase; color:#64748b;">WARRANTY EXPIRY</span>
+                          <span class="spec-value font-mono" style="font-size:0.8rem; font-weight:600; color:#334155;">${c.warranty_expiry === 'Non-Warranty' ? 'Non-Warranty' : Utils.formatDate(c.warranty_expiry)}</span>
+                        </div>
+                      </div>
+
+                      <!-- Calculated Remaining Days Period -->
+                      <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.75rem; padding:4px 8px; background:${w.badgeBg}; border:1px solid ${w.badgeBorder}; border-radius:6px; color:${w.badgeColor}; font-weight:600;">
+                        <span>⏱️ Remaining Period:</span>
+                        <span>${Utils.escapeHtml(w.daysText)}</span>
+                      </div>
+
+                      <!-- Replacement Preservation Banner (If Replaced) -->
+                      ${isReplaced ? `
+                        <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:8px 10px; font-size:0.74rem; color:#92400e;">
+                          <div style="font-weight:700; display:flex; align-items:center; gap:4px; margin-bottom:2px;">
+                            <span>🔄</span> Historical Replacement Record Preserved
+                          </div>
+                          <div>Replaced on <strong>${Utils.formatDate(c.replacement_date)}</strong> · Reason: <em>${Utils.escapeHtml(c.replacement_reason || 'Hardware Upgrade')}</em></div>
+                        </div>
+                      ` : ''}
+
+                      <!-- Actions Row (Authorised Admins) -->
+                      <div style="display:flex; align-items:center; justify-content:flex-end; gap:6px; padding-top:6px; border-top:1px dashed #e2e8f0; margin-top:2px;">
+                        <button type="button" class="component-action-btn" onclick="window.ITApp.openEditComponentModal('${c.id}', '${asset.id}')" title="Edit Component Details">
+                          ✏️ Edit
+                        </button>
+                        ${!isReplaced ? `
+                          <button type="button" class="component-action-btn btn-action-replace" onclick="window.ITApp.openReplaceComponentModal('${c.id}', '${asset.id}')" title="Replace Component & Preserve Previous Record">
+                            🔄 Replace
+                          </button>
+                        ` : ''}
+                        <button type="button" class="component-action-btn btn-action-delete" onclick="window.ITApp.promptDeleteComponent('${c.id}', '${asset.id}')" title="Remove Component from Lifecycle Tracking">
+                          🗑️ Delete
+                        </button>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+
+              <!-- Search Empty State -->
+              <div id="componentSearchEmptyState" style="display:none; padding:20px; text-align:center; color:#64748b; font-size:0.84rem; background:#f8fafc; border-radius:8px; border:1px dashed #cbd5e1; margin-top:12px;">
+                No hardware components match your search filter.
+              </div>
             </div>
-            `}
           </div>
 
           <!-- 4. PREVIOUS USER & ALLOCATION HISTORY (BEFORE ADMIN REMARKS) -->
@@ -7795,6 +10089,169 @@ Remarks: ${r.remark || 'None'}`);
     },
     extendWarrantyPreset(years) {
       app.extendWarrantyPreset(years);
+    },
+
+    // Component Lifecycle Tracking Methods
+    openAddComponentModal(assetId) {
+      app.openAddComponentModal(assetId);
+    },
+    handleAddComponentTypeChange(type) {
+      app.handleAddComponentTypeChange(type);
+    },
+    toggleAddComponentWarrantyDate(mode) {
+      app.toggleAddComponentWarrantyDate(mode);
+    },
+    handleSaveNewComponent(e) {
+      app.handleSaveNewComponent(e);
+    },
+    openEditComponentModal(componentId, assetId) {
+      app.openEditComponentModal(componentId, assetId);
+    },
+    handleSaveEditComponent(e) {
+      app.handleSaveEditComponent(e);
+    },
+    openReplaceComponentModal(componentId, assetId) {
+      app.openReplaceComponentModal(componentId, assetId);
+    },
+    handleSaveReplaceComponent(e) {
+      app.handleSaveReplaceComponent(e);
+    },
+    promptDeleteComponent(componentId, assetId) {
+      app.promptDeleteComponent(componentId, assetId);
+    },
+    cancelDeleteWarrantyComponent() {
+      app.cancelDeleteWarrantyComponent();
+    },
+    confirmDeleteWarrantyComponent() {
+      app.confirmDeleteWarrantyComponent();
+    },
+    openLifecycleHistoryModal(assetId) {
+      app.openLifecycleHistoryModal(assetId);
+    },
+    filterComponentsList(query) {
+      app.filterComponentsList(query);
+    },
+    calculateComponentWarranty(assignedDate, expiryDate) {
+      return app.calculateComponentWarranty(assignedDate, expiryDate);
+    },
+    getComponentIcon(type) {
+      return app.getComponentIcon(type);
+    },
+
+    // INSTOCK Module Global Methods
+    navigateTo(viewId, pushHistory) {
+      app.navigateTo(viewId, pushHistory);
+    },
+    renderInstockDashboard() {
+      app.renderInstockDashboard();
+    },
+    renderInstockInventoryTable() {
+      app.renderInstockInventoryTable();
+    },
+    filterDashboardByStatus(status) {
+      app.filterDashboardByStatus(status);
+    },
+    navToAssignedWithFilter(status) {
+      app.navToAssignedWithFilter(status);
+    },
+    filterInstockDashboard() {
+      app.filterInstockDashboard();
+    },
+    resetInstockDashboardFilters() {
+      app.resetInstockDashboardFilters();
+    },
+    openInstockEntryModal(defaultType = null, editId = null) {
+      app.openInstockEntryModal(defaultType, editId);
+    },
+    toggleInstockAssignmentFields() {
+      app.toggleInstockAssignmentFields();
+    },
+    handleInstockFormSubmit(event) {
+      return app.handleInstockFormSubmit(event);
+    },
+    toggleInstockStatus(id) {
+      app.toggleInstockStatus(id);
+    },
+    deleteInstockEntry(id) {
+      app.deleteInstockEntry(id);
+    },
+    setHardwareMaintenance(id) {
+      app.setHardwareMaintenance(id);
+    },
+    markHardwareAvailable(id) {
+      app.markHardwareAvailable(id);
+    },
+    openAssignAssetModal(preselectedAssetId = null) {
+      app.openAssignAssetModal(preselectedAssetId);
+    },
+    autoSelectUserTl(userName) {
+      app.autoSelectUserTl(userName);
+    },
+    handlePurposeChange() {
+      app.handlePurposeChange();
+    },
+    handleAssignAssetSubmit(event) {
+      return app.handleAssignAssetSubmit(event);
+    },
+    openReturnAssetModal(allocId) {
+      app.openReturnAssetModal(allocId);
+    },
+    handleReturnAssetSubmit(event) {
+      return app.handleReturnAssetSubmit(event);
+    },
+    handleQuickReturn(hardwareId) {
+      app.handleQuickReturn(hardwareId);
+    },
+    openUserAssetHistoryModal(userName) {
+      app.openUserAssetHistoryModal(userName);
+    },
+    openAssignAssetForUser() {
+      app.openAssignAssetForUser();
+    },
+    openEditAllocationModal(allocId) {
+      app.openEditAllocationModal(allocId);
+    },
+    handleEditAllocationSubmit(event) {
+      return app.handleEditAllocationSubmit(event);
+    },
+    renderAssignedItemsTable() {
+      app.renderAssignedItemsTable();
+    },
+    renderInstockAssignedTable() {
+      app.renderInstockAssignedTable();
+    },
+    filterAssignedItems() {
+      app.filterAssignedItems();
+    },
+    resetAssignedItemsFilters() {
+      app.resetAssignedItemsFilters();
+    },
+    exportAssignedCsv() {
+      app.exportAssignedCsv();
+    },
+    filterInventoryByCategory(cat) {
+      app.filterInventoryByCategory(cat);
+    },
+    renderInstockInventoryView() {
+      app.renderInstockInventoryView();
+    },
+    filterFullInventoryView() {
+      app.filterFullInventoryView();
+    },
+    resetFullInventoryViewFilters() {
+      app.resetFullInventoryViewFilters();
+    },
+    viewInstockItem(id) {
+      app.viewInstockItem(id);
+    },
+    openInstockEntryModalFromView() {
+      app.openInstockEntryModalFromView();
+    },
+    viewAllocationDetails(allocId) {
+      app.viewAllocationDetails(allocId);
+    },
+    openEditAllocationFromView() {
+      app.openEditAllocationFromView();
     },
 
     async clearAllDataFresh() {

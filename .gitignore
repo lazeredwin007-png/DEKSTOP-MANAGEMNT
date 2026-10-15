@@ -30,3 +30,4 @@ Thumbs.db
 # Temporary scripts
 *.tmp
 *.github_original
+/_BACKUP_SAFETY_PRE_RESTORE/
