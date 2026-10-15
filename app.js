@@ -825,7 +825,12 @@
   window.ITAssetStoreInstance = store;
 
   // Helper Utility Functions
+  // Expose Utils globally
   const Utils = {
+    normalizeCpu(cpu) {
+      if (!cpu) return '';
+      return String(cpu).trim();
+    },
     formatDate(dateStr) {
       if (!dateStr) return '—';
       const d = new Date(dateStr);
@@ -1013,6 +1018,9 @@
   class AppController {
     constructor() {
       this.currentView = 'dashboard';
+      this.lastNonAssignedFilterChanged = null;
+      this.lastReqFilterChanged = null;
+      this.assetSortDir = 'asc';
       this.init();
     }
 
@@ -1928,57 +1936,213 @@
       `;
     }
 
-    renderAllAssetsTable() {
+    /* ==========================================================================
+       DYNAMIC DEPENDENT ASSET FILTERS & INVENTORY TABLE
+       ========================================================================== */
+    updateDependentAssetFilters(changedFilter) {
+      const searchEl = document.getElementById('assetsSearchInput');
+      const typeEl = document.getElementById('assetsTypeFilter');
+      const cpuEl = document.getElementById('assetsCpuFilter');
+      const teamEl = document.getElementById('assetsTeamFilter');
+      const statusEl = document.getElementById('assetsStatusFilter');
+      const workStatusEl = document.getElementById('assetsWorkStatusFilter');
+
+      const search = (searchEl?.value || '').toLowerCase().trim();
+      let typeVal = typeEl?.value || 'all';
+      let cpuVal = cpuEl?.value || 'all';
+      let teamVal = teamEl?.value || 'all';
+      let statusVal = statusEl?.value || 'all';
+      let workStatusVal = workStatusEl?.value || 'all';
+
+      const assets = store.data.assets || [];
+
+      // Helper to match an asset against current filter criteria
+      const matchesCriteria = (a, excludeField) => {
+        if (search) {
+          const matchSearch =
+            (a.id && a.id.toLowerCase().includes(search)) ||
+            (a.user && a.user.toLowerCase().includes(search)) ||
+            (a.oldUsername && a.oldUsername.toLowerCase().includes(search)) ||
+            (a.serialNumber && a.serialNumber.toLowerCase().includes(search)) ||
+            (a.cpu && a.cpu.toLowerCase().includes(search)) ||
+            (a.ram && a.ram.toLowerCase().includes(search)) ||
+            (a.hdd && a.hdd.toLowerCase().includes(search)) ||
+            (a.ssd && a.ssd.toLowerCase().includes(search)) ||
+            (a.monitor && a.monitor.toLowerCase().includes(search)) ||
+            (a.team && a.team.toLowerCase().includes(search)) ||
+            (a.tl && a.tl.toLowerCase().includes(search)) ||
+            (a.location && a.location.toLowerCase().includes(search)) ||
+            (a.workStatus && a.workStatus.toLowerCase().includes(search)) ||
+            (a.status && a.status.toLowerCase().includes(search));
+          if (!matchSearch) return false;
+        }
+
+        if (excludeField !== 'type' && typeVal !== 'all') {
+          if (!a.type || a.type.toLowerCase() !== typeVal.toLowerCase()) return false;
+        }
+        if (excludeField !== 'cpu' && cpuVal !== 'all') {
+          if (!a.cpu || a.cpu.trim().toLowerCase() !== cpuVal.trim().toLowerCase()) return false;
+        }
+        if (excludeField !== 'team' && teamVal !== 'all') {
+          if (!a.team || a.team.trim().toLowerCase() !== teamVal.trim().toLowerCase()) return false;
+        }
+        if (excludeField !== 'status' && statusVal !== 'all') {
+          if (!a.status || a.status.toLowerCase() !== statusVal.toLowerCase()) return false;
+        }
+        if (excludeField !== 'workStatus' && workStatusVal !== 'all') {
+          const ws = a.workStatus || (a.status === 'Assigned' ? 'Currently Working' : '');
+          if (!ws || ws.toLowerCase() !== workStatusVal.toLowerCase()) return false;
+        }
+        return true;
+      };
+
+      // 1. Invalidation Check when parent filter changes:
+      // If Type changed, check if current CPU/Team/Status/WorkStatus are still valid for this Type
+      if (changedFilter === 'type') {
+        const allowedAssetsForType = assets.filter(a => matchesCriteria(a, 'cpu'));
+        const allowedCpus = new Set(allowedAssetsForType.map(a => a.cpu ? a.cpu.trim().toLowerCase() : '').filter(Boolean));
+        if (cpuVal !== 'all' && !allowedCpus.has(cpuVal.toLowerCase())) {
+          cpuVal = 'all';
+          if (cpuEl) cpuEl.value = 'all';
+        }
+      }
+
+      // If CPU changed, check if Type is compatible with this CPU
+      if (changedFilter === 'cpu') {
+        const allowedAssetsForCpu = assets.filter(a => matchesCriteria(a, 'type'));
+        const allowedTypes = new Set(allowedAssetsForCpu.map(a => a.type ? a.type.toLowerCase() : '').filter(Boolean));
+        if (typeVal !== 'all' && !allowedTypes.has(typeVal.toLowerCase())) {
+          typeVal = 'all';
+          if (typeEl) typeEl.value = 'all';
+        }
+      }
+
+      // 2. Compute available options for each dropdown
+      // For TYPE:
+      const typeMatches = assets.filter(a => matchesCriteria(a, 'type'));
+      const validTypes = Array.from(new Set(typeMatches.map(a => a.type).filter(Boolean))).sort();
+      if (typeVal !== 'all' && !validTypes.some(t => t.toLowerCase() === typeVal.toLowerCase())) {
+        typeVal = 'all';
+        if (typeEl) typeEl.value = 'all';
+      }
+
+      // For CPU:
+      const cpuMatches = assets.filter(a => matchesCriteria(a, 'cpu'));
+      const validCpus = Array.from(new Set(cpuMatches.map(a => a.cpu ? a.cpu.trim() : '').filter(Boolean)))
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+      if (cpuVal !== 'all' && !validCpus.some(c => c.toLowerCase() === cpuVal.toLowerCase())) {
+        cpuVal = 'all';
+        if (cpuEl) cpuEl.value = 'all';
+      }
+
+      // For TEAM (Department) with case-insensitive deduplication:
+      const teamMatches = assets.filter(a => matchesCriteria(a, 'team'));
+      const teamMap = new Map();
+      teamMatches.forEach(a => {
+        if (a.team && a.team.trim()) {
+          const trimmed = a.team.trim();
+          const key = trimmed.toLowerCase();
+          if (!teamMap.has(key)) {
+            teamMap.set(key, trimmed);
+          }
+        }
+      });
+      const validTeams = Array.from(teamMap.values()).sort((a, b) => a.localeCompare(b));
+      if (teamVal !== 'all' && !teamMap.has(teamVal.toLowerCase())) {
+        teamVal = 'all';
+        if (teamEl) teamEl.value = 'all';
+      }
+
+      // For STATUS:
+      const statusMatches = assets.filter(a => matchesCriteria(a, 'status'));
+      const validStatuses = Array.from(new Set(statusMatches.map(a => a.status).filter(Boolean))).sort();
+      if (statusVal !== 'all' && !validStatuses.some(s => s.toLowerCase() === statusVal.toLowerCase())) {
+        statusVal = 'all';
+        if (statusEl) statusEl.value = 'all';
+      }
+
+      // For WORK STATUS:
+      const workStatusMatches = assets.filter(a => matchesCriteria(a, 'workStatus'));
+      const validWorkStatuses = Array.from(new Set(workStatusMatches.map(a => a.workStatus || (a.status === 'Assigned' ? 'Currently Working' : '')).filter(Boolean))).sort();
+      if (workStatusVal !== 'all' && !validWorkStatuses.some(w => w.toLowerCase() === workStatusVal.toLowerCase())) {
+        workStatusVal = 'all';
+        if (workStatusEl) workStatusEl.value = 'all';
+      }
+
+      // Re-populate dropdown HTML options
+      if (typeEl) {
+        let typeHtml = '<option value="all">All Types</option>';
+        validTypes.forEach(t => {
+          typeHtml += `<option value="${Utils.escapeHtml(t)}">${Utils.escapeHtml(t)}</option>`;
+        });
+        typeEl.innerHTML = typeHtml;
+        typeEl.value = typeVal;
+      }
+
+      if (cpuEl) {
+        let cpuHtml = '<option value="all">All CPUs</option>';
+        validCpus.forEach(c => {
+          cpuHtml += `<option value="${Utils.escapeHtml(c)}">${Utils.escapeHtml(c)}</option>`;
+        });
+        cpuEl.innerHTML = cpuHtml;
+        cpuEl.value = cpuVal;
+      }
+
+      if (teamEl) {
+        let teamHtml = '<option value="all">All Departments</option>';
+        validTeams.forEach(t => {
+          teamHtml += `<option value="${Utils.escapeHtml(t)}">${Utils.escapeHtml(t)}</option>`;
+        });
+        teamEl.innerHTML = teamHtml;
+        teamEl.value = teamVal;
+      }
+
+      if (statusEl) {
+        let statusHtml = '<option value="all">All Statuses</option>';
+        validStatuses.forEach(s => {
+          statusHtml += `<option value="${Utils.escapeHtml(s)}">${Utils.escapeHtml(s)}</option>`;
+        });
+        statusEl.innerHTML = statusHtml;
+        statusEl.value = statusVal;
+      }
+
+      if (workStatusEl) {
+        let wsHtml = '<option value="all">All Work Statuses</option>';
+        validWorkStatuses.forEach(w => {
+          const prefix = w === 'Currently Working' ? '🟢 ' : (w === 'Work From Home' ? '🔵 ' : (w === 'User Exit' ? '🔴 ' : ''));
+          wsHtml += `<option value="${Utils.escapeHtml(w)}">${prefix}${Utils.escapeHtml(w)}</option>`;
+        });
+        workStatusEl.innerHTML = wsHtml;
+        workStatusEl.value = workStatusVal;
+      }
+
+      // Final filtered list with all active filters combined
+      const finalFilteredList = assets.filter(a => matchesCriteria(a, null));
+
+      return {
+        finalFilteredList,
+        validTypes,
+        validCpus,
+        validTeams,
+        validStatuses,
+        validWorkStatuses
+      };
+    }
+
+    handleAssetFilterChange(changedFilter) {
+      const result = this.updateDependentAssetFilters(changedFilter);
+      this.renderAllAssetsTable(result.finalFilteredList);
+    }
+
+    renderAllAssetsTable(providedList = null) {
       const tbody = document.getElementById('allAssetsTableBody');
       if (!tbody) return;
 
-      this.populateCpuDropdown();
-
-      const search = (document.getElementById('assetsSearchInput')?.value || '').toLowerCase().trim();
-      const typeFilter = document.getElementById('assetsTypeFilter')?.value || 'all';
-      const cpuFilter = document.getElementById('assetsCpuFilter')?.value || 'all';
-      const teamFilter = document.getElementById('assetsTeamFilter')?.value || 'all';
-      const statusFilter = document.getElementById('assetsStatusFilter')?.value || 'all';
-      const workStatusFilter = document.getElementById('assetsWorkStatusFilter')?.value || 'all';
-
-      const isDesktopOrLaptop = (typeFilter.toLowerCase() === 'desktop' || typeFilter.toLowerCase() === 'laptop' || this.currentView === 'desktop' || this.currentView === 'laptop');
-
-      let list = store.data.assets.filter(item => {
-        const matchesSearch = !search ||
-          (item.id && item.id.toLowerCase().includes(search)) ||
-          (item.user && item.user.toLowerCase().includes(search)) ||
-          (item.oldUsername && item.oldUsername.toLowerCase().includes(search)) ||
-          (item.serialNumber && item.serialNumber.toLowerCase().includes(search)) ||
-          (item.cpu && item.cpu.toLowerCase().includes(search)) ||
-          (item.ram && item.ram.toLowerCase().includes(search)) ||
-          (item.hdd && item.hdd.toLowerCase().includes(search)) ||
-          (item.ssd && item.ssd.toLowerCase().includes(search)) ||
-          (item.monitor && item.monitor.toLowerCase().includes(search)) ||
-          (item.team && item.team.toLowerCase().includes(search)) || (item.tl && item.tl.toLowerCase().includes(search)) ||
-          (item.location && item.location.toLowerCase().includes(search)) ||
-          (item.workStatus && item.workStatus.toLowerCase().includes(search)) ||
-          (item.status && item.status.toLowerCase().includes(search));
-
-        const matchesType = typeFilter === 'all' || (item.type && item.type.toLowerCase() === typeFilter.toLowerCase());
-        const matchesCpu = cpuFilter === 'all' || (item.cpu && item.cpu.trim().toLowerCase() === cpuFilter.trim().toLowerCase());
-        const matchesTeam = teamFilter === 'all' || (item.team && item.team.toLowerCase() === teamFilter.toLowerCase());
-
-        // Requirement:
-        // - All Assets: Non-Assigned assets SHOW
-        // - Desktop: Non-Assigned assets MUST NOT SHOW (only assigned desktops show)
-        // - Laptop: Non-Assigned assets MUST NOT SHOW (only assigned laptops show)
-        const isNonAssigned = (item.status === 'Non-Assigned' || item.status === 'Available');
-        if (isDesktopOrLaptop && isNonAssigned) {
-          return false;
-        }
-
-        const matchesStatus = statusFilter === 'all' || (item.status && item.status.toLowerCase() === statusFilter.toLowerCase());
-        const matchesWorkStatus = workStatusFilter === 'all' ||
-          (item.workStatus && item.workStatus.toLowerCase() === workStatusFilter.toLowerCase()) ||
-          (!item.workStatus && workStatusFilter === 'Currently Working' && item.status === 'Assigned');
-
-        return matchesSearch && matchesType && matchesCpu && matchesTeam && matchesStatus && matchesWorkStatus;
-      });
+      let list = providedList;
+      if (!list) {
+        const result = this.updateDependentAssetFilters();
+        list = result.finalFilteredList;
+      }
 
       // Natural alphanumeric sort by Asset ID
       const sortDir = app.assetSortDir || 'asc';
@@ -1999,7 +2163,14 @@
       const breakdownText = document.getElementById('assetsFilterBreakdownText');
       const toolbarPill = document.getElementById('assetsToolbarCountPill');
       const resetBtn = document.getElementById('assetsResetFiltersBtn');
-      const totalFleet = store.data.assets.length;
+      const totalFleet = (store.data.assets || []).length;
+
+      const search = (document.getElementById('assetsSearchInput')?.value || '').trim();
+      const typeFilter = document.getElementById('assetsTypeFilter')?.value || 'all';
+      const cpuFilter = document.getElementById('assetsCpuFilter')?.value || 'all';
+      const teamFilter = document.getElementById('assetsTeamFilter')?.value || 'all';
+      const statusFilter = document.getElementById('assetsStatusFilter')?.value || 'all';
+      const workStatusFilter = document.getElementById('assetsWorkStatusFilter')?.value || 'all';
 
       if (countBadge) {
         countBadge.textContent = `${list.length} Total`;
@@ -2039,78 +2210,55 @@
             a.status === 'Swap' ? 'status-swap' :
               a.status === 'Repair' ? 'status-repair' : 'status-warranty';
 
-        // HDD: display only HDD information or "-" if none
         const isNoHdd = !a.hdd || a.hdd === '-' || a.hdd === '—' || a.hdd.toLowerCase() === 'none' || a.hdd.toLowerCase() === 'nil';
         const hddText = isNoHdd ? '-' : a.hdd;
 
-        // SSD: display only SSD information or "-" if none
         const isNoSsd = !a.ssd || a.ssd === '-' || a.ssd === '—' || a.ssd.toLowerCase() === 'none' || a.ssd.toLowerCase() === 'nil';
         const ssdText = isNoSsd ? '-' : a.ssd;
 
-        // Monitor: display monitor information or "None" if none
         const isNoMon = !a.monitor || a.monitor === '-' || a.monitor === '—' || a.monitor.toLowerCase() === 'none' || a.monitor.toLowerCase() === 'nil';
         const monitorText = isNoMon ? 'None' : a.monitor;
 
-        // MAC Address: display consistent uppercase MAC format (00:E0:4C:4D:7F:01)
-        const rawMac = a.macAddress || a.serialNumber || '';
-        const isNoMac = !rawMac || rawMac === '-' || rawMac === '—' || rawMac.toLowerCase() === 'none';
-        const macText = isNoMac ? '-' : rawMac.toUpperCase();
+        const isUnassigned = !a.user || a.user.trim() === '' || a.user === 'None' || a.user === '—' || a.user === 'Unassigned';
+        const userDisplay = isUnassigned
+          ? '<span style="color:var(--text-faint); font-style:italic;">Unassigned</span>'
+          : `<strong>${Utils.escapeHtml(a.user)}</strong>`;
 
-        // CPU: actual CPU / processor information (never mixed with Team/TL)
-        const cpuText = (a.cpu && a.cpu.trim() !== '' && a.cpu !== '-' && a.cpu !== '—') ? a.cpu : '-';
+        const prevUserDisplay = (a.oldUsername && a.oldUsername.trim() !== '' && a.oldUsername !== 'None' && a.oldUsername !== '—' && a.oldUsername !== 'NEW SYSTEM')
+          ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;" title="Previous User: ${Utils.escapeHtml(a.oldUsername)}"><span style="color:var(--text-faint);">Prev:</span> ${Utils.escapeHtml(a.oldUsername)}</div>`
+          : '';
 
-        // RAM: actual RAM information
-        const ramText = (a.ram && a.ram.trim() !== '' && a.ram !== '-' && a.ram !== '—') ? a.ram : '-';
-
-        // Team: display team values ("TEAM TL", "Admin", etc.) with subtle TL note if present
-        const teamText = a.team || '—';
+        const macOrSerial = (a.macAddress || a.serialNumber || '-').toUpperCase();
         const tlNote = (a.tl && a.tl !== '-' && a.tl !== a.team)
           ? `<div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;" title="Team Leader: ${Utils.escapeHtml(a.tl)}"><span style="color:var(--text-faint);">TL:</span> ${Utils.escapeHtml(a.tl)}</div>`
           : '';
 
-        // Warranty: show warranty expiry date, "Expired", or "Non-Warranty"
-        let warrantyHtml = '';
-        const isNoWarranty = !a.warrantyEnd || a.warrantyEnd === '-' || a.warrantyEnd === '—' || a.warrantyEnd.toLowerCase() === 'none' || a.warrantyEnd.toLowerCase() === 'non-warranty' || a.warrantyEnd.toLowerCase() === 'nil';
-        if (isNoWarranty) {
-          warrantyHtml = `<span class="status-pill status-warning" style="font-size:0.72rem; padding:2px 8px; font-weight:600; background:#fef3c7; color:#b45309; border:1px solid #fde68a;">Non-Warranty</span>`;
-        } else {
-          const days = Utils.getDaysRemaining(a.warrantyEnd);
-          if (days !== null && days <= 0) {
-            warrantyHtml = `<span class="status-pill status-repair" style="font-size:0.72rem; padding:2px 8px; font-weight:600; background:#fee2e2; color:#b91c1c; border:1px solid #fecaca;">Expired</span>`;
-          } else {
-            warrantyHtml = `<span style="font-family:var(--font-mono); font-size:0.78rem; font-weight:600; color:var(--text-main);" title="${days !== null ? `${days} days remaining` : ''}">${Utils.formatDate(a.warrantyEnd)}</span>`;
-          }
-        }
-
         return `
-          <tr data-asset-id="${Utils.escapeHtml(a.id)}" class="${a.isRecentlySaved ? 'row-saved-highlight' : ''}" title="Double-click to edit specifications (CPU, RAM, HDD, Monitor, etc.)" ondblclick="window.ITApp.editAsset('${a.id}')">
-            <td><strong>${Utils.escapeHtml(a.id)}</strong></td>
+          <tr data-asset-id="${Utils.escapeHtml(a.id)}" class="${a.isRecentlySaved ? 'row-saved-highlight' : ''}" title="Double-click to view full specifications" ondblclick="window.ITApp.viewAsset('${a.id}')">
+            <td><span class="cell-asset-id" style="cursor:pointer;" onclick="window.ITApp.viewAsset('${a.id}')">${Utils.escapeHtml(a.id)}</span></td>
             <td><span class="status-pill status-available">${Utils.escapeHtml(a.type)}</span></td>
             <td>
-              ${(a.user && a.user.trim() !== '' && a.user !== 'None' && a.user !== '—' && a.user !== 'Unassigned')
-                ? `<strong>${Utils.escapeHtml(a.user)}</strong>`
-                : (a.oldUsername && a.oldUsername.trim() !== '' && a.oldUsername !== 'None' && a.oldUsername !== '—' && a.oldUsername !== 'NEW SYSTEM')
-                  ? `<strong title="Previous User: ${Utils.escapeHtml(a.oldUsername)}">${Utils.escapeHtml(a.oldUsername)}</strong>`
-                  : '<em style="color:var(--text-faint);">Unassigned</em>'}
+              ${userDisplay}
+              ${prevUserDisplay}
             </td>
             <td class="cell-work-status">
               ${this.getWorkStatusButton(a.id, a.workStatus)}
             </td>
             <td>
-              <span style="font-weight:600; color:var(--text-main); font-size:0.82rem;">${Utils.escapeHtml(teamText)}</span>
+              <span class="status-pill" style="font-size:0.75rem; background:rgba(37,99,235,0.08); color:var(--primary); font-weight:600;">${Utils.escapeHtml(a.team || 'None')}</span>
               ${tlNote}
             </td>
-            <td><span style="font-size:0.82rem; font-weight:600; color:var(--text-main);">${Utils.escapeHtml(cpuText)}</span></td>
-            <td><span class="status-pill" style="font-size:0.75rem; background:rgba(37,99,235,0.08); color:var(--primary); font-weight:600;">${Utils.escapeHtml(ramText)}</span></td>
+            <td><span style="font-size:0.82rem; font-weight:600; color:var(--text-main);">${Utils.escapeHtml(a.cpu || '-')}</span></td>
+            <td><span class="status-pill" style="font-size:0.75rem; background:rgba(37,99,235,0.08); color:var(--primary); font-weight:600;">${Utils.escapeHtml(a.ram || '-')}</span></td>
             <td><span style="font-size:0.82rem; color:${isNoHdd ? 'var(--text-faint)' : 'var(--text-main)'};">${Utils.escapeHtml(hddText)}</span></td>
             <td><span style="font-size:0.82rem; color:${isNoSsd ? 'var(--text-faint)' : 'var(--text-main)'};">${Utils.escapeHtml(ssdText)}</span></td>
             <td><span style="font-size:0.82rem; color:${isNoMon ? 'var(--text-faint)' : 'var(--text-main)'};">${Utils.escapeHtml(monitorText)}</span></td>
-            <td><span style="font-family:var(--font-mono); font-size:0.75rem; color:${isNoMac ? 'var(--text-faint)' : 'var(--text-muted)'}; letter-spacing:0.4px;">${Utils.escapeHtml(macText)}</span></td>
+            <td><span class="font-mono" style="font-size:0.75rem;">${Utils.escapeHtml(macOrSerial)}</span></td>
             <td><span class="status-pill ${statusClass}">${Utils.escapeHtml(a.status)}</span></td>
             <td>
               <div class="action-btn-group">
-                <button class="action-icon-btn btn-action-view" title="View Full Specifications" onclick="window.ITApp.viewAsset('${a.id}')">👁️</button>
-                <button class="action-icon-btn btn-action-edit" title="Edit Specifications (CPU, RAM, HDD, Monitor, User, etc.)" onclick="window.ITApp.editAsset('${a.id}')">✏️</button>
+                <button class="action-icon-btn btn-action-view" title="View Full Specs" onclick="window.ITApp.viewAsset('${a.id}')">👁️</button>
+                <button class="action-icon-btn btn-action-edit" title="Edit Hardware Specification" onclick="window.ITApp.editAsset('${a.id}')">✏️</button>
               </div>
             </td>
           </tr>
@@ -2134,7 +2282,150 @@
     /* ==========================================================================
        ASSIGNED USERS TABLE
        ========================================================================== */
-    renderAssignedUsersTable() {
+
+    /* ==========================================================================
+       ASSIGNED USERS DIRECTORY DYNAMIC FILTERS
+       ========================================================================== */
+    updateDependentAssignedUsersFilters(changedField) {
+      const searchEl = document.getElementById('assignedUsersSearch');
+      const typeEl = document.getElementById('assignedUsersTypeFilter');
+      const teamEl = document.getElementById('assignedUsersTeamFilter');
+      const workStatusEl = document.getElementById('assignedUsersWorkStatusFilter');
+
+      const search = (searchEl?.value || '').toLowerCase().trim();
+      let typeVal = typeEl?.value || 'all';
+      let teamVal = teamEl?.value || 'all';
+      let workStatusVal = workStatusEl?.value || 'all';
+
+      const assignedAssets = (store.data.assets || []).filter(a => a.status === 'Assigned' && a.user);
+
+      const matchesCriteria = (a, excludeField) => {
+        if (search) {
+          const matchSearch =
+            (a.user && a.user.toLowerCase().includes(search)) ||
+            (a.id && a.id.toLowerCase().includes(search)) ||
+            (a.team && a.team.toLowerCase().includes(search)) ||
+            (a.cpu && a.cpu.toLowerCase().includes(search)) ||
+            (a.ram && a.ram.toLowerCase().includes(search));
+          if (!matchSearch) return false;
+        }
+        if (excludeField !== 'type' && typeVal !== 'all') {
+          if (!a.type || a.type.toLowerCase() !== typeVal.toLowerCase()) return false;
+        }
+        if (excludeField !== 'team' && teamVal !== 'all') {
+          if (!a.team || a.team.trim().toLowerCase() !== teamVal.trim().toLowerCase()) return false;
+        }
+        if (excludeField !== 'workStatus' && workStatusVal !== 'all') {
+          const ws = a.workStatus || 'Currently Working';
+          if (!ws || ws.toLowerCase() !== workStatusVal.toLowerCase()) return false;
+        }
+        return true;
+      };
+
+      // Invalidation check
+      if (changedField === 'type' && teamVal !== 'all') {
+        const allowedAssets = assignedAssets.filter(a => matchesCriteria(a, 'team'));
+        const allowedTeams = new Set(allowedAssets.map(a => a.team ? a.team.trim().toLowerCase() : '').filter(Boolean));
+        if (!allowedTeams.has(teamVal.toLowerCase())) {
+          teamVal = 'all';
+          if (teamEl) teamEl.value = 'all';
+        }
+      }
+
+      // Valid Types
+      const typeMatches = assignedAssets.filter(a => matchesCriteria(a, 'type'));
+      const availableTypes = Array.from(new Set(typeMatches.map(a => a.type).filter(Boolean))).sort();
+      if (typeVal !== 'all' && !availableTypes.some(t => t.toLowerCase() === typeVal.toLowerCase())) {
+        typeVal = 'all';
+        if (typeEl) typeEl.value = 'all';
+      }
+
+      // Valid Teams (case-insensitively deduplicated)
+      const teamMatches = assignedAssets.filter(a => matchesCriteria(a, 'team'));
+      const teamMap = new Map();
+      teamMatches.forEach(a => {
+        if (a.team && a.team.trim()) {
+          const trimmed = a.team.trim();
+          const key = trimmed.toLowerCase();
+          if (!teamMap.has(key)) teamMap.set(key, trimmed);
+        }
+      });
+      const availableTeams = Array.from(teamMap.values()).sort((a, b) => a.localeCompare(b));
+      if (teamVal !== 'all' && !teamMap.has(teamVal.toLowerCase())) {
+        teamVal = 'all';
+        if (teamEl) teamEl.value = 'all';
+      }
+
+      // Valid Work Statuses
+      const workStatusMatches = assignedAssets.filter(a => matchesCriteria(a, 'workStatus'));
+      const availableWorkStatuses = Array.from(new Set(workStatusMatches.map(a => a.workStatus || 'Currently Working').filter(Boolean))).sort();
+      if (workStatusVal !== 'all' && !availableWorkStatuses.some(w => w.toLowerCase() === workStatusVal.toLowerCase())) {
+        workStatusVal = 'all';
+        if (workStatusEl) workStatusEl.value = 'all';
+      }
+
+      // Rebuild Type options
+      if (typeEl) {
+        let typeHtml = '<option value="all">All Asset Types</option>';
+        availableTypes.forEach(t => {
+          typeHtml += `<option value="${Utils.escapeHtml(t)}">${Utils.escapeHtml(t)}</option>`;
+        });
+        typeEl.innerHTML = typeHtml;
+        typeEl.value = typeVal;
+      }
+
+      // Rebuild Team options
+      if (teamEl) {
+        let teamHtml = '<option value="all">All Departments</option>';
+        availableTeams.forEach(t => {
+          teamHtml += `<option value="${Utils.escapeHtml(t)}">${Utils.escapeHtml(t)}</option>`;
+        });
+        teamEl.innerHTML = teamHtml;
+        teamEl.value = teamVal;
+      }
+
+      // Rebuild WorkStatus options
+      if (workStatusEl) {
+        let wsHtml = '<option value="all">All Work Statuses</option>';
+        availableWorkStatuses.forEach(w => {
+          const prefix = w === 'Currently Working' ? '🟢 ' : (w === 'Work From Home' ? '🔵 ' : (w === 'User Exit' ? '🔴 ' : ''));
+          wsHtml += `<option value="${Utils.escapeHtml(w)}">${prefix}${Utils.escapeHtml(w)}</option>`;
+        });
+        workStatusEl.innerHTML = wsHtml;
+        workStatusEl.value = workStatusVal;
+      }
+
+      const finalFilteredList = assignedAssets.filter(a => matchesCriteria(a, null));
+
+      // Update Toolbar count & reset button
+      const countPill = document.getElementById('assignedUsersCountPill');
+      if (countPill) countPill.textContent = `${finalFilteredList.length} Users`;
+
+      const resetBtn = document.getElementById('assignedUsersResetFiltersBtn');
+      const hasActive = search !== '' || typeVal !== 'all' || teamVal !== 'all' || workStatusVal !== 'all';
+      if (resetBtn) resetBtn.style.display = hasActive ? 'inline-flex' : 'none';
+
+      return {
+        finalFilteredList,
+        availableTypes,
+        availableTeams,
+        availableWorkStatuses
+      };
+    }
+
+    handleAssignedUsersFilterChange(field) {
+      const result = this.updateDependentAssignedUsersFilters(field);
+      this.renderAssignedUsersTable(result.finalFilteredList);
+    }
+
+    renderAssignedUsersTable(providedList = null) {
+      const tbody = document.getElementById('assignedUsersTableBody');
+      if (!tbody) return;
+      let list = providedList;
+      if (!list) {
+        const filterRes = this.updateDependentAssignedUsersFilters();
+        list = filterRes.finalFilteredList;
+      }
       const tbody = document.getElementById('assignedUsersTableBody');
       if (!tbody) return;
 
@@ -2267,7 +2558,188 @@
     /* ==========================================================================
        NON-ASSIGNED (AVAILABLE INVENTORY)
        ========================================================================== */
-    renderNonAssignedView() {
+
+    /* ==========================================================================
+       NON-ASSIGNED AVAILABLE POOL DYNAMIC FILTERS
+       ========================================================================== */
+    updateDependentNonAssignedFilters(changedField) {
+      const searchEl = document.getElementById('nonAssignedSearchInput');
+      const typeEl = document.getElementById('nonAssignedTypeFilter');
+      const cpuEl = document.getElementById('nonAssignedCpuFilter');
+      const teamEl = document.getElementById('nonAssignedTeamFilter');
+      const conditionEl = document.getElementById('nonAssignedConditionFilter');
+
+      const search = (searchEl?.value || '').toLowerCase().trim();
+      let typeVal = typeEl?.value || 'all';
+      let cpuVal = cpuEl?.value || 'all';
+      let teamVal = teamEl?.value || 'all';
+      let conditionVal = conditionEl?.value || 'all';
+
+      const unassignedAssets = (store.data.assets || []).filter(a =>
+        (a.status === 'Non-Assigned' || a.status === 'Available') &&
+        a.status !== 'Assigned' &&
+        a.status !== 'Retired'
+      );
+
+      const matchesCriteria = (a, excludeField) => {
+        if (search) {
+          const matchSearch =
+            (a.id && a.id.toLowerCase().includes(search)) ||
+            (a.user && a.user.toLowerCase().includes(search)) ||
+            (a.oldUsername && a.oldUsername.toLowerCase().includes(search)) ||
+            (a.serialNumber && a.serialNumber.toLowerCase().includes(search)) ||
+            (a.cpu && a.cpu.toLowerCase().includes(search)) ||
+            (a.ram && a.ram.toLowerCase().includes(search)) ||
+            (a.team && a.team.toLowerCase().includes(search));
+          if (!matchSearch) return false;
+        }
+
+        if (excludeField !== 'type' && typeVal !== 'all') {
+          const aType = (a.type || '').toLowerCase();
+          const targetType = typeVal.toLowerCase();
+          if (targetType === 'laptop') {
+            if (aType !== 'laptop' && aType !== 'macbook') return false;
+          } else if (aType !== targetType) {
+            return false;
+          }
+        }
+        if (excludeField !== 'cpu' && cpuVal !== 'all') {
+          const normCpu = Utils.normalizeCpu(a.cpu).toLowerCase();
+          if (normCpu !== cpuVal.toLowerCase()) return false;
+        }
+        if (excludeField !== 'team' && teamVal !== 'all') {
+          if (!a.team || a.team.trim().toLowerCase() !== teamVal.trim().toLowerCase()) return false;
+        }
+        if (excludeField !== 'condition' && conditionVal !== 'all') {
+          if (!a.condition || a.condition.toLowerCase() !== conditionVal.toLowerCase()) return false;
+        }
+        return true;
+      };
+
+      // Invalidation check
+      if (changedField === 'type' && cpuVal !== 'all') {
+        const allowedAssets = unassignedAssets.filter(a => matchesCriteria(a, 'cpu'));
+        const allowedCpus = new Set(allowedAssets.map(a => Utils.normalizeCpu(a.cpu).toLowerCase()).filter(Boolean));
+        if (!allowedCpus.has(cpuVal.toLowerCase())) {
+          cpuVal = 'all';
+          if (cpuEl) cpuEl.value = 'all';
+        }
+      }
+
+      // Valid Types
+      const typeMatches = unassignedAssets.filter(a => matchesCriteria(a, 'type'));
+      const availableTypes = Array.from(new Set(typeMatches.map(a => a.type).filter(Boolean))).sort();
+      if (typeVal !== 'all' && !availableTypes.some(t => t.toLowerCase() === typeVal.toLowerCase())) {
+        typeVal = 'all';
+        if (typeEl) typeEl.value = 'all';
+      }
+
+      // Valid CPUs (normalized)
+      const cpuMatches = unassignedAssets.filter(a => matchesCriteria(a, 'cpu'));
+      const cpuMap = new Map();
+      cpuMatches.forEach(a => {
+        const norm = Utils.normalizeCpu(a.cpu);
+        if (norm) {
+          const key = norm.toLowerCase();
+          if (!cpuMap.has(key)) cpuMap.set(key, norm);
+        }
+      });
+      const availableCpus = Array.from(cpuMap.values()).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+      if (cpuVal !== 'all' && !cpuMap.has(cpuVal.toLowerCase())) {
+        cpuVal = 'all';
+        if (cpuEl) cpuEl.value = 'all';
+      }
+
+      // Valid Teams
+      const teamMatches = unassignedAssets.filter(a => matchesCriteria(a, 'team'));
+      const teamMap = new Map();
+      teamMatches.forEach(a => {
+        if (a.team && a.team.trim()) {
+          const trimmed = a.team.trim();
+          const key = trimmed.toLowerCase();
+          if (!teamMap.has(key)) teamMap.set(key, trimmed);
+        }
+      });
+      const availableTeams = Array.from(teamMap.values()).sort((a, b) => a.localeCompare(b));
+      if (teamVal !== 'all' && !teamMap.has(teamVal.toLowerCase())) {
+        teamVal = 'all';
+        if (teamEl) teamEl.value = 'all';
+      }
+
+      // Valid Conditions
+      const condMatches = unassignedAssets.filter(a => matchesCriteria(a, 'condition'));
+      const availableConditions = Array.from(new Set(condMatches.map(a => a.condition).filter(Boolean))).sort();
+      if (conditionVal !== 'all' && !availableConditions.some(c => c.toLowerCase() === conditionVal.toLowerCase())) {
+        conditionVal = 'all';
+        if (conditionEl) conditionEl.value = 'all';
+      }
+
+      // Rebuild Dropdowns
+      if (typeEl) {
+        let typeHtml = '<option value="all">All Types</option>';
+        availableTypes.forEach(t => {
+          typeHtml += `<option value="${Utils.escapeHtml(t)}">${Utils.escapeHtml(t)}</option>`;
+        });
+        typeEl.innerHTML = typeHtml;
+        typeEl.value = typeVal;
+      }
+
+      if (cpuEl) {
+        let cpuHtml = '<option value="all">All CPUs</option>';
+        availableCpus.forEach(c => {
+          cpuHtml += `<option value="${Utils.escapeHtml(c)}">${Utils.escapeHtml(c)}</option>`;
+        });
+        cpuEl.innerHTML = cpuHtml;
+        cpuEl.value = cpuVal;
+      }
+
+      if (teamEl) {
+        let teamHtml = '<option value="all">All Departments</option>';
+        availableTeams.forEach(t => {
+          teamHtml += `<option value="${Utils.escapeHtml(t)}">${Utils.escapeHtml(t)}</option>`;
+        });
+        teamEl.innerHTML = teamHtml;
+        teamEl.value = teamVal;
+      }
+
+      if (conditionEl) {
+        let condHtml = '<option value="all">All Conditions</option>';
+        availableConditions.forEach(c => {
+          condHtml += `<option value="${Utils.escapeHtml(c)}">${Utils.escapeHtml(c)}</option>`;
+        });
+        conditionEl.innerHTML = condHtml;
+        conditionEl.value = conditionVal;
+      }
+
+      const finalFilteredList = unassignedAssets.filter(a => matchesCriteria(a, null));
+
+      // Update counters & buttons
+      const filteredPill = document.getElementById('nonAssignedFilteredCountPill');
+      if (filteredPill) filteredPill.textContent = `${finalFilteredList.length} Items Found`;
+
+      const badge = document.getElementById('nonAssignedCountBadge');
+      if (badge) badge.textContent = `${finalFilteredList.length} Available`;
+
+      const resetBtn = document.getElementById('nonAssignedResetBtn');
+      const hasActive = search !== '' || typeVal !== 'all' || cpuVal !== 'all' || teamVal !== 'all' || conditionVal !== 'all';
+      if (resetBtn) resetBtn.style.display = hasActive ? 'inline-flex' : 'none';
+
+      return {
+        finalFilteredList,
+        availableTypes,
+        availableCpus,
+        availableTeams,
+        availableConditions
+      };
+    }
+
+    handleNonAssignedFilterChange(field) {
+      this.lastNonAssignedFilterChanged = field;
+      const res = this.updateDependentNonAssignedFilters(field);
+      this.renderNonAssignedView(res.finalFilteredList);
+    }
+
+    renderNonAssignedView(providedList = null) {
       const allNonAssigned = store.data.assets.filter(a => a.status === 'Non-Assigned');
 
       // Metric Summary Cards
@@ -2917,7 +3389,108 @@
     /* ==========================================================================
        REQUIREMENTS MANAGEMENT
        ========================================================================== */
-    renderRequirementsTable() {
+
+    /* ==========================================================================
+       REQUIREMENTS DYNAMIC DEPENDENT FILTERS
+       ========================================================================== */
+    updateDependentRequirementsFilters(changedField) {
+      const searchEl = document.getElementById('reqSearchInput');
+      const statEl = document.getElementById('reqStatusFilter');
+      const prioEl = document.getElementById('reqPriorityFilter');
+
+      const search = (searchEl?.value || '').toLowerCase().trim();
+      let statVal = statEl?.value || 'all';
+      let prioVal = prioEl?.value || 'all';
+
+      const reqs = store.data.requirements || [];
+
+      const matchesCriteria = (r, excludeField) => {
+        if (search) {
+          const matchSearch =
+            (r.id && r.id.toLowerCase().includes(search)) ||
+            (r.name && r.name.toLowerCase().includes(search)) ||
+            (r.team && r.team.toLowerCase().includes(search)) ||
+            (r.tl && r.tl.toLowerCase().includes(search)) ||
+            (r.issue && r.issue.toLowerCase().includes(search)) ||
+            (r.requirement && r.requirement.toLowerCase().includes(search));
+          if (!matchSearch) return false;
+        }
+        if (excludeField !== 'status' && statVal !== 'all') {
+          if (!r.status || r.status.toLowerCase() !== statVal.toLowerCase()) return false;
+        }
+        if (excludeField !== 'priority' && prioVal !== 'all') {
+          if (!r.priority || r.priority.toLowerCase() !== prioVal.toLowerCase()) return false;
+        }
+        return true;
+      };
+
+      // Invalidation & Dependent Options
+      // Status options
+      const statMatches = reqs.filter(r => matchesCriteria(r, 'status'));
+      const availableStatuses = Array.from(new Set(statMatches.map(r => r.status).filter(Boolean))).sort();
+      if (statVal !== 'all' && !availableStatuses.some(s => s.toLowerCase() === statVal.toLowerCase())) {
+        statVal = 'all';
+        if (statEl) statEl.value = 'all';
+      }
+
+      // Priority options
+      const prioMatches = reqs.filter(r => matchesCriteria(r, 'priority'));
+      const availablePriorities = Array.from(new Set(prioMatches.map(r => r.priority).filter(Boolean))).sort();
+      if (prioVal !== 'all' && !availablePriorities.some(p => p.toLowerCase() === prioVal.toLowerCase())) {
+        prioVal = 'all';
+        if (prioEl) prioEl.value = 'all';
+      }
+
+      // Rebuild dropdown options
+      if (statEl) {
+        let statHtml = '<option value="all">All Statuses</option>';
+        availableStatuses.forEach(s => {
+          statHtml += `<option value="${Utils.escapeHtml(s)}">${Utils.escapeHtml(s)}</option>`;
+        });
+        statEl.innerHTML = statHtml;
+        statEl.value = statVal;
+      }
+
+      if (prioEl) {
+        let prioHtml = '<option value="all">All Priorities</option>';
+        availablePriorities.forEach(p => {
+          prioHtml += `<option value="${Utils.escapeHtml(p)}">${Utils.escapeHtml(p)}</option>`;
+        });
+        prioEl.innerHTML = prioHtml;
+        prioEl.value = prioVal;
+      }
+
+      const finalFilteredList = reqs.filter(r => matchesCriteria(r, null));
+
+      // Counters & Reset button
+      const countPill = document.getElementById('reqCountPill');
+      if (countPill) countPill.textContent = `${finalFilteredList.length} Requirements`;
+
+      const resetBtn = document.getElementById('reqResetFiltersBtn');
+      const hasActive = search !== '' || statVal !== 'all' || prioVal !== 'all';
+      if (resetBtn) resetBtn.style.display = hasActive ? 'inline-flex' : 'none';
+
+      return {
+        finalFilteredList,
+        availableStatuses,
+        availablePriorities
+      };
+    }
+
+    handleRequirementsFilterChange(field) {
+      this.lastReqFilterChanged = field;
+      const res = this.updateDependentRequirementsFilters(field);
+      this.renderRequirementsTable(res.finalFilteredList);
+    }
+
+    renderRequirementsTable(providedList = null) {
+      const tbody = document.getElementById('requirementsTableBody');
+      if (!tbody) return;
+      let list = providedList;
+      if (!list) {
+        const res = this.updateDependentRequirementsFilters();
+        list = res.finalFilteredList;
+      }
       const tbody = document.getElementById('requirementsTableBody');
       if (!tbody) return;
 
@@ -7715,62 +8288,109 @@ Remarks: ${r.remark || 'None'}`);
       const userSelect = document.getElementById('instockFilterUser');
       const deptSelect = document.getElementById('instockFilterDepartment');
       const tlSelect = document.getElementById('instockFilterTl');
+      const catSelect = document.getElementById('instockFilterCategory');
+
       if (!userSelect) return;
 
-      const currentSelectedUser = userSelect.value;
-      const currentSelectedDept = deptSelect?.value || 'all';
-      const currentSelectedTl = tlSelect?.value || 'all';
+      const currentSelectedUser = userSelect.value || 'all';
+      const currentSelectedDept = deptSelect ? (deptSelect.value || 'all') : 'all';
+      const currentSelectedTl = tlSelect ? (tlSelect.value || 'all') : 'all';
+      const currentSelectedCat = catSelect ? (catSelect.value || 'all') : 'all';
 
       const allocations = this.getInstockAllocations();
-      const allUsers = store.data.users || [];
 
-      // Extract unique user names
-      const usersSet = new Set();
-      allocations.forEach(a => { if (a.user_name) usersSet.add(a.user_name.trim()); });
-      allUsers.forEach(u => { if (u.name) usersSet.add(u.name.trim()); });
-      const sortedUsers = Array.from(usersSet).sort((a, b) => a.localeCompare(b));
+      // 1. Departments filtered by user and category
+      const deptMatches = allocations.filter(a => {
+        if (currentSelectedUser !== 'all' && (a.user_name || '').toLowerCase() !== currentSelectedUser.toLowerCase()) return false;
+        if (currentSelectedCat !== 'all' && (a.component_type || '').toUpperCase() !== currentSelectedCat.toUpperCase()) return false;
+        return true;
+      });
+      const validDepts = Array.from(new Set(deptMatches.map(a => a.team ? a.team.trim() : '').filter(Boolean))).sort((a, b) => a.localeCompare(b));
 
-      // Extract unique departments / teams
-      const deptSet = new Set();
-      allocations.forEach(a => { if (a.team) deptSet.add(a.team.trim()); });
-      ['PHP', 'AI', 'MOBIL TEAM', 'ACCOUNT', 'ADMIN', 'HR', 'SYSTEM ADMIN', 'Team 1', 'Team 2', 'Team 3'].forEach(d => deptSet.add(d));
-      const sortedDepts = Array.from(deptSet).sort((a, b) => a.localeCompare(b));
+      let selectedDept = currentSelectedDept;
+      if (selectedDept !== 'all' && !validDepts.some(d => d.toLowerCase() === selectedDept.toLowerCase())) {
+        selectedDept = 'all';
+        if (deptSelect) deptSelect.value = 'all';
+      }
 
-      // Extract unique TL names
-      const tlSet = new Set();
-      allocations.forEach(a => { if (a.tl_name) tlSet.add(a.tl_name.trim()); });
-      ['Sundar Pichai', 'Kavitha R', 'Mohan K', 'Divya S', 'Anand Kumar', 'Ramesh B'].forEach(t => tlSet.add(t));
-      const sortedTls = Array.from(tlSet).sort((a, b) => a.localeCompare(b));
+      // 2. Users filtered by department and category
+      const userMatches = allocations.filter(a => {
+        if (selectedDept !== 'all' && (a.team || '').toLowerCase() !== selectedDept.toLowerCase()) return false;
+        if (currentSelectedCat !== 'all' && (a.component_type || '').toUpperCase() !== currentSelectedCat.toUpperCase()) return false;
+        return true;
+      });
+      const validUsers = Array.from(new Set(userMatches.map(a => a.user_name ? a.user_name.trim() : '').filter(Boolean))).sort((a, b) => a.localeCompare(b));
 
-      // Rebuild User options
+      let selectedUser = currentSelectedUser;
+      if (selectedUser !== 'all' && !validUsers.some(u => u.toLowerCase() === selectedUser.toLowerCase())) {
+        selectedUser = 'all';
+        if (userSelect) userSelect.value = 'all';
+      }
+
+      // 3. TLs filtered by department and user
+      const tlMatches = allocations.filter(a => {
+        if (selectedDept !== 'all' && (a.team || '').toLowerCase() !== selectedDept.toLowerCase()) return false;
+        if (selectedUser !== 'all' && (a.user_name || '').toLowerCase() !== selectedUser.toLowerCase()) return false;
+        return true;
+      });
+      const validTls = Array.from(new Set(tlMatches.map(a => a.tl_name ? a.tl_name.trim() : '').filter(Boolean))).sort((a, b) => a.localeCompare(b));
+
+      let selectedTl = currentSelectedTl;
+      if (selectedTl !== 'all' && !validTls.some(t => t.toLowerCase() === selectedTl.toLowerCase())) {
+        selectedTl = 'all';
+        if (tlSelect) tlSelect.value = 'all';
+      }
+
+      // 4. Categories filtered by user and department
+      const catMatches = allocations.filter(a => {
+        if (selectedDept !== 'all' && (a.team || '').toLowerCase() !== selectedDept.toLowerCase()) return false;
+        if (selectedUser !== 'all' && (a.user_name || '').toLowerCase() !== selectedUser.toLowerCase()) return false;
+        return true;
+      });
+      const validCats = Array.from(new Set(catMatches.map(a => a.component_type ? a.component_type.trim().toUpperCase() : '').filter(Boolean))).sort((a, b) => a.localeCompare(b));
+
+      let selectedCat = currentSelectedCat;
+      if (selectedCat !== 'all' && !validCats.some(c => c.toUpperCase() === selectedCat.toUpperCase())) {
+        selectedCat = 'all';
+        if (catSelect) catSelect.value = 'all';
+      }
+
+      // Rebuild options strictly from real records
       let userOptionsHtml = '<option value="all">All Employees</option>';
-      sortedUsers.forEach(u => {
-        const selected = (u === currentSelectedUser) ? 'selected' : '';
-        userOptionsHtml += `<option value="${Utils.escapeHtml(u)}" ${selected}>${Utils.escapeHtml(u)}</option>`;
+      validUsers.forEach(u => {
+        const sel = (u.toLowerCase() === selectedUser.toLowerCase()) ? 'selected' : '';
+        userOptionsHtml += `<option value="${Utils.escapeHtml(u)}" ${sel}>${Utils.escapeHtml(u)}</option>`;
       });
       userSelect.innerHTML = userOptionsHtml;
 
-      // Rebuild Department options
       if (deptSelect) {
         let deptOptionsHtml = '<option value="all">All Departments</option>';
-        sortedDepts.forEach(d => {
-          const selected = (d === currentSelectedDept) ? 'selected' : '';
-          deptOptionsHtml += `<option value="${Utils.escapeHtml(d)}" ${selected}>${Utils.escapeHtml(d)}</option>`;
+        validDepts.forEach(d => {
+          const sel = (d.toLowerCase() === selectedDept.toLowerCase()) ? 'selected' : '';
+          deptOptionsHtml += `<option value="${Utils.escapeHtml(d)}" ${sel}>${Utils.escapeHtml(d)}</option>`;
         });
         deptSelect.innerHTML = deptOptionsHtml;
       }
 
-      // Rebuild TL options
       if (tlSelect) {
         let tlOptionsHtml = '<option value="all">All Team Leads</option>';
-        sortedTls.forEach(tl => {
-          const selected = (tl === currentSelectedTl) ? 'selected' : '';
-          tlOptionsHtml += `<option value="${Utils.escapeHtml(tl)}" ${selected}>${Utils.escapeHtml(tl)}</option>`;
+        validTls.forEach(t => {
+          const sel = (t.toLowerCase() === selectedTl.toLowerCase()) ? 'selected' : '';
+          tlOptionsHtml += `<option value="${Utils.escapeHtml(t)}" ${sel}>${Utils.escapeHtml(t)}</option>`;
         });
         tlSelect.innerHTML = tlOptionsHtml;
       }
-    }
 
+      if (catSelect) {
+        let catOptionsHtml = '<option value="all">All Categories</option>';
+        validCats.forEach(c => {
+          const sel = (c.toUpperCase() === selectedCat.toUpperCase()) ? 'selected' : '';
+          catOptionsHtml += `<option value="${Utils.escapeHtml(c)}" ${sel}>${Utils.escapeHtml(c)}</option>`;
+        });
+        catSelect.innerHTML = catOptionsHtml;
+      }
+    }
+    
     renderAssignedItemsTable() {
       // Ensure filter dropdowns are populated dynamically from the database
       this.populateAssignedFilterDropdowns();
@@ -8839,10 +9459,80 @@ Remarks: ${r.remark || 'None'}`);
 
   // Instantiate application controller
   const app = new AppController();
+  window.Utils = Utils;
   window.ITAppControllerInstance = app;
 
   // Expose global methods for inline HTML onclick handlers
   window.ITApp = {
+    // Assigned Users
+    handleAssignedUsersFilterChange(field) {
+      app.handleAssignedUsersFilterChange(field);
+    },
+    updateDependentAssignedUsersFilters() {
+      return app.updateDependentAssignedUsersFilters();
+    },
+    resetAssignedUsersFilters() {
+      const search = document.getElementById('assignedUsersSearch');
+      if (search) search.value = '';
+      const type = document.getElementById('assignedUsersTypeFilter');
+      if (type) type.value = 'all';
+      const team = document.getElementById('assignedUsersTeamFilter');
+      if (team) team.value = 'all';
+      const work = document.getElementById('assignedUsersWorkStatusFilter');
+      if (work) work.value = 'all';
+      const res = app.updateDependentAssignedUsersFilters();
+      app.renderAssignedUsersTable(res.finalFilteredList);
+    },
+
+    // Non-Assigned Available Pool
+    handleNonAssignedFilterChange(field) {
+      app.handleNonAssignedFilterChange(field);
+    },
+    updateDependentNonAssignedFilters() {
+      return app.updateDependentNonAssignedFilters();
+    },
+    resetNonAssignedFilters() {
+      app.lastNonAssignedFilterChanged = null;
+      const search = document.getElementById('nonAssignedSearchInput');
+      if (search) search.value = '';
+      const type = document.getElementById('nonAssignedTypeFilter');
+      if (type) type.value = 'all';
+      const cpu = document.getElementById('nonAssignedCpuFilter');
+      if (cpu) cpu.value = 'all';
+      const team = document.getElementById('nonAssignedTeamFilter');
+      if (team) team.value = 'all';
+      const cond = document.getElementById('nonAssignedConditionFilter');
+      if (cond) cond.value = 'all';
+      const res = app.updateDependentNonAssignedFilters();
+      app.renderNonAssignedView(res.finalFilteredList);
+    },
+
+    // Requirements
+    handleRequirementsFilterChange(field) {
+      app.handleRequirementsFilterChange(field);
+    },
+    updateDependentRequirementsFilters() {
+      return app.updateDependentRequirementsFilters();
+    },
+    resetRequirementsFilters() {
+      app.lastReqFilterChanged = null;
+      const search = document.getElementById('reqSearchInput');
+      if (search) search.value = '';
+      const stat = document.getElementById('reqStatusFilter');
+      if (stat) stat.value = 'all';
+      const prio = document.getElementById('reqPriorityFilter');
+      if (prio) prio.value = 'all';
+      const res = app.updateDependentRequirementsFilters();
+      app.renderRequirementsTable(res.finalFilteredList);
+    },
+
+    renderRequirementsTable() {
+      app.renderRequirementsTable();
+    },
+    renderAssignedUsersTable() {
+      app.renderAssignedUsersTable();
+    },
+
     handleWorkStatusChange: (v) => app.handleWorkStatusChange(v),
     handleSystemStatusChange: (v) => app.handleSystemStatusChange(v),
     renderAllAssetsTable() {
@@ -8938,6 +9628,12 @@ Remarks: ${r.remark || 'None'}`);
       app.editReq(id);
     },
 
+    handleAssetFilterChange(filterName) {
+      app.handleAssetFilterChange(filterName);
+    },
+    updateDependentAssetFilters(filterName) {
+      return app.updateDependentAssetFilters(filterName);
+    },
     resetAllAssetFilters() {
       const search = document.getElementById('assetsSearchInput');
       if (search) search.value = '';
@@ -8951,7 +9647,7 @@ Remarks: ${r.remark || 'None'}`);
       if (status) status.value = 'all';
       const work = document.getElementById('assetsWorkStatusFilter');
       if (work) work.value = 'all';
-      app.renderAllAssetsTable();
+      app.handleAssetFilterChange();
     },
 
     // Navigation
