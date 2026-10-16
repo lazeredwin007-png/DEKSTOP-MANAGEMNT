@@ -570,7 +570,10 @@ class DatabaseService {
         requestDate TEXT,
         requiredDate TEXT,
         status TEXT,
-        remark TEXT
+        remark TEXT,
+        asset_assignment_status TEXT DEFAULT 'Non-Assigned / Awaiting Allocation',
+        assigned_asset_id TEXT DEFAULT '',
+        hardware_item TEXT DEFAULT ''
       );
 
       CREATE TABLE IF NOT EXISTS non_it_assets (
@@ -754,6 +757,19 @@ class DatabaseService {
     } catch (e) {}
     try {
       this.db.exec("ALTER TABLE instock_hardware ADD COLUMN changing_reason TEXT DEFAULT ''");
+    } catch (e) {}
+    try {
+      this.db.exec("ALTER TABLE requirements ADD COLUMN asset_assignment_status TEXT DEFAULT 'Non-Assigned / Awaiting Allocation'");
+    } catch (e) {}
+    try {
+      this.db.exec("ALTER TABLE requirements ADD COLUMN assigned_asset_id TEXT DEFAULT ''");
+    } catch (e) {}
+    try {
+      this.db.exec("ALTER TABLE requirements ADD COLUMN hardware_item TEXT DEFAULT ''");
+    } catch (e) {}
+    try {
+      this.db.exec("UPDATE requirements SET asset_assignment_status = 'Non-Assigned / Awaiting Allocation' WHERE asset_assignment_status IS NULL OR asset_assignment_status = ''");
+      this.db.exec("UPDATE requirements SET hardware_item = requirement WHERE hardware_item IS NULL OR hardware_item = ''");
     } catch (e) {}
 
     try {
@@ -1685,30 +1701,161 @@ class DatabaseService {
   }
 
   insertRequirement(req) {
+    const id = req.id || `REQ-${Math.floor(100 + Math.random() * 900)}`;
+    const name = req.name || req.employee_name || req.user_name || req.user || 'Staff Requester';
+    const team = req.team || req.department || 'General';
+    const tl = req.tl || req.team_lead || '';
+    const issue = req.issue || req.reason || req.notes || '';
+    const requirement = req.requirement || req.hardware_item || req.item || req.type || issue || 'Hardware Requirement';
+    const priority = req.priority || 'Medium';
+    const requestDate = req.requestDate || req.date || req.created_at || new Date().toISOString().substring(0, 10);
+    const requiredDate = req.requiredDate || req.required_date || '';
+    const status = req.status || 'Pending';
+    const remark = req.remark || req.notes || '';
+    const assetAssignmentStatus = req.asset_assignment_status || (req.assigned_asset_id ? 'Assigned' : 'Non-Assigned');
+    const assignedAssetId = req.assigned_asset_id || '';
+    const hardwareItem = req.hardware_item || req.item || req.type || requirement;
+
     if (this.db) {
-      this.db.prepare('INSERT INTO requirements (id, name, team, tl, issue, requirement, priority, requestDate, requiredDate, status, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-        .run(req.id, req.name, req.team, req.tl || '', req.issue || '', req.requirement, req.priority || 'Medium', req.requestDate || '', req.requiredDate || '', req.status || 'Pending', req.remark || '');
-      this.addActivity('Filed Requirement', req.id, req.name, 'Pending');
-      return req;
+      this.db.prepare(`
+        INSERT INTO requirements (id, name, team, tl, issue, requirement, priority, requestDate, requiredDate, status, remark, asset_assignment_status, assigned_asset_id, hardware_item)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        id, name, team, tl, issue, requirement,
+        priority, requestDate, requiredDate, status, remark,
+        assetAssignmentStatus, assignedAssetId, hardwareItem
+      );
+      this.addActivity('Filed Requirement', id, name, status);
+      return this.db.prepare('SELECT * FROM requirements WHERE id = ?').get(id);
     }
-    this.memoryData.requirements.unshift(req);
-    this.addActivity('Filed Requirement', req.id, req.name, 'Pending');
+    const newReq = {
+      id,
+      name,
+      team,
+      tl,
+      issue,
+      requirement,
+      priority,
+      requestDate,
+      requiredDate,
+      status,
+      remark,
+      asset_assignment_status: assetAssignmentStatus,
+      assigned_asset_id: assignedAssetId,
+      hardware_item: hardwareItem
+    };
+    this.memoryData.requirements.unshift(newReq);
+    this.addActivity('Filed Requirement', id, name, status);
     this.saveFileStore();
-    return req;
+    return newReq;
   }
 
-  updateRequirement(id, status) {
+  updateRequirement(id, updates) {
+    if (typeof updates === 'string') {
+      updates = { status: updates };
+    }
     if (this.db) {
-      this.db.prepare('UPDATE requirements SET status = ? WHERE id = ?').run(status, id);
-      return true;
+      const allowedCols = ['name', 'team', 'tl', 'issue', 'requirement', 'priority', 'requestDate', 'requiredDate', 'status', 'remark', 'asset_assignment_status', 'assigned_asset_id', 'hardware_item'];
+      const valid = {};
+      for (const [k, v] of Object.entries(updates || {})) {
+        if (allowedCols.includes(k)) valid[k] = v;
+      }
+      if (Object.keys(valid).length > 0) {
+        const setClauses = Object.keys(valid).map(k => `${k} = ?`).join(', ');
+        const values = [...Object.values(valid), id];
+        this.db.prepare(`UPDATE requirements SET ${setClauses} WHERE id = ?`).run(...values);
+      }
+      return this.db.prepare('SELECT * FROM requirements WHERE id = ?').get(id);
     }
-    const r = this.memoryData.requirements.find(item => item.id === id);
+    const r = (this.memoryData.requirements || []).find(item => item.id === id);
     if (r) {
-      r.status = status;
+      Object.assign(r, updates);
       this.saveFileStore();
-      return true;
+      return r;
     }
-    return false;
+    return null;
+  }
+
+  assignHardwareToRequirement(reqId, assetId, assignedDate = null) {
+    const date = assignedDate || new Date().toISOString().substring(0, 10);
+    if (this.db) {
+      const req = this.db.prepare('SELECT * FROM requirements WHERE id = ?').get(reqId);
+      if (!req) throw new Error(`Requirement ${reqId} not found`);
+      const hw = this.db.prepare('SELECT * FROM instock_hardware WHERE id = ?').get(assetId);
+      if (!hw) throw new Error(`Hardware asset ${assetId} not found`);
+      if (hw.status === 'Assigned') throw new Error(`Asset ${assetId} is already assigned to ${hw.assigned_user || 'another employee'}`);
+
+      // 1. Update requirement record
+      this.db.prepare(`
+        UPDATE requirements 
+        SET status = 'Approved', asset_assignment_status = 'Assigned', assigned_asset_id = ? 
+        WHERE id = ?
+      `).run(assetId, reqId);
+
+      // 2. Insert into instock_allocations
+      const allocId = `ALC-${Math.floor(1000 + Math.random() * 9000)}`;
+      const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+      const empName = req.name || req.employee_name || 'Staff';
+      this.db.prepare(`
+        INSERT INTO instock_allocations (id, asset_id, user_name, team, tl_name, component_type, spec, serial_number, assigned_date, return_date, user_exit_date, changing_reason, purpose, status, assigned_by, remark, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        allocId, assetId, empName, req.team || '', req.tl || '',
+        hw.component_type || 'Hardware', hw.spec || '', hw.serial_number || '',
+        date, null, '', 'Requirement Allocation', req.requirement || req.issue || 'Hardware request allocation',
+        'Assigned', 'SysAdmin', `Allocated for Request ${reqId}`, now
+      );
+
+      // 3. Update physical hardware status
+      this.db.prepare(`
+        UPDATE instock_hardware 
+        SET status = 'Assigned', assigned_user = ?, team = ?, tl = ?, assigned_date = ? 
+        WHERE id = ?
+      `).run(empName, req.team || '', req.tl || '', date, assetId);
+
+      this.addActivity('Assigned Hardware to Request', `${assetId} assigned to ${empName} (${reqId})`, 'SysAdmin', 'Success');
+
+      return {
+        requirement: this.db.prepare('SELECT * FROM requirements WHERE id = ?').get(reqId),
+        hardware: this.db.prepare('SELECT * FROM instock_hardware WHERE id = ?').get(assetId),
+        allocation: this.db.prepare('SELECT * FROM instock_allocations WHERE id = ?').get(allocId)
+      };
+    }
+
+    const req = (this.memoryData.requirements || []).find(r => r.id === reqId);
+    if (!req) throw new Error(`Requirement ${reqId} not found`);
+    const hw = (this.memoryData.instockHardware || []).find(h => h.id === assetId);
+    if (!hw) throw new Error(`Hardware asset ${assetId} not found`);
+    if (hw.status === 'Assigned') throw new Error(`Asset ${assetId} is already assigned`);
+
+    req.status = 'Approved';
+    req.asset_assignment_status = 'Assigned';
+    req.assigned_asset_id = assetId;
+
+    hw.status = 'Assigned';
+    hw.assigned_user = req.name;
+    hw.team = req.team || '';
+    hw.tl = req.tl || '';
+    hw.assigned_date = date;
+
+    const alloc = {
+      id: `ALC-${Math.floor(1000 + Math.random() * 9000)}`,
+      asset_id: assetId,
+      user_name: req.name,
+      team: req.team || '',
+      tl_name: req.tl || '',
+      component_type: hw.component_type,
+      spec: hw.spec,
+      serial_number: hw.serial_number,
+      assigned_date: date,
+      status: 'Assigned',
+      purpose: req.requirement || 'Hardware request allocation'
+    };
+    if (!this.memoryData.instockAllocations) this.memoryData.instockAllocations = [];
+    this.memoryData.instockAllocations.unshift(alloc);
+    this.saveFileStore();
+
+    return { requirement: req, hardware: hw, allocation: alloc };
   }
 
   deleteRequirement(id) {
@@ -1770,11 +1917,18 @@ class DatabaseService {
     return this.memoryData.instockHardware || [];
   }
 
+  getInstockHardwareById(id) {
+    if (this.db) {
+      return this.db.prepare('SELECT * FROM instock_hardware WHERE id = ?').get(id);
+    }
+    return (this.memoryData.instockHardware || []).find(i => i.id === id);
+  }
+
   insertInstockHardware(item) {
     const type = (item.component_type || 'OTHER').toUpperCase();
-    const id = item.id || `STK-${type}-${Math.floor(100 + Math.random() * 900)}`;
+    const id = item.id ? item.id.trim() : `STK-${type}-${Math.floor(100 + Math.random() * 900)}`;
     const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
-    const status = (item.status === 'Assigned' && item.assigned_user) ? 'Assigned' : (item.status || 'Pending');
+    const status = (item.status === 'Assigned' && item.assigned_user) ? 'Assigned' : (item.status || 'Available');
 
     if (this.db) {
       const stmt = this.db.prepare(`
@@ -1815,6 +1969,7 @@ class DatabaseService {
     };
     if (!this.memoryData.instockHardware) this.memoryData.instockHardware = [];
     this.memoryData.instockHardware.unshift(newRecord);
+    this.saveFileStore();
     return newRecord;
   }
 
@@ -1838,6 +1993,7 @@ class DatabaseService {
     if (!this.memoryData.instockHardware) return null;
     const item = this.memoryData.instockHardware.find(i => i.id === id);
     if (item) Object.assign(item, updates);
+    this.saveFileStore();
     return item;
   }
 
@@ -1848,6 +2004,7 @@ class DatabaseService {
     }
     if (this.memoryData.instockHardware) {
       this.memoryData.instockHardware = this.memoryData.instockHardware.filter(i => i.id !== id);
+      this.saveFileStore();
     }
     return true;
   }

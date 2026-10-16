@@ -168,8 +168,8 @@
               </ul>
             </li>
 
-            <!-- 👥 Users (Expandable) -->
-            <li class="nav-item has-submenu">
+            <!-- 👥 Users (Expandable - Hidden) -->
+            <li class="nav-item has-submenu" id="navItemUsers" style="display: none !important;">
               <a href="#users" class="nav-link">
                 <div class="nav-link-content">
                   <span class="nav-icon">👥</span>
@@ -213,18 +213,28 @@
               <ul class="nav-submenu">
                 <li>
                   <a href="#instock-dashboard" class="submenu-link" data-target-view="instock-dashboard">
-                    <span class="submenu-bullet"></span> IN-STOCK Dashboard
+                    <span class="submenu-bullet"></span> Instock Dashboard
                   </a>
                 </li>
                 <li>
-                  <a href="#instock-inventory" class="submenu-link" data-target-view="instock-inventory">
-                    <span class="submenu-bullet"></span> Stock Inventory
+                  <a href="#instock-entry" class="submenu-link" data-target-view="instock-entry">
+                    <span class="submenu-bullet"></span> Instock Entry
                   </a>
                 </li>
                 <li>
-                  <a href="#instock-assigned" class="submenu-link" data-target-view="instock-assigned">
-                    <span class="submenu-bullet"></span> Assigned Details
+                  <a href="#instock-asset-details" class="submenu-link" data-target-view="instock-asset-details">
+                    <span class="submenu-bullet"></span> Asset Details
                   </a>
+                </li>
+                <li>
+                  <a href="#instock-requests" class="submenu-link" data-target-view="instock-requests">
+                    <span class="submenu-bullet"></span> Request
+                  </a>
+                </li>
+                <!-- Hidden legacy links for backwards compatibility -->
+                <li style="display:none !important;">
+                  <a href="#instock-inventory" class="submenu-link" data-target-view="instock-inventory">Stock Inventory</a>
+                  <a href="#instock-assigned" class="submenu-link" data-target-view="instock-assigned">Assigned Details</a>
                 </li>
               </ul>
             </li>
@@ -1412,16 +1422,13 @@
               <thead>
                 <tr>
                   <th>Asset ID</th>
-                  <th>Type</th>
-                  <th>User</th>
+                  <th>User / Assigned To</th>
                   <th class="th-work-status">Work Status</th>
-                  <th>Team</th>
+                  <th>Team / TL</th>
                   <th>CPU</th>
                   <th>RAM</th>
                   <th>HDD</th>
                   <th>SSD</th>
-                  <th>Monitor</th>
-                  <th>MAC Address</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -1799,22 +1806,25 @@
               </div>
               <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
                 <!-- Subnav pills -->
-                <div class="instock-subnav-pills" style="display:flex; background:rgba(15,23,42,0.06); padding:4px; border-radius:10px; gap:4px;">
+                <div class="instock-subnav-pills" style="display:flex; background:rgba(15,23,42,0.06); padding:4px; border-radius:10px; gap:4px; flex-wrap:wrap;">
                   <button type="button" class="btn btn-sm btn-primary active" onclick="window.ITApp.navTo('instock-dashboard')" style="border-radius:8px; font-weight:600; padding:6px 14px;">
-                    📊 IN-STOCK Dashboard
+                    📊 Instock Dashboard
                   </button>
-                  <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.navTo('instock-inventory')" style="border-radius:8px; font-weight:600; padding:6px 14px; background:transparent; border:none; color:var(--text-secondary);">
-                    🗄️ Stock Inventory
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.navTo('instock-entry')" style="border-radius:8px; font-weight:600; padding:6px 14px; background:transparent; border:none; color:var(--text-secondary);">
+                    ➕ Instock Entry
                   </button>
-                  <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.navTo('instock-assigned')" style="border-radius:8px; font-weight:600; padding:6px 14px; background:transparent; border:none; color:var(--text-secondary);">
-                    📋 Assigned Details
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.navTo('instock-asset-details')" style="border-radius:8px; font-weight:600; padding:6px 14px; background:transparent; border:none; color:var(--text-secondary);">
+                    🗄️ Asset Details
+                  </button>
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.navTo('instock-requests')" style="border-radius:8px; font-weight:600; padding:6px 14px; background:transparent; border:none; color:var(--text-secondary);">
+                    📝 Request
                   </button>
                 </div>
                 <!-- Quick actions -->
                 <button type="button" class="btn btn-primary" onclick="window.ITApp.openAssignAssetModal()" style="display:inline-flex; align-items:center; gap:6px; font-weight:600; border-radius:8px; padding:8px 16px; box-shadow:0 4px 12px rgba(37,99,235,0.25);">
                   <span>👤</span> Assign Asset
                 </button>
-                <button type="button" class="btn btn-secondary" onclick="window.ITApp.openInstockEntryModal()" style="display:inline-flex; align-items:center; gap:6px; font-weight:600; border-radius:8px; padding:8px 14px;">
+                <button type="button" class="btn btn-secondary" id="btnAddStockItemDashboard" onclick="window.ITApp.openInstockEntryModal()" style="display:inline-flex; align-items:center; gap:6px; font-weight:600; border-radius:8px; padding:8px 14px;">
                   <span>+</span> Add Stock Item
                 </button>
               </div>
@@ -1897,7 +1907,7 @@
                       <div class="stat-pill-hint">Click for Assigned</div>
                     </div>
                   </div>
-                  <button type="button" class="btn-instock-new-entry" onclick="event.stopPropagation(); window.ITApp.openInstockEntryModal('CPU')" title="Add new CPU stock entry">
+                  <button type="button" class="btn-instock-new-entry" id="btnNewEntryCPU" onclick="event.stopPropagation(); window.ITApp.openInstockEntryModal('CPU')" title="Add new CPU stock entry">
                     + New Entry
                   </button>
                 </div>
@@ -1921,7 +1931,7 @@
                       <div class="stat-pill-hint">Click for Assigned</div>
                     </div>
                   </div>
-                  <button type="button" class="btn-instock-new-entry" onclick="event.stopPropagation(); window.ITApp.openInstockEntryModal('SSD')" title="Add new SSD stock entry">
+                  <button type="button" class="btn-instock-new-entry" id="btnNewEntrySSD" onclick="event.stopPropagation(); window.ITApp.openInstockEntryModal('SSD')" title="Add new SSD stock entry">
                     + New Entry
                   </button>
                 </div>
@@ -1945,7 +1955,7 @@
                       <div class="stat-pill-hint">Click for Assigned</div>
                     </div>
                   </div>
-                  <button type="button" class="btn-instock-new-entry" onclick="event.stopPropagation(); window.ITApp.openInstockEntryModal('RAM')" title="Add new RAM stock entry">
+                  <button type="button" class="btn-instock-new-entry" id="btnNewEntryRAM" onclick="event.stopPropagation(); window.ITApp.openInstockEntryModal('RAM')" title="Add new RAM stock entry">
                     + New Entry
                   </button>
                 </div>
@@ -1969,7 +1979,7 @@
                       <div class="stat-pill-hint">Click for Assigned</div>
                     </div>
                   </div>
-                  <button type="button" class="btn-instock-new-entry" onclick="event.stopPropagation(); window.ITApp.openInstockEntryModal('SMPS')" title="Add new SMPS stock entry">
+                  <button type="button" class="btn-instock-new-entry" id="btnNewEntrySMPS" onclick="event.stopPropagation(); window.ITApp.openInstockEntryModal('SMPS')" title="Add new SMPS stock entry">
                     + New Entry
                   </button>
                 </div>
@@ -1993,7 +2003,7 @@
                       <div class="stat-pill-hint">Click for Assigned</div>
                     </div>
                   </div>
-                  <button type="button" class="btn-instock-new-entry" onclick="event.stopPropagation(); window.ITApp.openInstockEntryModal('MONITOR')" title="Add new Monitor stock entry">
+                  <button type="button" class="btn-instock-new-entry" id="btnNewEntryMONITOR" onclick="event.stopPropagation(); window.ITApp.openInstockEntryModal('MONITOR')" title="Add new Monitor stock entry">
                     + New Entry
                   </button>
                 </div>
@@ -2017,18 +2027,296 @@
                       <div class="stat-pill-hint">Click for Assigned</div>
                     </div>
                   </div>
-                  <button type="button" class="btn-instock-new-entry" onclick="event.stopPropagation(); window.ITApp.openInstockEntryModal('OTHER')" title="Add new Other stock entry">
+                  <button type="button" class="btn-instock-new-entry" id="btnNewEntryOTHER" onclick="event.stopPropagation(); window.ITApp.openInstockEntryModal('OTHER')" title="Add new Other stock entry">
                     + New Entry
                   </button>
                 </div>
             </div>
           </div>
+
+          <!-- 3. Hardware Stock Live Inventory Table -->
+          <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,0.05); margin-top: 10px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+              <div>
+                <h3 style="font-size:1.05rem; font-weight:700; color:var(--text-primary); margin:0; display:flex; align-items:center; gap:8px;">
+                  <span>📋</span> Live Stock Inventory
+                </h3>
+                <p style="font-size:0.8rem; color:var(--text-secondary); margin:3px 0 0 0;">Real-time inventory list with category filtering, quick actions, and allocation status</p>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span id="instockInventoryCountBadge" class="badge" style="background:#eff6ff; color:#2563eb; font-weight:600; font-size:0.78rem; border:1px solid #bfdbfe; padding:6px 12px; border-radius:12px;">
+                  0 Items
+                </span>
+              </div>
+            </div>
+
+            <!-- Filter Toolbar -->
+            <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; background:#f8fafc; padding:12px 16px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:16px;">
+              <div style="position:relative; flex:1; min-width:200px;">
+                <input type="text" id="instockInventorySearch" class="form-control" placeholder="🔍 Search Asset ID, spec, or serial..." oninput="window.ITApp.filterInstockDashboard()" style="padding-left:14px; width:100%; border-radius:8px; font-size:0.85rem;" aria-label="🔍 Search Asset ID, spec, or serial...">
+              </div>
+              <select id="instockInventoryCategoryFilter" class="form-select" onchange="window.ITApp.filterInstockDashboard()" style="width:auto; min-width:140px; border-radius:8px; font-size:0.85rem;">
+                <option value="all">All Categories</option>
+                <option value="CPU">CPU</option>
+                <option value="SSD">SSD</option>
+                <option value="RAM">RAM</option>
+                <option value="SMPS">SMPS</option>
+                <option value="MONITOR">MONITOR</option>
+                <option value="OTHER">OTHER</option>
+              </select>
+              <select id="instockInventoryStatusFilter" class="form-select" onchange="window.ITApp.filterInstockDashboard()" style="width:auto; min-width:150px; border-radius:8px; font-size:0.85rem;">
+                <option value="all">All Statuses</option>
+                <option value="Available">🟢 Available</option>
+                <option value="Assigned">👤 Assigned</option>
+                <option value="Under Maintenance">🛠️ Under Maintenance</option>
+              </select>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.resetInstockDashboardFilters()" title="Reset Filters" style="border-radius:8px; font-weight:600;">
+                ↺ Reset
+              </button>
+            </div>
+
+            <!-- Inventory Data Table -->
+            <div class="table-container" style="overflow-x:auto; border:1px solid #e2e8f0; border-radius:10px;">
+              <table class="data-table" id="instockInventoryTable">
+                <thead>
+                  <tr style="background:#f1f5f9; color:#334155;">
+                    <th style="min-width:110px;">Asset ID</th>
+                    <th style="min-width:120px;">Category</th>
+                    <th style="min-width:220px;">Specification / Model</th>
+                    <th style="min-width:140px;">Serial Number</th>
+                    <th style="min-width:115px;">Purchase Date</th>
+                    <th style="min-width:120px;">Current Status</th>
+                    <th style="min-width:170px; text-align:center;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="instockInventoryTableBody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
         <!-- ==================================================================
-             PANEL: STOCK INVENTORY (Dedicated Full Page Submenu)
+             PANEL: INSTOCK ENTRY (Dedicated Subpage)
              ================================================================== -->
-        <div class="view-panel" id="view-instock-inventory">
+        <div class="view-panel" id="view-instock-entry">
+          <div class="section-card" style="padding: 24px;">
+            <!-- Header bar with Subnav Pill Switches -->
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px;">
+              <div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span style="font-size:1.8rem; background:rgba(37,99,235,0.1); padding:8px 12px; border-radius:12px; color:var(--primary);">➕</span>
+                  <div>
+                    <h2 style="font-size:1.35rem; font-weight:800; margin:0; color:var(--text-primary); letter-spacing:-0.02em;">Instock Entry</h2>
+                    <p style="font-size:0.85rem; color:var(--text-secondary); margin:4px 0 0 0;">Enter, manage and register hardware asset records into the IT database</p>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                <div class="instock-subnav-pills" style="display:flex; background:rgba(15,23,42,0.06); padding:4px; border-radius:10px; gap:4px; flex-wrap:wrap;">
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.navTo('instock-dashboard')" style="border-radius:8px; font-weight:600; padding:6px 14px; background:transparent; border:none; color:var(--text-secondary);">
+                    📊 Instock Dashboard
+                  </button>
+                  <button type="button" class="btn btn-sm btn-primary active" onclick="window.ITApp.navTo('instock-entry')" style="border-radius:8px; font-weight:600; padding:6px 14px;">
+                    ➕ Instock Entry
+                  </button>
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.navTo('instock-asset-details')" style="border-radius:8px; font-weight:600; padding:6px 14px; background:transparent; border:none; color:var(--text-secondary);">
+                    🗄️ Asset Details
+                  </button>
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.navTo('instock-requests')" style="border-radius:8px; font-weight:600; padding:6px 14px; background:transparent; border:none; color:var(--text-secondary);">
+                    📝 Request
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hardware Entry Form Card -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:24px; margin-bottom:28px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+                <h3 id="entryFormCardTitle" style="font-size:1.1rem; font-weight:800; color:#1e293b; margin:0; display:flex; align-items:center; gap:8px;">
+                  <span>📝</span> Enter Hardware Asset Record
+                </h3>
+                <span id="entryFormModeBadge" class="badge" style="background:#eff6ff; color:#2563eb; font-weight:700; border:1px solid #bfdbfe; padding:4px 10px; border-radius:6px; font-size:0.75rem;">
+                  New Asset Mode
+                </span>
+              </div>
+
+              <form id="formPageInstockEntry" onsubmit="window.ITApp.handlePageInstockEntrySubmit(event)">
+                <input type="hidden" id="entryPageEditId" value="">
+
+                <!-- Grid Row 1: Asset ID & Category -->
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:18px; margin-bottom:16px;">
+                  <div class="form-group">
+                    <label class="form-label" for="entryPageAssetId" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
+                      Asset ID <span style="font-size:0.75rem; color:#64748b; font-weight:normal;">(Auto-generated if left blank)</span>
+                    </label>
+                    <input type="text" id="entryPageAssetId" class="form-control" placeholder="e.g. STK-CPU-109 or leave blank" style="width:100%; border-radius:8px; padding:10px 14px; font-family:var(--font-mono, monospace);">
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label" for="entryPageComponentType" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
+                      Category <span style="color:#ef4444;">*</span>
+                    </label>
+                    <select id="entryPageComponentType" class="form-select" required style="width:100%; border-radius:8px; padding:10px 14px; font-weight:600;">
+                      <option value="CPU">💻 CPU (Processor)</option>
+                      <option value="SSD">⚡ SSD (Storage)</option>
+                      <option value="RAM">🧠 RAM (Memory)</option>
+                      <option value="SMPS">🔌 SMPS (Power Supply)</option>
+                      <option value="MONITOR">🖥️ MONITOR (Display)</option>
+                      <option value="OTHER">🧰 OTHER (Peripherals / Accessories)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Grid Row 2: Specification / Model -->
+                <div class="form-group" style="margin-bottom:16px;">
+                  <label class="form-label" for="entryPageSpec" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
+                    Specification / Model <span style="color:#ef4444;">*</span>
+                  </label>
+                  <input type="text" id="entryPageSpec" class="form-control" placeholder="e.g. Intel Core i7-12700 12th Gen / Crucial 16GB DDR4 / Samsung 980 1TB NVMe" required style="width:100%; border-radius:8px; padding:10px 14px;">
+                </div>
+
+                <!-- Grid Row 3: Serial Number, Purchase Date & Current Status -->
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:18px; margin-bottom:16px;">
+                  <div class="form-group">
+                    <label class="form-label" for="entryPageSerial" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
+                      Serial Number <span style="color:#ef4444;">*</span>
+                    </label>
+                    <input type="text" id="entryPageSerial" class="form-control" placeholder="e.g. SN-CPU-99488" required style="width:100%; border-radius:8px; padding:10px 14px; font-family:var(--font-mono, monospace);">
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label" for="entryPagePurchaseDate" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
+                      Purchase Date <span style="color:#ef4444;">*</span>
+                    </label>
+                    <input type="date" id="entryPagePurchaseDate" class="form-control" required style="width:100%; border-radius:8px; padding:10px 14px;">
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label" for="entryPageStatus" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
+                      Current Status <span style="color:#ef4444;">*</span>
+                    </label>
+                    <select id="entryPageStatus" class="form-select" onchange="window.ITApp.toggleEntryPageAssignmentFields()" required style="width:100%; border-radius:8px; padding:10px 14px; font-weight:600;">
+                      <option value="Available">🟢 Available (In Stock)</option>
+                      <option value="Assigned">👤 Assigned (Allocated)</option>
+                      <option value="Under Maintenance">🛠️ Under Maintenance</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Dynamic Assignment Fields (visible only when status === Assigned) -->
+                <div id="entryPageAssignedSection" style="display:none; background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:18px; margin-bottom:16px;">
+                  <div style="font-weight:700; font-size:0.85rem; color:#1e40af; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+                    <span>👤</span> Employee Assignment Details
+                  </div>
+                  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:14px;">
+                    <div class="form-group">
+                      <label class="form-label" for="entryPageAssignedUser" style="font-weight:600; font-size:0.82rem; color:#1e293b; margin-bottom:4px; display:block;">
+                        Employee Name <span style="color:#ef4444;">*</span>
+                      </label>
+                      <input type="text" id="entryPageAssignedUser" class="form-control" placeholder="e.g. Dinesh Kumar" list="entryPageUsersDatalist" style="width:100%; border-radius:8px; padding:8px 12px; background:#fff;">
+                      <datalist id="entryPageUsersDatalist"></datalist>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label" for="entryPageAssignedTeam" style="font-weight:600; font-size:0.82rem; color:#1e293b; margin-bottom:4px; display:block;">
+                        Team / Department
+                      </label>
+                      <select id="entryPageAssignedTeam" class="form-select" style="width:100%; border-radius:8px; padding:8px 12px; background:#fff;">
+                        <option value="SYSTEM ADMIN">SYSTEM ADMIN</option>
+                        <option value="PHP">PHP</option>
+                        <option value="MOBIL TEAM">MOBIL TEAM</option>
+                        <option value="AI">AI</option>
+                        <option value="ADMIN">ADMIN</option>
+                        <option value="ACCOUNT">ACCOUNT</option>
+                        <option value="HR">HR</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label" for="entryPageAssignedTl" style="font-weight:600; font-size:0.82rem; color:#1e293b; margin-bottom:4px; display:block;">
+                        Team Leader (TL)
+                      </label>
+                      <input type="text" id="entryPageAssignedTl" class="form-control" placeholder="e.g. Sundar Pichai" style="width:100%; border-radius:8px; padding:8px 12px; background:#fff;">
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label" for="entryPageAssignedDate" style="font-weight:600; font-size:0.82rem; color:#1e293b; margin-bottom:4px; display:block;">
+                        Assigned Date <span style="color:#ef4444;">*</span>
+                      </label>
+                      <input type="date" id="entryPageAssignedDate" class="form-control" style="width:100%; border-radius:8px; padding:8px 12px; background:#fff;">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Remarks -->
+                <div class="form-group" style="margin-bottom:20px;">
+                  <label class="form-label" for="entryPageRemark" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
+                    Remarks / Hardware Notes
+                  </label>
+                  <textarea id="entryPageRemark" class="form-control" rows="2" placeholder="e.g. Purchased for new engineering batch, lab spares..." style="width:100%; border-radius:8px; padding:10px 14px;"></textarea>
+                </div>
+
+                <!-- Form Buttons -->
+                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                  <button type="submit" class="btn btn-primary" id="btnSaveEntryPage" style="border-radius:8px; padding:10px 24px; font-weight:700; box-shadow:0 4px 12px rgba(37,99,235,0.25);">
+                    💾 Save Hardware Record
+                  </button>
+                  <button type="button" class="btn btn-secondary" onclick="window.ITApp.resetPageInstockEntryForm()" style="border-radius:8px; padding:10px 20px;">
+                    ↺ Clear / Reset
+                  </button>
+                  <button type="button" class="btn btn-secondary" id="btnCancelEditEntryPage" onclick="window.ITApp.cancelEditPageInstockEntry()" style="border-radius:8px; padding:10px 20px; display:none; color:#ef4444;">
+                    ✕ Cancel Edit
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Existing Hardware Registry Table -->
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:12px;">
+              <div>
+                <h3 style="font-size:1.1rem; font-weight:800; color:#1e293b; margin:0;">
+                  Hardware Stock Records
+                </h3>
+                <p style="font-size:0.82rem; color:#64748b; margin:2px 0 0 0;">Manage, view or edit registered stock entries</p>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <input type="text" id="entryPageSearch" class="form-control" placeholder="🔍 Search records..." oninput="window.ITApp.renderPageInstockEntryTable()" style="width:220px; font-size:0.82rem; padding:6px 12px; border-radius:8px;">
+                <span id="entryPageTableBadge" class="badge" style="background:#eff6ff; color:#2563eb; font-weight:700; border:1px solid #bfdbfe; padding:6px 12px; border-radius:12px; font-size:0.75rem;">
+                  0 Records
+                </span>
+              </div>
+            </div>
+
+            <div class="table-container" style="overflow-x:auto; border:1px solid #e2e8f0; border-radius:10px;">
+              <table class="data-table" id="entryPageTable">
+                <thead>
+                  <tr style="background:#f1f5f9; color:#334155;">
+                    <th style="min-width:110px;">Asset ID</th>
+                    <th style="min-width:110px;">Category</th>
+                    <th style="min-width:220px;">Specification / Model</th>
+                    <th style="min-width:140px;">Serial Number</th>
+                    <th style="min-width:115px;">Purchase Date</th>
+                    <th style="min-width:120px;">Current Status</th>
+                    <th style="min-width:140px; text-align:center;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="entryPageTableBody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             PANEL: ASSET DETAILS (Hardware Details & Associated Assignments)
+             ================================================================== -->
+        <div class="view-panel" id="view-instock-asset-details" data-alias-id="view-instock-inventory">
+          <!-- Hidden anchor for test backwards compatibility -->
+          <div id="view-instock-inventory" style="display:none;"></div>
           <div class="section-card" style="padding: 24px;">
             <!-- Header bar with Subnav Pill Switches -->
             <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px;">
@@ -2036,27 +2324,30 @@
                 <div style="display:flex; align-items:center; gap:10px;">
                   <span style="font-size:1.8rem; background:rgba(37,99,235,0.1); padding:8px 12px; border-radius:12px; color:var(--primary);">🗄️</span>
                   <div>
-                    <h2 style="font-size:1.35rem; font-weight:800; margin:0; color:var(--text-primary); letter-spacing:-0.02em;">Stock Inventory</h2>
-                    <p style="font-size:0.85rem; color:var(--text-secondary); margin:4px 0 0 0;">Complete Hardware Inventory Directory &amp; Physical Stock Registry</p>
+                    <h2 style="font-size:1.35rem; font-weight:800; margin:0; color:var(--text-primary); letter-spacing:-0.02em;">Asset Details</h2>
+                    <p style="font-size:0.85rem; color:var(--text-secondary); margin:4px 0 0 0;">Hardware Specifications, System Status &amp; Real-time Assignment Information</p>
                   </div>
                 </div>
               </div>
               <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-                <div class="instock-subnav-pills" style="display:flex; background:rgba(15,23,42,0.06); padding:4px; border-radius:10px; gap:4px;">
+                <div class="instock-subnav-pills" style="display:flex; background:rgba(15,23,42,0.06); padding:4px; border-radius:10px; gap:4px; flex-wrap:wrap;">
                   <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.navTo('instock-dashboard')" style="border-radius:8px; font-weight:600; padding:6px 14px; background:transparent; border:none; color:var(--text-secondary);">
-                    📊 IN-STOCK Dashboard
+                    📊 Instock Dashboard
                   </button>
-                  <button type="button" class="btn btn-sm btn-primary active" onclick="window.ITApp.navTo('instock-inventory')" style="border-radius:8px; font-weight:600; padding:6px 14px;">
-                    🗄️ Stock Inventory
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.navTo('instock-entry')" style="border-radius:8px; font-weight:600; padding:6px 14px; background:transparent; border:none; color:var(--text-secondary);">
+                    ➕ Instock Entry
                   </button>
-                  <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.navTo('instock-assigned')" style="border-radius:8px; font-weight:600; padding:6px 14px; background:transparent; border:none; color:var(--text-secondary);">
-                    📋 Assigned Details
+                  <button type="button" class="btn btn-sm btn-primary active" onclick="window.ITApp.navTo('instock-asset-details')" style="border-radius:8px; font-weight:600; padding:6px 14px;">
+                    🗄️ Asset Details
+                  </button>
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.navTo('instock-requests')" style="border-radius:8px; font-weight:600; padding:6px 14px; background:transparent; border:none; color:var(--text-secondary);">
+                    📝 Request
                   </button>
                 </div>
                 <button type="button" class="btn btn-primary" onclick="window.ITApp.openAssignAssetModal()" style="display:inline-flex; align-items:center; gap:6px; font-weight:600; border-radius:8px; padding:8px 16px; box-shadow:0 4px 12px rgba(37,99,235,0.25);">
                   <span>👤</span> Assign Asset
                 </button>
-                <button type="button" class="btn btn-secondary" onclick="window.ITApp.openInstockEntryModal()" style="display:inline-flex; align-items:center; gap:6px; font-weight:600; border-radius:8px; padding:8px 14px;">
+                <button type="button" class="btn btn-secondary" onclick="window.ITApp.navTo('instock-entry')" style="display:inline-flex; align-items:center; gap:6px; font-weight:600; border-radius:8px; padding:8px 14px;">
                   <span>+</span> Add Stock Item
                 </button>
               </div>
@@ -2129,15 +2420,18 @@
                 </div>
               </div>
               <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-                <div class="instock-subnav-pills" style="display:flex; background:rgba(15,23,42,0.06); padding:4px; border-radius:10px; gap:4px;">
+                <div class="instock-subnav-pills" style="display:flex; background:rgba(15,23,42,0.06); padding:4px; border-radius:10px; gap:4px; flex-wrap:wrap;">
                   <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.navTo('instock-dashboard')" style="border-radius:8px; font-weight:600; padding:6px 14px; background:transparent; border:none; color:var(--text-secondary);">
-                    📊 IN-STOCK Dashboard
+                    📊 Instock Dashboard
                   </button>
-                  <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.navTo('instock-inventory')" style="border-radius:8px; font-weight:600; padding:6px 14px; background:transparent; border:none; color:var(--text-secondary);">
-                    🗄️ Stock Inventory
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.navTo('instock-entry')" style="border-radius:8px; font-weight:600; padding:6px 14px; background:transparent; border:none; color:var(--text-secondary);">
+                    ➕ Instock Entry
                   </button>
-                  <button type="button" class="btn btn-sm btn-primary active" onclick="window.ITApp.navTo('instock-assigned')" style="border-radius:8px; font-weight:600; padding:6px 14px;">
-                    📋 Assigned Details
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.navTo('instock-asset-details')" style="border-radius:8px; font-weight:600; padding:6px 14px; background:transparent; border:none; color:var(--text-secondary);">
+                    🗄️ Asset Details
+                  </button>
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.navTo('instock-requests')" style="border-radius:8px; font-weight:600; padding:6px 14px; background:transparent; border:none; color:var(--text-secondary);">
+                    📝 Request
                   </button>
                 </div>
                 <button type="button" class="btn btn-primary" onclick="window.ITApp.openAssignAssetModal()" style="display:inline-flex; align-items:center; gap:6px; font-weight:600; border-radius:8px; padding:8px 16px; box-shadow:0 4px 12px rgba(37,99,235,0.25);">
@@ -2246,6 +2540,95 @@
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             PANEL: REQUEST (Dedicated Instock Subpage for Employee Hardware Requests)
+             ================================================================== -->
+        <div class="view-panel" id="view-instock-requests">
+          <div class="section-card" style="padding: 24px;">
+            <!-- Header bar with Subnav Pill Switches & Action Buttons -->
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px;">
+              <div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span style="font-size:1.8rem; background:rgba(37,99,235,0.1); padding:8px 12px; border-radius:12px; color:var(--primary);">📝</span>
+                  <div>
+                    <h2 style="font-size:1.35rem; font-weight:800; margin:0; color:var(--text-primary); letter-spacing:-0.02em;">Hardware Requests</h2>
+                    <p style="font-size:0.85rem; color:var(--text-secondary); margin:4px 0 0 0;">Manage employee hardware requests, approval workflow &amp; in-stock asset allocation</p>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                <div class="instock-subnav-pills" style="display:flex; background:rgba(15,23,42,0.06); padding:4px; border-radius:10px; gap:4px; flex-wrap:wrap;">
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.navTo('instock-dashboard')" style="border-radius:8px; font-weight:600; padding:6px 14px; background:transparent; border:none; color:var(--text-secondary);">
+                    📊 Instock Dashboard
+                  </button>
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.navTo('instock-entry')" style="border-radius:8px; font-weight:600; padding:6px 14px; background:transparent; border:none; color:var(--text-secondary);">
+                    ➕ Instock Entry
+                  </button>
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.navTo('instock-asset-details')" style="border-radius:8px; font-weight:600; padding:6px 14px; background:transparent; border:none; color:var(--text-secondary);">
+                    🗄️ Asset Details
+                  </button>
+                  <button type="button" class="btn btn-sm btn-primary active" onclick="window.ITApp.navTo('instock-requests')" style="border-radius:8px; font-weight:600; padding:6px 14px;">
+                    📝 Request
+                  </button>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="window.ITApp.openNewRequestModal()" style="display:inline-flex; align-items:center; gap:6px; font-weight:600; border-radius:8px; padding:8px 16px; box-shadow:0 4px 12px rgba(37,99,235,0.25);">
+                  <span>+</span> New Request
+                </button>
+              </div>
+            </div>
+
+            <!-- Toolbar: Search, Filters & Counters -->
+            <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; background:#f8fafc; padding:14px 18px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:16px;">
+              <div style="position:relative; flex:1; min-width:240px;">
+                <input type="text" id="instockRequestsSearch" class="form-control" placeholder="🔍 Search Employee, ID, Team, Hardware, Issue..." oninput="window.ITApp.filterInstockRequests()" style="padding-left:14px; width:100%; border-radius:8px; font-size:0.85rem;" aria-label="Search requests">
+              </div>
+              <select id="instockRequestsStatusFilter" class="form-select" onchange="window.ITApp.filterInstockRequests()" style="width:auto; min-width:150px; border-radius:8px; font-size:0.85rem;">
+                <option value="all">All Request Statuses</option>
+                <option value="Pending">⏳ Pending</option>
+                <option value="Approved">🔵 Approved</option>
+                <option value="Rejected">🔴 Rejected</option>
+                <option value="Completed">🟢 Completed</option>
+                <option value="Purchase Required">🟣 Purchase Required</option>
+              </select>
+              <select id="instockRequestsAssignmentFilter" class="form-select" onchange="window.ITApp.filterInstockRequests()" style="width:auto; min-width:180px; border-radius:8px; font-size:0.85rem;">
+                <option value="all">All Assignment Statuses</option>
+                <option value="Assigned">🟢 Assigned</option>
+                <option value="Non-Assigned">⏳ Non-Assigned / Awaiting Allocation</option>
+              </select>
+              <span id="instockRequestsCountBadge" class="badge" style="background:#eff6ff; color:#2563eb; font-weight:700; font-size:0.78rem; border:1px solid #bfdbfe; padding:6px 12px; border-radius:12px;">
+                0 Requests
+              </span>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.resetInstockRequestsFilters()" title="Reset Filters" style="border-radius:8px; font-weight:600;">
+                ↺ Reset
+              </button>
+            </div>
+
+            <!-- 10-Column Data Table -->
+            <div class="table-container" style="overflow-x:auto; border:1px solid #e2e8f0; border-radius:10px;">
+              <table class="data-table" id="instockRequestsTable">
+                <thead>
+                  <tr style="background:#f1f5f9; color:#334155;">
+                    <th style="min-width:100px;">Request ID</th>
+                    <th style="min-width:140px;">Employee Name</th>
+                    <th style="min-width:130px;">TL</th>
+                    <th style="min-width:120px;">Team</th>
+                    <th style="min-width:200px;">Issue / Requirement</th>
+                    <th style="min-width:110px;">Request Date</th>
+                    <th style="min-width:180px;">Hardware Item</th>
+                    <th style="min-width:120px;">Request Status</th>
+                    <th style="min-width:170px;">Asset Assignment Status</th>
+                    <th style="min-width:150px; text-align:center;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="instockRequestsTableBody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+
           </div>
         </div>
 
@@ -2747,30 +3130,24 @@
     </div>
   </div>
 
-  <!-- 1. View Asset Details Modal (Enterprise ITAM Redesign) -->
+  <!-- 1. View Asset Details Modal -->
   <div class="modal-overlay" id="modalViewAsset">
-    <div class="modal-dialog itam-spec-dialog" id="viewAssetModalDialog">
-      <div class="modal-header" id="viewAssetModalHeader">
+    <div class="modal-dialog modal-lg" style="max-width: 820px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);">
+      <div class="modal-header" id="viewAssetModalHeader" style="padding: 16px 24px; border-bottom: 1px solid var(--border-color); background: #ffffff; display: flex; align-items: center; justify-content: space-between; gap: 16px;">
         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-          <div style="width: 32px; height: 32px; border-radius: 8px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #2563eb; flex-shrink: 0; border: 1px solid #bfdbfe;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          </div>
-          <h3 class="modal-title" style="margin: 0; font-size: 1.12rem; font-weight: 700; color: #0f172a; letter-spacing: -0.2px;">
-            Hardware Asset Specification
+          <h3 class="modal-title" style="margin: 0; font-size: 1.12rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+            <span>🖥️</span> Hardware Asset Specification
           </h3>
           <div id="viewAssetModalMeta" class="spec-modal-meta-row" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <!-- Populated dynamically: Asset ID badge, Device Type badge, Status badge -->
           </div>
         </div>
-        <button class="modal-close-btn" data-close-modal title="Close Popup" aria-label="Close" style="font-size: 1.25rem; line-height: 1; padding: 4px 8px; cursor: pointer; color: #64748b; background: transparent; border: none; border-radius: 6px;">✕</button>
+        <button class="modal-close-btn" data-close-modal title="Close Popup" aria-label="Close" style="font-size: 1.3rem; line-height: 1; padding: 4px 8px;">✕</button>
       </div>
-      <div class="modal-body" id="viewAssetModalBody"></div>
-      <div class="modal-footer" id="viewAssetModalFooter">
-        <button class="btn btn-secondary" data-close-modal type="button" style="padding: 8px 18px; font-weight: 600; font-size: 0.85rem; border-radius: 6px;">Close</button>
-        <button class="btn btn-primary" id="viewAssetEditModalBtn" type="button" style="padding: 8px 20px; font-weight: 600; font-size: 0.85rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 7px; background: #2563eb; color: #ffffff; border: 1px solid #1d4ed8; cursor: pointer;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          Edit
-        </button>
+      <div class="modal-body" id="viewAssetModalBody" style="padding: 20px 24px; background: #ffffff; max-height: 72vh; overflow-y: auto;"></div>
+      <div class="modal-footer" id="viewAssetModalFooter" style="position: sticky; bottom: 0; background: #ffffff; border-top: 1px solid var(--border-color); padding: 14px 24px; display: flex; justify-content: flex-end; gap: 12px; z-index: 10;">
+        <button class="btn btn-secondary" data-close-modal type="button" style="padding: 8px 18px; font-weight: 600;">Close</button>
+        <button class="btn btn-primary" id="viewAssetEditModalBtn" type="button" style="padding: 8px 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">✏️ Edit Specifications</button>
       </div>
     </div>
   </div>
@@ -4977,15 +5354,15 @@
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
             <div class="form-group">
               <label class="form-label" for="instockAssetId" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
-                Asset ID <span style="font-size:0.75rem; color:#64748b; font-weight:normal;">(Auto-generated if blank)</span>
+                Asset ID <span style="color:#ef4444;">*</span> <span style="font-size:0.75rem; color:#64748b; font-weight:normal;">(Auto-generated or custom)</span>
               </label>
-              <input type="text" id="instockAssetId" class="form-control" placeholder="e.g. STK-CPU-105" style="width:100%; border-radius:8px; padding:9px 12px; font-family:var(--font-mono, monospace);">
+              <input type="text" id="instockAssetId" class="form-control" placeholder="e.g. STK-CPU-105" required style="width:100%; border-radius:8px; padding:9px 12px; font-family:var(--font-mono, monospace);">
             </div>
             <div class="form-group">
               <label class="form-label" for="instockComponentType" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
                 Hardware Category <span style="color:#ef4444;">*</span>
               </label>
-              <select id="instockComponentType" class="form-select" required style="width:100%; border-radius:8px; padding:9px 12px; font-weight:600;">
+              <select id="instockComponentType" class="form-select" onchange="window.ITApp.handleInstockCategoryChange()" required style="width:100%; border-radius:8px; padding:9px 12px; font-weight:600;">
                 <option value="CPU">💻 CPU (Processor)</option>
                 <option value="SSD">⚡ SSD (Storage)</option>
                 <option value="RAM">🧠 RAM (Memory)</option>
@@ -5020,21 +5397,19 @@
             </div>
           </div>
 
-          <!-- Status Toggle Switch -->
-          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px;">
-            <label style="font-weight:700; font-size:0.88rem; color:#1e293b; display:block; margin-bottom:8px;">
-              Assignment Status <span style="color:#ef4444;">*</span>
+          <!-- Current Status -->
+          <div class="form-group" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px;">
+            <label class="form-label" for="instockStatus" style="font-weight:700; font-size:0.88rem; color:#1e293b; display:block; margin-bottom:8px;">
+              Current Status <span style="color:#ef4444;">*</span>
             </label>
-            <div style="display:flex; gap:20px; align-items:center;">
-              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:#16a34a; font-size:0.9rem;">
-                <input type="radio" name="instockStatusRadio" id="instockStatusPending" aria-label="Filter stock by pending status" value="Pending" checked onchange="window.ITApp.toggleInstockAssignmentFields()" style="accent-color:#16a34a; transform:scale(1.2);">
-                <span>📦 Pending (In Store Room Stock)</span>
-              </label>
-              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:#2563eb; font-size:0.9rem;">
-                <input type="radio" name="instockStatusRadio" id="instockStatusAssigned" aria-label="Filter stock by assigned status" value="Assigned" onchange="window.ITApp.toggleInstockAssignmentFields()" style="accent-color:#2563eb; transform:scale(1.2);">
-                <span>👤 Assigned (Allocated to User)</span>
-              </label>
-            </div>
+            <select id="instockStatus" class="form-select" onchange="window.ITApp.toggleInstockAssignmentFields()" required style="width:100%; border-radius:8px; padding:9px 12px; font-weight:600; font-size:0.9rem;">
+              <option value="Available">🟢 Available (In Stock)</option>
+              <option value="Assigned">👤 Assigned (Allocated)</option>
+              <option value="Under Maintenance">🛠️ Under Maintenance</option>
+            </select>
+            <!-- Hidden radio elements maintained for backward compatibility with existing tests/scripts -->
+            <input type="radio" name="instockStatusRadio" id="instockStatusPending" value="Pending" style="display:none;">
+            <input type="radio" name="instockStatusRadio" id="instockStatusAssigned" value="Assigned" style="display:none;">
             <div id="instockPendingHelpText" style="font-size:0.78rem; color:#64748b; margin-top:8px;">
               💡 Item will be kept in available in-stock inventory ready for future allocation.
             </div>
@@ -5096,9 +5471,297 @@
         </div>
 
         <div class="modal-footer" style="padding:16px 24px; background:#f8fafc; border-top:1px solid #f1f5f9; display:flex; justify-content:flex-end; gap:12px;">
-          <button type="button" class="btn btn-secondary" onclick="window.ITApp.closeModal('modalInstockEntry')" style="border-radius:8px;">Cancel</button>
+          <button type="button" class="btn btn-secondary" id="btnCancelInstockEntry" onclick="window.ITApp.closeModal('modalInstockEntry')" style="border-radius:8px; padding:9px 18px; font-weight:600;">Cancel</button>
           <button type="submit" class="btn btn-primary" id="btnSaveInstockEntry" style="border-radius:8px; padding:9px 20px; font-weight:700;">
             💾 Save Hardware Entry
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MODAL: ASSIGN HARDWARE TO REQUEST
+       ====================================================================== -->
+  <div class="modal-overlay" id="modalAssignHardwareToReq" style="z-index: 10060;">
+    <div class="modal-dialog modal-md" style="max-width: 600px; border-radius: 14px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+      <div class="modal-header" style="padding: 18px 24px; border-bottom: 1px solid var(--border-color); background: #ffffff; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:40px; height:40px; border-radius:10px; background:rgba(37,99,235,0.1); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
+            ⚡
+          </div>
+          <div>
+            <h3 class="modal-title" style="margin:0; font-size:1.15rem; font-weight:800; color:var(--text-primary);">Assign Available Hardware</h3>
+            <span style="font-size:0.75rem; color:var(--text-secondary);">Allocate in-stock hardware to approved employee request</span>
+          </div>
+        </div>
+        <button class="modal-close-btn" type="button" onclick="window.ITApp.closeModal('modalAssignHardwareToReq')" title="Close" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;">✕</button>
+      </div>
+      <form id="formAssignHardwareToReq" onsubmit="window.ITApp.handleAssignHardwareToReqSubmit(event)">
+        <input type="hidden" id="assignReqTargetId" value="">
+        <div class="modal-body" style="padding: 24px; display:flex; flex-direction:column; gap:16px; background:#ffffff;">
+          <!-- Request Info Box -->
+          <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:16px;">
+            <div style="font-size:0.75rem; font-weight:700; color:#1e40af; text-transform:uppercase; margin-bottom:6px;">Target Request</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:0.85rem;">
+              <div><span style="color:#64748b;">Request ID:</span> <strong id="assignReqDisplayId" class="font-mono" style="color:#2563eb;">-</strong></div>
+              <div><span style="color:#64748b;">Employee:</span> <strong id="assignReqDisplayName" style="color:#0f172a;">-</strong></div>
+              <div><span style="color:#64748b;">Team:</span> <strong id="assignReqDisplayTeam">-</strong></div>
+              <div><span style="color:#64748b;">Team Lead:</span> <strong id="assignReqDisplayTl">-</strong></div>
+            </div>
+            <div style="margin-top:8px; font-size:0.83rem;">
+              <span style="color:#64748b;">Requested Item:</span> <strong id="assignReqDisplayItem" style="color:#1e40af;">-</strong>
+            </div>
+          </div>
+
+          <!-- Select Available Hardware -->
+          <div class="form-group">
+            <label class="form-label" for="assignReqSelectHardware" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
+              Select Available Hardware from Stock <span style="color:#ef4444;">*</span>
+            </label>
+            <select id="assignReqSelectHardware" class="form-select" required style="width:100%; border-radius:8px; padding:10px 14px; font-weight:600;">
+              <!-- Populated with Available hardware items -->
+            </select>
+            <div style="font-size:0.75rem; color:#64748b; margin-top:4px;">
+              💡 Only items with status <strong>Available</strong> in In-Stock inventory are eligible.
+            </div>
+          </div>
+
+          <!-- Allocation Date -->
+          <div class="form-group">
+            <label class="form-label" for="assignReqDate" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
+              Assignment Date <span style="color:#ef4444;">*</span>
+            </label>
+            <input type="date" id="assignReqDate" class="form-control" required style="width:100%; border-radius:8px; padding:9px 12px;">
+          </div>
+        </div>
+        <div class="modal-footer" style="padding:16px 24px; background:#f8fafc; border-top:1px solid #f1f5f9; display:flex; justify-content:flex-end; gap:12px;">
+          <button type="button" class="btn btn-secondary" onclick="window.ITApp.closeModal('modalAssignHardwareToReq')" style="border-radius:8px;">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btnConfirmAssignReq" style="border-radius:8px; padding:9px 20px; font-weight:700;">
+            ⚡ Confirm Hardware Allocation
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MODAL: UPDATE REQUEST STATUS
+       ====================================================================== -->
+  <div class="modal-overlay" id="modalUpdateReqStatus" style="z-index: 10060;">
+    <div class="modal-dialog modal-sm" style="max-width: 480px; border-radius: 14px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+      <div class="modal-header" style="padding: 18px 24px; border-bottom: 1px solid var(--border-color); background: #ffffff; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:40px; height:40px; border-radius:10px; background:rgba(37,99,235,0.1); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
+            🔄
+          </div>
+          <div>
+            <h3 class="modal-title" style="margin:0; font-size:1.15rem; font-weight:800; color:var(--text-primary);">Update Request Status</h3>
+            <span style="font-size:0.75rem; color:var(--text-secondary);" id="updateReqModalSubtitle">Change workflow status for request</span>
+          </div>
+        </div>
+        <button class="modal-close-btn" type="button" onclick="window.ITApp.closeModal('modalUpdateReqStatus')" title="Close" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;">✕</button>
+      </div>
+      <form id="formUpdateReqStatus" onsubmit="window.ITApp.handleUpdateReqStatusSubmit(event)">
+        <input type="hidden" id="updateReqTargetId" value="">
+        <div class="modal-body" style="padding: 24px; display:flex; flex-direction:column; gap:16px; background:#ffffff;">
+          <div class="form-group">
+            <label class="form-label" for="updateReqNewStatus" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
+              Request Status <span style="color:#ef4444;">*</span>
+            </label>
+            <select id="updateReqNewStatus" class="form-select" required style="width:100%; border-radius:8px; padding:10px 14px; font-weight:600;">
+              <option value="Pending">⏳ Pending</option>
+              <option value="Approved">🔵 Approved</option>
+              <option value="Rejected">🔴 Rejected</option>
+              <option value="Completed">🟢 Completed</option>
+              <option value="Purchase Required">🟣 Purchase Required</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="updateReqRemarks" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
+              Status Notes / Approval Remark
+            </label>
+            <textarea id="updateReqRemarks" class="form-control" rows="2" placeholder="e.g. Approved by department head; hardware allocation pending..." style="width:100%; border-radius:8px; padding:10px 14px;"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer" style="padding:16px 24px; background:#f8fafc; border-top:1px solid #f1f5f9; display:flex; justify-content:flex-end; gap:12px;">
+          <button type="button" class="btn btn-secondary" onclick="window.ITApp.closeModal('modalUpdateReqStatus')" style="border-radius:8px;">Cancel</button>
+          <button type="submit" class="btn btn-primary" style="border-radius:8px; padding:9px 20px; font-weight:700;">
+            💾 Update Status
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MODAL: VIEW REQUEST DETAILS
+       ====================================================================== -->
+  <div class="modal-overlay" id="modalViewRequest" style="z-index: 10060;">
+    <div class="modal-dialog modal-md" style="max-width: 600px; border-radius: 14px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+      <div class="modal-header" style="padding: 18px 24px; border-bottom: 1px solid var(--border-color); background: #ffffff; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:40px; height:40px; border-radius:10px; background:rgba(37,99,235,0.1); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
+            📋
+          </div>
+          <div>
+            <h3 class="modal-title" style="margin:0; font-size:1.15rem; font-weight:800; color:var(--text-primary);">Request Details</h3>
+            <span style="font-size:0.75rem; color:var(--text-secondary);">Employee hardware requirement and allocation tracking</span>
+          </div>
+        </div>
+        <button class="modal-close-btn" type="button" onclick="window.ITApp.closeModal('modalViewRequest')" title="Close" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 24px; display:flex; flex-direction:column; gap:16px; background:#ffffff;">
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div><span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:700;">Request ID</span><div id="viewReqId" class="font-mono" style="font-weight:700; color:#2563eb; font-size:1rem;">-</div></div>
+          <div><span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:700;">Request Date</span><div id="viewReqDate" style="font-weight:600; color:#334155;">-</div></div>
+          <div><span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:700;">Employee Name</span><div id="viewReqName" style="font-weight:700; color:#0f172a;">-</div></div>
+          <div><span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:700;">Department / Team</span><div id="viewReqTeam" style="font-weight:600; color:#0f172a;">-</div></div>
+          <div><span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:700;">Team Leader (TL)</span><div id="viewReqTl" style="font-weight:600; color:#0f172a;">-</div></div>
+          <div><span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:700;">Priority</span><div id="viewReqPriority">-</div></div>
+        </div>
+
+        <div>
+          <span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:700; display:block; margin-bottom:4px;">Issue / Business Justification</span>
+          <div id="viewReqIssue" style="background:#f1f5f9; padding:10px 14px; border-radius:8px; font-size:0.88rem; color:#1e293b;">-</div>
+        </div>
+
+        <div>
+          <span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:700; display:block; margin-bottom:4px;">Requested Hardware Item</span>
+          <div id="viewReqHardware" style="background:#eff6ff; border:1px solid #bfdbfe; padding:10px 14px; border-radius:8px; font-weight:700; color:#1e40af; font-size:0.9rem;">-</div>
+        </div>
+
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div><span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:700; display:block; margin-bottom:4px;">Request Status</span><span id="viewReqStatusBadge">-</span></div>
+          <div><span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:700; display:block; margin-bottom:4px;">Asset Assignment Status</span><span id="viewReqAssignmentBadge">-</span></div>
+        </div>
+
+        <div id="viewReqAssignedAssetBox" style="display:none; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:10px; padding:14px;">
+          <span style="color:#065f46; font-size:0.75rem; text-transform:uppercase; font-weight:700; display:block; margin-bottom:4px;">Allocated Hardware Asset</span>
+          <strong id="viewReqAssignedAssetInfo" style="color:#047857; font-size:0.9rem;">-</strong>
+        </div>
+
+        <div>
+          <span style="color:#64748b; font-size:0.75rem; text-transform:uppercase; font-weight:700; display:block; margin-bottom:4px;">Remarks</span>
+          <div id="viewReqRemarks" style="color:#475569; font-size:0.85rem; background:#f8fafc; border:1px solid #e2e8f0; padding:8px 12px; border-radius:8px;">None</div>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding:16px 24px; background:#f8fafc; border-top:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
+        <button type="button" class="btn btn-secondary" onclick="window.ITApp.closeModal('modalViewRequest')" style="border-radius:8px;">Close</button>
+        <button type="button" class="btn btn-primary" id="btnViewReqAssignHw" onclick="window.ITApp.openAssignHwModalFromView()" style="border-radius:8px; font-weight:600;">
+          ⚡ Assign Hardware
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MODAL: CREATE / EDIT REQUIREMENT REQUEST
+       ====================================================================== -->
+  <div class="modal-overlay" id="modalNewRequest" style="z-index: 10060;">
+    <div class="modal-dialog modal-md" style="max-width: 620px; border-radius: 14px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+      <div class="modal-header" style="padding: 18px 24px; border-bottom: 1px solid var(--border-color); background: #ffffff; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:40px; height:40px; border-radius:10px; background:rgba(37,99,235,0.1); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
+            ➕
+          </div>
+          <div>
+            <h3 class="modal-title" id="newReqModalTitle" style="margin:0; font-size:1.15rem; font-weight:800; color:var(--text-primary);">New Hardware Request</h3>
+            <span style="font-size:0.75rem; color:var(--text-secondary);">Submit an employee hardware requirement or upgrade request</span>
+          </div>
+        </div>
+        <button class="modal-close-btn" type="button" onclick="window.ITApp.closeModal('modalNewRequest')" title="Close" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;">✕</button>
+      </div>
+      <form id="formNewRequest" onsubmit="window.ITApp.handleNewRequestSubmit(event)">
+        <input type="hidden" id="newReqEditId" value="">
+        <div class="modal-body" style="padding: 24px; display:flex; flex-direction:column; gap:16px; background:#ffffff; max-height:75vh; overflow-y:auto;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+            <div class="form-group">
+              <label class="form-label" for="newReqEmployeeName" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
+                Employee Name <span style="color:#ef4444;">*</span>
+              </label>
+              <input type="text" id="newReqEmployeeName" class="form-control" placeholder="e.g. Naveen Kumar" required style="width:100%; border-radius:8px; padding:9px 12px;">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="newReqTeam" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
+                Department / Team <span style="color:#ef4444;">*</span>
+              </label>
+              <select id="newReqTeam" class="form-select" required style="width:100%; border-radius:8px; padding:9px 12px; font-weight:600;">
+                <option value="SYSTEM ADMIN">SYSTEM ADMIN</option>
+                <option value="PHP">PHP</option>
+                <option value="MOBIL TEAM">MOBIL TEAM</option>
+                <option value="AI">AI</option>
+                <option value="ADMIN">ADMIN</option>
+                <option value="ACCOUNT">ACCOUNT</option>
+                <option value="HR">HR</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+            <div class="form-group">
+              <label class="form-label" for="newReqTl" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
+                Team Leader (TL) <span style="color:#ef4444;">*</span>
+              </label>
+              <input type="text" id="newReqTl" class="form-control" placeholder="e.g. Karthik Raja" required style="width:100%; border-radius:8px; padding:9px 12px;">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="newReqPriority" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
+                Priority
+              </label>
+              <select id="newReqPriority" class="form-select" style="width:100%; border-radius:8px; padding:9px 12px;">
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Urgent">Urgent</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="newReqHardwareItem" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
+              Hardware Item / Specification Needed <span style="color:#ef4444;">*</span>
+            </label>
+            <input type="text" id="newReqHardwareItem" class="form-control" placeholder="e.g. High-performance Desktop (i7, 32GB RAM, 1TB SSD) / Dual 27' Monitor" required style="width:100%; border-radius:8px; padding:9px 12px;">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="newReqIssue" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
+              Issue / Business Requirement <span style="color:#ef4444;">*</span>
+            </label>
+            <textarea id="newReqIssue" class="form-control" rows="2" placeholder="e.g. New developer onboarding for PHP project batch..." required style="width:100%; border-radius:8px; padding:9px 12px;"></textarea>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+            <div class="form-group">
+              <label class="form-label" for="newReqRequiredDate" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
+                Required By Date
+              </label>
+              <input type="date" id="newReqRequiredDate" class="form-control" style="width:100%; border-radius:8px; padding:9px 12px;">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="newReqInitialStatus" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
+                Initial Status
+              </label>
+              <select id="newReqInitialStatus" class="form-select" style="width:100%; border-radius:8px; padding:9px 12px; font-weight:600;">
+                <option value="Pending">⏳ Pending</option>
+                <option value="Approved">🔵 Approved</option>
+                <option value="Purchase Required">🟣 Purchase Required</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="newReqRemark" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
+              Remarks / Management Notes
+            </label>
+            <textarea id="newReqRemark" class="form-control" rows="1" placeholder="e.g. Budget approved, waiting for stock allocation" style="width:100%; border-radius:8px; padding:9px 12px;"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer" style="padding:16px 24px; background:#f8fafc; border-top:1px solid #f1f5f9; display:flex; justify-content:flex-end; gap:12px;">
+          <button type="button" class="btn btn-secondary" onclick="window.ITApp.closeModal('modalNewRequest')" style="border-radius:8px;">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btnSaveNewReq" style="border-radius:8px; padding:9px 20px; font-weight:700;">
+            💾 Save Request
           </button>
         </div>
       </form>

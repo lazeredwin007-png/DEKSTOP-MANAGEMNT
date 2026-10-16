@@ -1461,9 +1461,12 @@
         'purchase-required': 'Purchase & Procurement',
         'assigned-hardware': 'Assigned Hardware Items',
         'hardware-stock': 'Hardware Stock & Accessories',
-        'instock': 'IN-STOCK Dashboard',
-        'instock-dashboard': 'IN-STOCK Dashboard',
-        'instock-inventory': 'Stock Inventory',
+        'instock': 'Instock Dashboard',
+        'instock-dashboard': 'Instock Dashboard',
+        'instock-entry': 'Instock Entry',
+        'instock-asset-details': 'Asset Details',
+        'instock-requests': 'Hardware Requests',
+        'instock-inventory': 'Asset Details',
         'instock-assigned': 'Assigned Details',
         'accessories': 'IT Accessories Inventory',
         'switch-modem': 'Network Switches & Gateways',
@@ -1491,8 +1494,13 @@
 
       // Hide all panels, show targeted panel
       document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
-      const targetPanelId = (viewId === 'desktop' || viewId === 'laptop') ? 'view-all-assets' : `view-${viewId}`;
-      const targetPanel = document.getElementById(targetPanelId);
+      let targetPanelId = `view-${viewId}`;
+      if (viewId === 'desktop' || viewId === 'laptop') {
+        targetPanelId = 'view-all-assets';
+      } else if (viewId === 'instock-inventory') {
+        targetPanelId = 'view-instock-asset-details';
+      }
+      const targetPanel = document.getElementById(targetPanelId) || document.getElementById(`view-${viewId}`);
       if (targetPanel) {
         targetPanel.classList.add('active');
       }
@@ -1581,9 +1589,17 @@
         case 'instock':
         case 'instock-dashboard':
           this.renderInstockDashboard();
+          this.renderInstockInventoryTable();
           break;
+        case 'instock-entry':
+          this.renderInstockEntryPage();
+          break;
+        case 'instock-asset-details':
         case 'instock-inventory':
-          this.renderInstockInventoryView();
+          this.renderInstockAssetDetailsPage();
+          break;
+        case 'instock-requests':
+          this.renderInstockRequestsPage();
           break;
         case 'instock-assigned':
           this.renderAssignedItemsTable();
@@ -1922,20 +1938,11 @@
         dot = '📦';
       }
 
-      const title = `${dot} ${label} (${colorName} Light Indicator)`;
-
-      if (showLabel) {
-        return `
-          <div class="workstatus-light-pill ${lightClass}" style="cursor: default;" title="${Utils.escapeHtml(title)}">
-            <span class="workstatus-led"></span>
-            <span>${label}</span>
-          </div>
-        `;
-      }
+      const title = `${dot} Work Status: ${label} (${colorName} Light Indicator)`;
 
       return `
-        <div class="workstatus-light-wrapper" style="cursor: default;" title="${Utils.escapeHtml(title)}">
-          <div class="workstatus-light-btn ${lightClass}" style="cursor: default; pointer-events: none;" aria-label="${Utils.escapeHtml(label)}">
+        <div class="workstatus-light-wrapper" style="cursor: pointer;" title="${Utils.escapeHtml(title)}" onclick="window.ITApp.cycleWorkStatus ? window.ITApp.cycleWorkStatus('${assetId}') : null">
+          <div class="workstatus-light-btn ${lightClass}" style="cursor: pointer;" aria-label="${Utils.escapeHtml(label)}">
             <span class="workstatus-led"></span>
           </div>
         </div>
@@ -2226,24 +2233,22 @@
       }
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="13" class="empty-state"><div class="empty-icon">💻</div><div class="empty-title">No assets found</div><div class="empty-desc">Try changing your search terms or filters.</div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" class="empty-state"><div class="empty-icon">💻</div><div class="empty-title">No assets found</div><div class="empty-desc">Try changing your search terms or filters.</div></td></tr>`;
         return;
       }
 
       tbody.innerHTML = list.map(a => {
-        const statusClass = a.status === 'Assigned' ? 'status-assigned' :
-          (a.status === 'Non-Assigned' || a.status === 'Available') ? 'status-non-assigned' :
-            a.status === 'Swap' ? 'status-swap' :
-              a.status === 'Repair' ? 'status-repair' : 'status-warranty';
+        const stLower = (a.status || '').toLowerCase().trim();
+        const statusClass = stLower === 'assigned' ? 'status-assigned' :
+          (stLower === 'non-assigned' || stLower === 'non assigned' || stLower === 'available' || stLower === 'unassigned') ? 'status-non-assigned' :
+            stLower === 'swap' ? 'status-swap' :
+              stLower === 'repair' ? 'status-repair' : 'status-warranty';
 
         const isNoHdd = !a.hdd || a.hdd === '-' || a.hdd === '—' || a.hdd.toLowerCase() === 'none' || a.hdd.toLowerCase() === 'nil';
         const hddText = isNoHdd ? '-' : a.hdd;
 
         const isNoSsd = !a.ssd || a.ssd === '-' || a.ssd === '—' || a.ssd.toLowerCase() === 'none' || a.ssd.toLowerCase() === 'nil';
         const ssdText = isNoSsd ? '-' : a.ssd;
-
-        const isNoMon = !a.monitor || a.monitor === '-' || a.monitor === '—' || a.monitor.toLowerCase() === 'none' || a.monitor.toLowerCase() === 'nil';
-        const monitorText = isNoMon ? 'None' : a.monitor;
 
         const isUnassigned = !a.user || a.user.trim() === '' || a.user === 'None' || a.user === '—' || a.user === 'Unassigned';
         const userDisplay = isUnassigned
@@ -2254,7 +2259,6 @@
           ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;" title="Previous User: ${Utils.escapeHtml(a.oldUsername)}"><span style="color:var(--text-faint);">Prev:</span> ${Utils.escapeHtml(a.oldUsername)}</div>`
           : '';
 
-        const macOrSerial = (a.macAddress || a.serialNumber || '-').toUpperCase();
         const tlNote = (a.tl && a.tl !== '-' && a.tl !== a.team)
           ? `<div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;" title="Team Leader: ${Utils.escapeHtml(a.tl)}"><span style="color:var(--text-faint);">TL:</span> ${Utils.escapeHtml(a.tl)}</div>`
           : '';
@@ -2262,13 +2266,12 @@
         return `
           <tr data-asset-id="${Utils.escapeHtml(a.id)}" class="${a.isRecentlySaved ? 'row-saved-highlight' : ''}" title="Double-click to view full specifications" ondblclick="window.ITApp.viewAsset('${a.id}')">
             <td><span class="cell-asset-id" style="cursor:pointer;" onclick="window.ITApp.viewAsset('${a.id}')">${Utils.escapeHtml(a.id)}</span></td>
-            <td><span class="status-pill status-available">${Utils.escapeHtml(a.type)}</span></td>
             <td>
               ${userDisplay}
               ${prevUserDisplay}
             </td>
             <td class="cell-work-status">
-              ${this.getWorkStatusButton(a.id, a.workStatus, true)}
+              ${this.getWorkStatusButton(a.id, a.workStatus)}
             </td>
             <td>
               <span class="status-pill" style="font-size:0.75rem; background:rgba(37,99,235,0.08); color:var(--primary); font-weight:600;">${Utils.escapeHtml(a.team || 'None')}</span>
@@ -2278,8 +2281,6 @@
             <td><span class="status-pill" style="font-size:0.75rem; background:rgba(37,99,235,0.08); color:var(--primary); font-weight:600;">${Utils.escapeHtml(a.ram || '-')}</span></td>
             <td><span style="font-size:0.82rem; color:${isNoHdd ? 'var(--text-faint)' : 'var(--text-main)'};">${Utils.escapeHtml(hddText)}</span></td>
             <td><span style="font-size:0.82rem; color:${isNoSsd ? 'var(--text-faint)' : 'var(--text-main)'};">${Utils.escapeHtml(ssdText)}</span></td>
-            <td><span style="font-size:0.82rem; color:${isNoMon ? 'var(--text-faint)' : 'var(--text-main)'};">${Utils.escapeHtml(monitorText)}</span></td>
-            <td><span class="font-mono" style="font-size:0.75rem;">${Utils.escapeHtml(macOrSerial)}</span></td>
             <td><span class="status-pill ${statusClass}">${Utils.escapeHtml(a.status)}</span></td>
             <td>
               <div class="action-btn-group">
@@ -3170,16 +3171,7 @@
       }
 
       tbody.innerHTML = list.map(a => {
-        // Status colors: Currently Working = Green, Work From Home = Blue, User Exit = Red
-        const ws = a.workStatus || 'Currently Working';
-        let statusBadge = '';
-        if (ws === 'Currently Working') {
-          statusBadge = '<span class="status-pill status-assigned" style="background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-weight:600;"><span style="width:6px; height:6px; border-radius:50%; background:#047857; display:inline-block; margin-right:5px;"></span>Currently Working</span>';
-        } else if (ws === 'Work From Home') {
-          statusBadge = '<span class="status-pill" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:600;"><span style="width:6px; height:6px; border-radius:50%; background:#1d4ed8; display:inline-block; margin-right:5px;"></span>Work From Home</span>';
-        } else {
-          statusBadge = '<span class="status-pill" style="background:#fff1f2; color:#e11d48; border:1px solid #fecdd3; font-weight:600;"><span style="width:6px; height:6px; border-radius:50%; background:#e11d48; display:inline-block; margin-right:5px;"></span>User Exit</span>';
-        }
+        const statusBadge = this.getWorkStatusButton(a.id, a.workStatus);
 
         const empId = a.employeeId || a.empId || '—';
         const ssdVal = a.ssd ? a.ssd : (a.hdd || '—');
@@ -8108,9 +8100,13 @@ Remarks: ${r.remark || 'None'}`);
 
         let statusBadge = '';
         if (st === 'Available') {
-          statusBadge = `<span class="instock-badge instock-badge-available">🟢 Available</span>`;
+          statusBadge = `<span class="instock-badge instock-badge-available" title="Available in stock, ready for immediate assignment">🟢 Available</span>`;
         } else if (st === 'Assigned') {
-          statusBadge = `<span class="instock-badge instock-badge-assigned">👤 Assigned</span>`;
+          statusBadge = `
+            <span class="instock-badge instock-badge-assigned" style="cursor:pointer;" onclick="window.ITApp.toggleAssetDrawer('${item.id}')" title="Click to view/collapse assignment details">
+              👤 Assigned ▾
+            </span>
+          `;
         } else {
           statusBadge = `<span class="instock-badge instock-badge-maintenance">🛠️ Maintenance</span>`;
         }
@@ -8129,6 +8125,60 @@ Remarks: ${r.remark || 'None'}`);
             </button>
           `;
         }
+
+        // History of allocations
+        const historyList = (store.data.instockAllocations || []).filter(a => a.asset_id === item.id);
+        let allocHistoryHtml = '';
+        if (historyList.length > 0) {
+          allocHistoryHtml = `
+            <div class="assignment-drawer-history-box">
+              <span class="assignment-drawer-label" style="display:block; margin-bottom:6px;">Assignment History (${historyList.length} Records)</span>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                ${historyList.map(h => `
+                  <div style="font-size:0.78rem; background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                    <div><strong>${Utils.escapeHtml(h.user_name || 'User')}</strong> (${Utils.escapeHtml(h.team || 'Team')}) • Assigned: ${Utils.escapeHtml(h.assigned_date || '—')}</div>
+                    <div>
+                      ${h.return_date ? `<span class="badge" style="background:#f1f5f9; color:#475569; font-size:0.72rem;">Returned: ${Utils.escapeHtml(h.return_date)}</span>` : `<span class="badge" style="background:#ecfdf5; color:#065f46; font-size:0.72rem;">Current</span>`}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        // Drawer row if assigned
+        const drawerHtml = st === 'Assigned' ? `
+          <tr id="drawer-row-${item.id}" class="assignment-drawer-row" style="display:none; background:#f8fafc;">
+            <td colspan="7" style="padding:12px 18px;">
+              <div class="assignment-drawer-card">
+                <div style="font-weight:700; color:#1e40af; font-size:0.85rem; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between;">
+                  <span>👤 Current Assignment Details</span>
+                  <span class="badge" style="background:#dbeafe; color:#1e40af; font-size:0.75rem;">Status: Assigned (Active)</span>
+                </div>
+                <div class="assignment-drawer-grid">
+                  <div class="assignment-drawer-item">
+                    <span class="assignment-drawer-label">Employee Name</span>
+                    <span class="assignment-drawer-value">${Utils.escapeHtml(item.assigned_user || '—')}</span>
+                  </div>
+                  <div class="assignment-drawer-item">
+                    <span class="assignment-drawer-label">Team Leader (TL)</span>
+                    <span class="assignment-drawer-value">${Utils.escapeHtml(item.tl || '—')}</span>
+                  </div>
+                  <div class="assignment-drawer-item">
+                    <span class="assignment-drawer-label">Department / Team</span>
+                    <span class="assignment-drawer-value">${Utils.escapeHtml(item.team || '—')}</span>
+                  </div>
+                  <div class="assignment-drawer-item">
+                    <span class="assignment-drawer-label">Assigned Date</span>
+                    <span class="assignment-drawer-value">${Utils.escapeHtml(item.assigned_date || '—')}</span>
+                  </div>
+                </div>
+                ${allocHistoryHtml}
+              </div>
+            </td>
+          </tr>
+        ` : '';
 
         return `
           <tr style="border-bottom:1px solid #f1f5f9;">
@@ -8159,7 +8209,7 @@ Remarks: ${r.remark || 'None'}`);
                   👁️
                 </button>
                 ${actionBtns}
-                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.openInstockEntryModal(null, '${item.id}')" title="Edit Hardware Record" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
+                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.openEditFromAssetDetails('${item.id}')" title="Edit Hardware Record" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
                   ✏️
                 </button>
                 <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.deleteInstockEntry('${item.id}')" title="Delete Hardware Record" style="padding:4px 8px; border-radius:6px; font-size:0.75rem; color:#ef4444;">
@@ -8168,6 +8218,7 @@ Remarks: ${r.remark || 'None'}`);
               </div>
             </td>
           </tr>
+          ${drawerHtml}
         `;
       }).join('');
     }
@@ -9248,6 +9299,45 @@ Remarks: ${r.remark || 'None'}`);
     // ========================================================================
     // HARDWARE STOCK ENTRY (CREATION OF RAW INVENTORY)
     // ========================================================================
+    getNextInstockAssetId(cat) {
+      const type = (cat || 'CPU').toUpperCase();
+      const codeMap = {
+        'CPU': 'CPU',
+        'SSD': 'SSD',
+        'RAM': 'RAM',
+        'SMPS': 'SMPS',
+        'MONITOR': 'MON',
+        'OTHER': 'OTH'
+      };
+      const code = codeMap[type] || (type.length >= 3 ? type.substring(0, 3) : type);
+      const items = store.data.instockHardware || [];
+      const prefix = `STK-${code}-`;
+      const nums = items
+        .map(i => i.id || '')
+        .filter(id => id.toUpperCase().startsWith(prefix))
+        .map(id => parseInt(id.substring(prefix.length), 10))
+        .filter(n => !isNaN(n));
+      const nextNum = nums.length > 0 ? Math.max(...nums) + 1 : 101;
+      return `${prefix}${nextNum}`;
+    }
+
+    handleInstockCategoryChange() {
+      const editId = document.getElementById('instockEditId')?.value;
+      if (editId) return; // do not change ID when editing existing item
+      const catSelect = document.getElementById('instockComponentType');
+      const assetIdInput = document.getElementById('instockAssetId');
+      const serialInput = document.getElementById('instockSerial');
+      const cat = catSelect ? catSelect.value : 'CPU';
+
+      if (assetIdInput && (!assetIdInput.value || assetIdInput.dataset.autoGenerated === 'true' || assetIdInput.value.startsWith('STK-'))) {
+        assetIdInput.value = this.getNextInstockAssetId(cat);
+        assetIdInput.dataset.autoGenerated = 'true';
+      }
+      if (serialInput && (!serialInput.value || serialInput.value.startsWith('SN-'))) {
+        serialInput.value = `SN-${cat.toUpperCase()}-${Math.floor(10000 + Math.random() * 90000)}`;
+      }
+    }
+
     openInstockEntryModal(defaultType = null, editId = null) {
       const modal = document.getElementById('modalInstockEntry');
       if (!modal) return;
@@ -9259,6 +9349,7 @@ Remarks: ${r.remark || 'None'}`);
       const specInput = document.getElementById('instockSpec');
       const serialInput = document.getElementById('instockSerial');
       const purchaseDateInput = document.getElementById('instockPurchaseDate');
+      const statusSelect = document.getElementById('instockStatus');
       const radioPending = document.getElementById('instockStatusPending');
       const radioAssigned = document.getElementById('instockStatusAssigned');
       const userInput = document.getElementById('instockAssignedUser');
@@ -9266,6 +9357,12 @@ Remarks: ${r.remark || 'None'}`);
       const teamSelect = document.getElementById('instockAssignedTeam');
       const tlInput = document.getElementById('instockAssignedTl');
       const remarkInput = document.getElementById('instockRemark');
+      const saveBtn = document.getElementById('btnSaveInstockEntry');
+
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '💾 Save Hardware Entry';
+      }
 
       // Populate User Datalist
       const userDatalist = document.getElementById('instockAllUsersDatalist');
@@ -9280,12 +9377,16 @@ Remarks: ${r.remark || 'None'}`);
           if (assetIdInput) {
             assetIdInput.value = item.id;
             assetIdInput.disabled = true;
+            assetIdInput.dataset.autoGenerated = 'false';
           }
           if (titleEl) titleEl.textContent = `Edit Hardware Entry (${item.id})`;
           if (typeSelect) typeSelect.value = item.component_type || 'CPU';
           if (specInput) specInput.value = item.spec || '';
           if (serialInput) serialInput.value = item.serial_number || '';
           if (purchaseDateInput) purchaseDateInput.value = item.purchase_date || '';
+          if (statusSelect) {
+            statusSelect.value = item.status || 'Available';
+          }
           if (item.status === 'Assigned') {
             if (radioAssigned) radioAssigned.checked = true;
           } else {
@@ -9298,19 +9399,25 @@ Remarks: ${r.remark || 'None'}`);
           if (remarkInput) remarkInput.value = item.remark || '';
         }
       } else {
+        const cat = (defaultType || 'CPU').toUpperCase();
         if (editIdInput) editIdInput.value = '';
+        if (typeSelect) typeSelect.value = cat;
         if (assetIdInput) {
-          assetIdInput.value = '';
+          assetIdInput.value = this.getNextInstockAssetId(cat);
           assetIdInput.disabled = false;
+          assetIdInput.dataset.autoGenerated = 'true';
         }
-        if (titleEl) titleEl.textContent = 'Add Hardware Item to In-Stock Inventory';
-        if (typeSelect && defaultType) typeSelect.value = defaultType.toUpperCase();
+        if (titleEl) {
+          titleEl.textContent = defaultType ? `Add New ${cat} Stock Entry` : 'Add Hardware Stock Item';
+        }
         if (specInput) specInput.value = '';
-        if (serialInput) serialInput.value = `SN-${defaultType ? defaultType.toUpperCase() : 'HW'}-${Math.floor(10000 + Math.random() * 90000)}`;
+        if (serialInput) serialInput.value = `SN-${cat}-${Math.floor(10000 + Math.random() * 90000)}`;
         if (purchaseDateInput) purchaseDateInput.value = new Date().toISOString().substring(0, 10);
+        if (statusSelect) statusSelect.value = 'Available';
         if (radioPending) radioPending.checked = true;
         if (userInput) userInput.value = '';
         if (assignedDateInput) assignedDateInput.value = new Date().toISOString().substring(0, 10);
+        if (teamSelect) teamSelect.value = 'SYSTEM ADMIN';
         if (tlInput) tlInput.value = '';
         if (remarkInput) remarkInput.value = '';
       }
@@ -9320,13 +9427,47 @@ Remarks: ${r.remark || 'None'}`);
     }
 
     toggleInstockAssignmentFields() {
+      const statusSelect = document.getElementById('instockStatus');
       const radioAssigned = document.getElementById('instockStatusAssigned');
+      const radioPending = document.getElementById('instockStatusPending');
       const section = document.getElementById('instockAssignedFieldsSection');
       const helpText = document.getElementById('instockPendingHelpText');
-      const isAssigned = radioAssigned && radioAssigned.checked;
+      const userInput = document.getElementById('instockAssignedUser');
+      const assignedDateInput = document.getElementById('instockAssignedDate');
+
+      const isAssigned = (statusSelect && statusSelect.value === 'Assigned') || (radioAssigned && radioAssigned.checked);
+
+      // Sync backward-compatible radios if select is changed
+      if (statusSelect) {
+        if (radioAssigned) radioAssigned.checked = (statusSelect.value === 'Assigned');
+        if (radioPending) radioPending.checked = (statusSelect.value !== 'Assigned');
+      }
 
       if (section) section.style.display = isAssigned ? 'flex' : 'none';
-      if (helpText) helpText.style.display = isAssigned ? 'none' : 'block';
+      if (helpText) {
+        if (statusSelect && statusSelect.value === 'Under Maintenance') {
+          helpText.style.display = 'block';
+          helpText.innerHTML = '🛠️ Item will be marked under maintenance for diagnosis / repairs.';
+        } else if (isAssigned) {
+          helpText.style.display = 'none';
+        } else {
+          helpText.style.display = 'block';
+          helpText.innerHTML = '💡 Item will be kept in available in-stock inventory ready for future allocation.';
+        }
+      }
+
+      if (isAssigned) {
+        if (userInput) userInput.required = true;
+        if (assignedDateInput) {
+          assignedDateInput.required = true;
+          if (!assignedDateInput.value) {
+            assignedDateInput.value = new Date().toISOString().substring(0, 10);
+          }
+        }
+      } else {
+        if (userInput) userInput.required = false;
+        if (assignedDateInput) assignedDateInput.required = false;
+      }
     }
 
     async handleInstockFormSubmit(event) {
@@ -9338,15 +9479,27 @@ Remarks: ${r.remark || 'None'}`);
       const spec = document.getElementById('instockSpec')?.value?.trim() || '';
       const serial_number = document.getElementById('instockSerial')?.value?.trim() || '';
       const purchase_date = document.getElementById('instockPurchaseDate')?.value || '';
-      const isAssigned = document.getElementById('instockStatusAssigned')?.checked;
-      const status = isAssigned ? 'Assigned' : 'Available';
+      const statusSelect = document.getElementById('instockStatus');
+      const radioAssigned = document.getElementById('instockStatusAssigned');
+      const status = statusSelect ? statusSelect.value : (radioAssigned && radioAssigned.checked ? 'Assigned' : 'Available');
+      const isAssigned = (status === 'Assigned');
       const assigned_user = isAssigned ? (document.getElementById('instockAssignedUser')?.value?.trim() || '') : '';
       const assigned_date = isAssigned ? (document.getElementById('instockAssignedDate')?.value || '') : '';
       const team = isAssigned ? (document.getElementById('instockAssignedTeam')?.value || '') : '';
       const tl = isAssigned ? (document.getElementById('instockAssignedTl')?.value?.trim() || '') : '';
       const remark = document.getElementById('instockRemark')?.value?.trim() || '';
 
+      const finalAssetId = customAssetId || this.getNextInstockAssetId(component_type);
+
       // Required field validation
+      if (!finalAssetId) {
+        Utils.showToast('Validation Error', 'Asset ID is required.', 'error');
+        return;
+      }
+      if (!component_type) {
+        Utils.showToast('Validation Error', 'Hardware Category is required.', 'error');
+        return;
+      }
       if (!spec) {
         Utils.showToast('Validation Error', 'Hardware Specification / Model is required.', 'error');
         return;
@@ -9359,14 +9512,22 @@ Remarks: ${r.remark || 'None'}`);
         Utils.showToast('Validation Error', 'Purchasing Date is required.', 'error');
         return;
       }
+      if (!status) {
+        Utils.showToast('Validation Error', 'Current Status is required.', 'error');
+        return;
+      }
+      if (isAssigned && !assigned_user) {
+        Utils.showToast('Validation Error', 'Assigned User Name is required when status is Assigned.', 'error');
+        return;
+      }
 
       const allItems = store.data.instockHardware || [];
 
       // Validate duplicate Asset ID when creating new
-      if (!editId && customAssetId) {
-        const dupId = allItems.find(i => i.id.toLowerCase() === customAssetId.toLowerCase());
+      if (!editId) {
+        const dupId = allItems.find(i => (i.id || '').toLowerCase() === finalAssetId.toLowerCase());
         if (dupId) {
-          Utils.showToast('Duplicate Asset ID', `Asset ID "${customAssetId}" already exists in stock. Please specify a unique ID.`, 'error');
+          Utils.showToast('Duplicate Asset ID', `Asset ID "${finalAssetId}" already exists in stock. Please specify a unique ID.`, 'error');
           return;
         }
       }
@@ -9374,8 +9535,8 @@ Remarks: ${r.remark || 'None'}`);
       // Validate duplicate Serial Number (excluding currently editing item)
       const dupSerial = allItems.find(i =>
         i.serial_number &&
-        i.serial_number.toLowerCase() === serial_number.toLowerCase() &&
-        i.id !== editId
+        (i.serial_number || '').toLowerCase() === serial_number.toLowerCase() &&
+        i.id !== (editId || finalAssetId)
       );
       if (dupSerial) {
         Utils.showToast('Duplicate Serial Number', `Serial Number "${serial_number}" is already registered on asset ${dupSerial.id}. Serial numbers must be unique.`, 'error');
@@ -9383,20 +9544,23 @@ Remarks: ${r.remark || 'None'}`);
       }
 
       const payload = {
+        id: finalAssetId,
         component_type,
         spec,
         serial_number,
         purchase_date,
         status,
         assigned_user,
-        assigned_date,
+        assigned_date: isAssigned ? (assigned_date || purchase_date) : '',
         team,
         tl,
         remark
       };
 
-      if (!editId && customAssetId) {
-        payload.id = customAssetId;
+      const saveBtn = document.getElementById('btnSaveInstockEntry');
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '⏳ Saving...';
       }
 
       try {
@@ -9406,51 +9570,82 @@ Remarks: ${r.remark || 'None'}`);
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           });
-          if (res.ok) {
-            const updated = await res.json();
-            const idx = (store.data.instockHardware || []).findIndex(i => i.id === editId);
-            if (idx !== -1) {
-              store.data.instockHardware[idx] = updated;
-            }
-            store.save();
-            Utils.showToast('Record Updated', `Hardware item ${editId} updated successfully.`, 'success');
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || `Server returned ${res.status}`);
           }
+          const updated = await res.json();
+          const idx = (store.data.instockHardware || []).findIndex(i => i.id === editId);
+          if (idx !== -1) {
+            store.data.instockHardware[idx] = updated;
+          }
+          store.save();
+          Utils.showToast('Record Updated', `Hardware item ${editId} updated successfully.`, 'success');
         } else {
           const res = await fetch('/api/instock', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           });
-          if (res.ok) {
-            const saved = await res.json();
-            if (!store.data.instockHardware) store.data.instockHardware = [];
-            store.data.instockHardware.unshift(saved);
-            store.save();
-            Utils.showToast('Hardware Added', `${component_type} (${spec}) added to stock!`, 'success');
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || `Server returned ${res.status}`);
           }
-        }
-      } catch (err) {
-        console.error('Failed to sync instock hardware with server:', err);
-        if (editId) {
-          const item = (store.data.instockHardware || []).find(i => i.id === editId);
-          if (item) Object.assign(item, payload);
-        } else {
-          const newId = customAssetId || `STK-${component_type}-${Math.floor(100 + Math.random() * 900)}`;
-          const newRecord = {
-            id: newId,
-            ...payload,
-            created_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
-          };
+          const saved = await res.json();
           if (!store.data.instockHardware) store.data.instockHardware = [];
-          store.data.instockHardware.unshift(newRecord);
-        }
-        store.save();
-        Utils.showToast('Saved Locally', 'Hardware saved to store.', 'info');
-      }
+          store.data.instockHardware.unshift(saved);
 
-      this.closeModal('modalInstockEntry');
-      this.renderInstockDashboard();
-      this.renderAssignedItemsTable();
+          // If created as Assigned, also record in allocations table
+          if (isAssigned && assigned_user) {
+            try {
+              const aRes = await fetch('/api/instock/allocations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  asset_id: saved.id,
+                  user_name: assigned_user,
+                  team,
+                  tl_name: tl,
+                  component_type,
+                  spec,
+                  serial_number,
+                  assigned_date: assigned_date || purchase_date,
+                  purpose: 'Initial In-Stock Assignment',
+                  status: 'Assigned',
+                  assigned_by: 'Sundar Pichai (SysAdmin)',
+                  remark: remark || ''
+                })
+              });
+              if (aRes.ok) {
+                const newAlloc = await aRes.json();
+                if (!store.data.instockAllocations) store.data.instockAllocations = [];
+                store.data.instockAllocations.unshift(newAlloc);
+              }
+            } catch (ae) {
+              console.warn('Could not sync allocation record:', ae);
+            }
+          }
+
+          store.save();
+          Utils.showToast('Hardware Added', `${component_type} (${finalAssetId}) added to stock!`, 'success');
+        }
+
+        // Close modal and refresh all views
+        this.closeModal('modalInstockEntry');
+        this.renderInstockDashboard();
+        this.renderInstockInventoryTable();
+        this.renderInstockInventoryView();
+        this.renderPageInstockEntryTable();
+        this.renderAssignedItemsTable();
+      } catch (err) {
+        console.error('Failed to save instock hardware:', err);
+        Utils.showToast('Save Failed', err.message || 'Could not save hardware item to database.', 'error');
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = '💾 Save Hardware Entry';
+        }
+      }
     }
 
     async toggleInstockStatus(id) {
@@ -9474,7 +9669,958 @@ Remarks: ${r.remark || 'None'}`);
         Utils.showToast('Deleted', `Hardware record ${id} removed.`, 'warning');
         this.renderInstockDashboard();
         this.renderAssignedItemsTable();
+        this.renderPageInstockEntryTable();
+        this.renderInstockInventoryView();
       }
+    }
+
+    renderInstockAssetDetailsPage() {
+      this.renderInstockInventoryView();
+    }
+
+    // ========================================================================
+    // INSTOCK ENTRY SUBPAGE CONTROLLER (DEDICATED FULL SUBPAGE)
+    // ========================================================================
+    renderInstockEntryPage() {
+      // Setup datalist for users
+      const userDatalist = document.getElementById('entryPageUsersDatalist');
+      if (userDatalist) {
+        const userSet = new Set();
+        (store.data.users || []).forEach(u => { if (u.name) userSet.add(u.name.trim()); });
+        (store.data.instockAllocations || []).forEach(a => { if (a.user_name) userSet.add(a.user_name.trim()); });
+        userDatalist.innerHTML = Array.from(userSet).sort().map(name => `<option value="${Utils.escapeHtml(name)}">`).join('');
+      }
+
+      // Default purchase date to today if empty
+      const purchaseDate = document.getElementById('entryPagePurchaseDate');
+      if (purchaseDate && !purchaseDate.value) {
+        purchaseDate.value = new Date().toISOString().substring(0, 10);
+      }
+
+      this.renderPageInstockEntryTable();
+    }
+
+    renderPageInstockEntryTable() {
+      const items = store.data.instockHardware || [];
+      const searchInput = document.getElementById('entryPageSearch');
+      const searchVal = (searchInput?.value || '').toLowerCase().trim();
+
+      const filtered = items.filter(item => {
+        if (!searchVal) return true;
+        return (
+          (item.id || '').toLowerCase().includes(searchVal) ||
+          (item.component_type || '').toLowerCase().includes(searchVal) ||
+          (item.spec || '').toLowerCase().includes(searchVal) ||
+          (item.serial_number || '').toLowerCase().includes(searchVal) ||
+          (item.status || '').toLowerCase().includes(searchVal) ||
+          (item.assigned_user || '').toLowerCase().includes(searchVal)
+        );
+      });
+
+      const badge = document.getElementById('entryPageTableBadge');
+      if (badge) {
+        badge.textContent = `${filtered.length} Record${filtered.length === 1 ? '' : 's'}`;
+      }
+
+      const tbody = document.getElementById('entryPageTableBody');
+      if (!tbody) return;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align:center; padding:32px; color:#64748b; font-size:0.9rem;">
+              <div style="font-size:1.8rem; margin-bottom:6px;">📦</div>
+              <strong>No hardware entries match your search.</strong>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      const iconMap = {
+        'CPU': '💻',
+        'SSD': '⚡',
+        'RAM': '🧠',
+        'SMPS': '🔌',
+        'MONITOR': '🖥️',
+        'OTHER': '🧰'
+      };
+
+      tbody.innerHTML = filtered.map(item => {
+        const type = (item.component_type || 'OTHER').toUpperCase();
+        const icon = iconMap[type] || '📦';
+        const st = item.status || 'Available';
+
+        let statusBadge = '';
+        if (st === 'Available') {
+          statusBadge = `<span class="instock-badge instock-badge-available">🟢 Available</span>`;
+        } else if (st === 'Assigned') {
+          statusBadge = `<span class="instock-badge instock-badge-assigned">👤 Assigned (${Utils.escapeHtml(item.assigned_user || 'Allocated')})</span>`;
+        } else {
+          statusBadge = `<span class="instock-badge instock-badge-maintenance">🛠️ Maintenance</span>`;
+        }
+
+        return `
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td>
+              <span class="font-mono" style="font-weight:700; color:#2563eb; font-size:0.84rem;">${Utils.escapeHtml(item.id)}</span>
+            </td>
+            <td>
+              <span class="badge" style="background:rgba(37,99,235,0.08); color:var(--primary); font-weight:700; font-size:0.75rem; padding:4px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">
+                <span>${icon}</span> <span>${type}</span>
+              </span>
+            </td>
+            <td>
+              <strong style="color:#0f172a; font-size:0.86rem;">${Utils.escapeHtml(item.spec || '—')}</strong>
+              ${item.remark ? `<div style="font-size:0.73rem; color:#64748b; margin-top:2px;">${Utils.escapeHtml(item.remark)}</div>` : ''}
+            </td>
+            <td>
+              <code style="background:#f8fafc; border:1px solid #e2e8f0; padding:2px 6px; border-radius:4px; font-size:0.78rem; color:#334155;">
+                ${Utils.escapeHtml(item.serial_number || '—')}
+              </code>
+            </td>
+            <td style="font-size:0.82rem; color:#475569;">
+              ${Utils.escapeHtml(item.purchase_date || '—')}
+            </td>
+            <td>${statusBadge}</td>
+            <td style="text-align:center; white-space:nowrap;">
+              <div style="display:inline-flex; gap:6px; align-items:center;">
+                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.viewInstockItem('${item.id}')" title="View Hardware Details" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
+                  👁️
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.editPageInstockEntry('${item.id}')" title="Edit Hardware Record" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
+                  ✏️ Edit
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.deleteInstockEntry('${item.id}')" title="Delete Hardware Record" style="padding:4px 8px; border-radius:6px; font-size:0.75rem; color:#ef4444;">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    toggleEntryPageAssignmentFields() {
+      const statusSelect = document.getElementById('entryPageStatus');
+      const section = document.getElementById('entryPageAssignedSection');
+      const assignedDate = document.getElementById('entryPageAssignedDate');
+
+      const isAssigned = statusSelect && statusSelect.value === 'Assigned';
+      if (section) section.style.display = isAssigned ? 'block' : 'none';
+      if (isAssigned && assignedDate && !assignedDate.value) {
+        assignedDate.value = new Date().toISOString().substring(0, 10);
+      }
+    }
+
+    async handlePageInstockEntrySubmit(event) {
+      if (event && event.preventDefault) event.preventDefault();
+
+      const form = document.getElementById('entryPageForm');
+      const editId = form ? form.dataset.editId : null;
+      const assetId = document.getElementById('entryPageAssetId')?.value?.trim();
+      const component_type = document.getElementById('entryPageComponentType')?.value || 'OTHER';
+      const spec = document.getElementById('entryPageSpec')?.value?.trim() || '';
+      const serial_number = document.getElementById('entryPageSerial')?.value?.trim() || '';
+      const purchase_date = document.getElementById('entryPagePurchaseDate')?.value || '';
+      const status = document.getElementById('entryPageStatus')?.value || 'Available';
+      const remark = document.getElementById('entryPageRemark')?.value?.trim() || '';
+
+      const isAssigned = (status === 'Assigned');
+      const assigned_user = isAssigned ? (document.getElementById('entryPageAssignedUser')?.value?.trim() || '') : '';
+      const team = isAssigned ? (document.getElementById('entryPageAssignedTeam')?.value || '') : '';
+      const tl = isAssigned ? (document.getElementById('entryPageAssignedTl')?.value?.trim() || '') : '';
+      const assigned_date = isAssigned ? (document.getElementById('entryPageAssignedDate')?.value || '') : '';
+
+      // Required field validation
+      if (!assetId) {
+        Utils.showToast('Validation Error', 'Asset ID is required.', 'error');
+        return;
+      }
+      if (!spec) {
+        Utils.showToast('Validation Error', 'Specification / Model is required.', 'error');
+        return;
+      }
+      if (!serial_number) {
+        Utils.showToast('Validation Error', 'Serial Number is required.', 'error');
+        return;
+      }
+      if (!purchase_date) {
+        Utils.showToast('Validation Error', 'Purchase Date is required.', 'error');
+        return;
+      }
+      if (isAssigned && !assigned_user) {
+        Utils.showToast('Validation Error', 'Employee Name is required when status is Assigned.', 'error');
+        return;
+      }
+
+      const allItems = store.data.instockHardware || [];
+
+      // Duplicate Asset ID check (prevent duplicates)
+      if (!editId) {
+        const dupId = allItems.find(i => (i.id || '').toLowerCase() === assetId.toLowerCase());
+        if (dupId) {
+          Utils.showToast('Duplicate Asset ID', `Asset ID "${assetId}" already exists. Please use a unique Asset ID.`, 'error');
+          return;
+        }
+      }
+
+      // Duplicate Serial Number check
+      const dupSerial = allItems.find(i =>
+        i.serial_number &&
+        i.serial_number.toLowerCase() === serial_number.toLowerCase() &&
+        i.id !== (editId || assetId)
+      );
+      if (dupSerial) {
+        Utils.showToast('Duplicate Serial Number', `Serial number "${serial_number}" is already registered on asset ${dupSerial.id}.`, 'error');
+        return;
+      }
+
+      const payload = {
+        id: assetId,
+        component_type,
+        spec,
+        serial_number,
+        purchase_date,
+        status,
+        assigned_user,
+        assigned_date,
+        team,
+        tl,
+        remark
+      };
+
+      try {
+        if (editId) {
+          // Editing existing record: DO NOT create a duplicate record!
+          const res = await fetch(`/api/instock/${encodeURIComponent(editId)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (res.ok) {
+            const updated = await res.json();
+            const idx = allItems.findIndex(i => i.id === editId);
+            if (idx !== -1) {
+              allItems[idx] = Object.assign(allItems[idx], updated);
+            }
+            store.save();
+            Utils.showToast('Success', `Hardware record ${editId} updated successfully.`, 'success');
+          } else {
+            const err = await res.json();
+            throw new Error(err.error || 'Failed to update record');
+          }
+        } else {
+          // Creating new record
+          const res = await fetch('/api/instock', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (res.ok) {
+            const created = await res.json();
+            allItems.unshift(created);
+            store.save();
+
+            // If created as Assigned, also record in allocations table
+            if (isAssigned && assigned_user) {
+              const allocPayload = {
+                asset_id: assetId,
+                user_name: assigned_user,
+                team,
+                tl_name: tl,
+                component_type,
+                spec,
+                serial_number,
+                assigned_date: assigned_date || purchase_date,
+                purpose: 'Initial In-Stock Assignment',
+                status: 'Assigned',
+                assigned_by: 'Sundar Pichai (SysAdmin)',
+                remark: remark || ''
+              };
+              try {
+                const aRes = await fetch('/api/instock/allocations', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(allocPayload)
+                });
+                if (aRes.ok) {
+                  const newAlloc = await aRes.json();
+                  if (!store.data.instockAllocations) store.data.instockAllocations = [];
+                  store.data.instockAllocations.unshift(newAlloc);
+                  store.save();
+                }
+              } catch (ae) {}
+            }
+
+            Utils.showToast('Success', `Hardware asset ${assetId} saved to stock successfully.`, 'success');
+          } else {
+            const err = await res.json();
+            throw new Error(err.error || 'Failed to save record');
+          }
+        }
+      } catch (err) {
+        console.error('Failed to sync instock hardware with backend:', err);
+        // Fallback local save
+        if (editId) {
+          const item = allItems.find(i => i.id === editId);
+          if (item) Object.assign(item, payload);
+          Utils.showToast('Updated Locally', `Hardware record ${editId} updated.`, 'info');
+        } else {
+          allItems.unshift(payload);
+          Utils.showToast('Saved Locally', `Hardware asset ${assetId} saved to stock.`, 'info');
+        }
+        store.save();
+      }
+
+      this.resetPageInstockEntryForm();
+      this.renderPageInstockEntryTable();
+      this.renderInstockDashboard();
+      this.renderInstockInventoryView();
+      this.renderAssignedItemsTable();
+    }
+
+    editPageInstockEntry(id) {
+      const item = (store.data.instockHardware || []).find(i => i.id === id);
+      if (!item) {
+        Utils.showToast('Not Found', `Asset ${id} not found in stock.`, 'error');
+        return;
+      }
+
+      const form = document.getElementById('entryPageForm');
+      if (form) form.dataset.editId = id;
+
+      const assetIdInput = document.getElementById('entryPageAssetId');
+      const catSelect = document.getElementById('entryPageComponentType');
+      const specInput = document.getElementById('entryPageSpec');
+      const serialInput = document.getElementById('entryPageSerial');
+      const purchaseDateInput = document.getElementById('entryPagePurchaseDate');
+      const statusSelect = document.getElementById('entryPageStatus');
+      const remarkInput = document.getElementById('entryPageRemark');
+      const saveBtn = document.getElementById('btnSaveEntryPage');
+      const cancelBtn = document.getElementById('btnCancelEditEntryPage');
+
+      if (assetIdInput) {
+        assetIdInput.value = item.id;
+        assetIdInput.disabled = true; // Prevent changing ID on edit to avoid duplicate records
+      }
+      if (catSelect) catSelect.value = (item.component_type || 'OTHER').toUpperCase();
+      if (specInput) specInput.value = item.spec || '';
+      if (serialInput) serialInput.value = item.serial_number || '';
+      if (purchaseDateInput) purchaseDateInput.value = item.purchase_date || '';
+      if (statusSelect) statusSelect.value = item.status || 'Available';
+      if (remarkInput) remarkInput.value = item.remark || '';
+
+      this.toggleEntryPageAssignmentFields();
+
+      if (item.status === 'Assigned') {
+        const userInput = document.getElementById('entryPageAssignedUser');
+        const teamSelect = document.getElementById('entryPageAssignedTeam');
+        const tlInput = document.getElementById('entryPageAssignedTl');
+        const dateInput = document.getElementById('entryPageAssignedDate');
+
+        if (userInput) userInput.value = item.assigned_user || '';
+        if (teamSelect && item.team) teamSelect.value = item.team;
+        if (tlInput) tlInput.value = item.tl || '';
+        if (dateInput) dateInput.value = item.assigned_date || '';
+      }
+
+      if (saveBtn) saveBtn.innerHTML = '💾 Update Hardware Record';
+      if (cancelBtn) cancelBtn.style.display = 'inline-block';
+
+      // Scroll form into view
+      form?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    resetPageInstockEntryForm() {
+      const form = document.getElementById('entryPageForm');
+      if (form) {
+        form.reset();
+        delete form.dataset.editId;
+      }
+      const assetIdInput = document.getElementById('entryPageAssetId');
+      if (assetIdInput) {
+        assetIdInput.disabled = false;
+        assetIdInput.value = '';
+      }
+      const purchaseDate = document.getElementById('entryPagePurchaseDate');
+      if (purchaseDate) purchaseDate.value = new Date().toISOString().substring(0, 10);
+
+      const saveBtn = document.getElementById('btnSaveEntryPage');
+      const cancelBtn = document.getElementById('btnCancelEditEntryPage');
+      if (saveBtn) saveBtn.innerHTML = '💾 Save Hardware Record';
+      if (cancelBtn) cancelBtn.style.display = 'none';
+
+      this.toggleEntryPageAssignmentFields();
+    }
+
+    cancelEditPageInstockEntry() {
+      this.resetPageInstockEntryForm();
+    }
+
+    openEditFromAssetDetails(id) {
+      this.navigateTo('instock-entry');
+      setTimeout(() => this.editPageInstockEntry(id), 50);
+    }
+
+    toggleAssetDrawer(assetId) {
+      const drawerRow = document.getElementById(`drawer-row-${assetId}`);
+      if (!drawerRow) return;
+      if (drawerRow.style.display === 'none' || !drawerRow.style.display) {
+        drawerRow.style.display = 'table-row';
+      } else {
+        drawerRow.style.display = 'none';
+      }
+    }
+
+    // ========================================================================
+    // INSTOCK REQUESTS SUBPAGE CONTROLLER (DEDICATED FULL SUBPAGE)
+    // ========================================================================
+    renderInstockRequestsPage() {
+      this.renderInstockRequestsTable();
+    }
+
+    renderInstockRequestsTable() {
+      const reqs = store.data.requirements || [];
+      const searchInput = document.getElementById('instockRequestsSearch');
+      const statusFilter = document.getElementById('instockRequestsStatusFilter');
+      const assignFilter = document.getElementById('instockRequestsAssignmentFilter');
+
+      const searchVal = (searchInput?.value || '').toLowerCase().trim();
+      const statusVal = statusFilter?.value || 'all';
+      const assignVal = assignFilter?.value || 'all';
+
+      const filtered = reqs.filter(req => {
+        // Status filter
+        if (statusVal !== 'all' && (req.status || 'Pending').toLowerCase() !== statusVal.toLowerCase()) {
+          return false;
+        }
+
+        // Assignment status filter
+        const assignStatus = req.asset_assignment_status || (req.assigned_asset_id ? 'Assigned' : 'Non-Assigned');
+        if (assignVal !== 'all') {
+          if (assignVal === 'Assigned' && assignStatus !== 'Assigned') return false;
+          if (assignVal === 'Non-Assigned' && assignStatus === 'Assigned') return false;
+        }
+
+        // Search filter
+        if (searchVal) {
+          const match =
+            (req.id || '').toLowerCase().includes(searchVal) ||
+            (req.user_name || req.employee_name || req.user || '').toLowerCase().includes(searchVal) ||
+            (req.tl || req.team_lead || '').toLowerCase().includes(searchVal) ||
+            (req.team || req.department || '').toLowerCase().includes(searchVal) ||
+            (req.hardware_item || req.item || req.type || '').toLowerCase().includes(searchVal) ||
+            (req.reason || req.requirement || req.notes || '').toLowerCase().includes(searchVal);
+          if (!match) return false;
+        }
+        return true;
+      });
+
+      const badge = document.getElementById('instockRequestsCountBadge');
+      if (badge) {
+        badge.textContent = `${filtered.length} Request${filtered.length === 1 ? '' : 's'}`;
+      }
+
+      const tbody = document.getElementById('instockRequestsTableBody');
+      if (!tbody) return;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="10" style="text-align:center; padding:36px; color:#64748b; font-size:0.9rem;">
+              <div style="font-size:2rem; margin-bottom:8px;">📝</div>
+              <strong>No hardware requests match your filter selection.</strong>
+              <div style="font-size:0.8rem; margin-top:4px;">Click "+ New Request" to submit an employee hardware requirement.</div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(req => {
+        const reqId = req.id || 'REQ-000';
+        const empName = req.user_name || req.employee_name || req.user || '—';
+        const tlName = req.tl || req.team_lead || '—';
+        const teamName = req.team || req.department || '—';
+        const issueReq = req.reason || req.requirement || req.notes || 'Hardware upgrade/allocation';
+        const reqDate = req.date || req.created_at || '—';
+        const hwItem = req.hardware_item || req.item || req.type || req.device_type || 'Hardware';
+        const reqStatus = req.status || 'Pending';
+        const assignStatus = req.asset_assignment_status || (req.assigned_asset_id ? 'Assigned' : 'Non-Assigned');
+
+        let statusBadgeClass = 'badge-req-pending';
+        let statusIcon = '⏳';
+        if (reqStatus === 'Approved') {
+          statusBadgeClass = 'badge-req-approved';
+          statusIcon = '🔵';
+        } else if (reqStatus === 'Rejected') {
+          statusBadgeClass = 'badge-req-rejected';
+          statusIcon = '🔴';
+        } else if (reqStatus === 'Completed') {
+          statusBadgeClass = 'badge-req-completed';
+          statusIcon = '🟢';
+        } else if (reqStatus === 'Purchase Required') {
+          statusBadgeClass = 'badge-req-purchase';
+          statusIcon = '🟣';
+        }
+
+        const assignBadgeClass = (assignStatus === 'Assigned') ? 'badge-assign-status-assigned' : 'badge-assign-status-awaiting';
+        const assignIcon = (assignStatus === 'Assigned') ? '🟢' : '⏳';
+        const assignLabel = (assignStatus === 'Assigned') ? `Assigned (${Utils.escapeHtml(req.assigned_asset_id || 'Stock')})` : 'Non-Assigned';
+
+        // Action buttons
+        const isAlreadyAssigned = (assignStatus === 'Assigned');
+
+        return `
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td>
+              <span class="font-mono" style="font-weight:700; color:#2563eb; font-size:0.84rem;">${Utils.escapeHtml(reqId)}</span>
+            </td>
+            <td>
+              <strong style="color:#0f172a; font-size:0.86rem;">${Utils.escapeHtml(empName)}</strong>
+            </td>
+            <td style="font-size:0.84rem; color:#334155;">
+              ${Utils.escapeHtml(tlName)}
+            </td>
+            <td>
+              <span class="badge" style="background:#f1f5f9; color:#334155; font-size:0.75rem; border:1px solid #e2e8f0;">
+                ${Utils.escapeHtml(teamName)}
+              </span>
+            </td>
+            <td>
+              <div style="font-size:0.82rem; color:#334155; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${Utils.escapeHtml(issueReq)}">
+                ${Utils.escapeHtml(issueReq)}
+              </div>
+            </td>
+            <td style="font-size:0.82rem; color:#64748b; white-space:nowrap;">
+              ${Utils.escapeHtml(reqDate)}
+            </td>
+            <td>
+              <strong style="font-size:0.84rem; color:#1e40af;">${Utils.escapeHtml(hwItem)}</strong>
+            </td>
+            <td>
+              <span class="instock-badge ${statusBadgeClass}">
+                ${statusIcon} ${Utils.escapeHtml(reqStatus)}
+              </span>
+            </td>
+            <td>
+              <span class="instock-badge ${assignBadgeClass}" title="${assignStatus}">
+                ${assignIcon} ${assignLabel}
+              </span>
+            </td>
+            <td style="text-align:center; white-space:nowrap;">
+              <div style="display:inline-flex; gap:6px; align-items:center;">
+                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.viewInstockRequest('${reqId}')" title="View Request Details" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
+                  👁️
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.openUpdateReqStatusModal('${reqId}')" title="Update Request Status" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
+                  🔄 Status
+                </button>
+                ${!isAlreadyAssigned ? `
+                  <button type="button" class="btn btn-sm btn-primary" onclick="window.ITApp.openAssignHardwareToReqModal('${reqId}')" title="Assign In-Stock Hardware" style="padding:4px 9px; border-radius:6px; font-size:0.75rem; font-weight:700;">
+                    ⚡ Assign
+                  </button>
+                ` : `
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.viewInstockItem('${req.assigned_asset_id}')" title="View Allocated Asset (${req.assigned_asset_id})" style="padding:4px 8px; border-radius:6px; font-size:0.75rem; color:#059669;">
+                    ✓ ${Utils.escapeHtml(req.assigned_asset_id)}
+                  </button>
+                `}
+                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.deleteInstockRequest('${reqId}')" title="Delete Request" style="padding:4px 8px; border-radius:6px; font-size:0.75rem; color:#ef4444;">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    filterInstockRequests() {
+      this.renderInstockRequestsTable();
+    }
+
+    resetInstockRequestsFilters() {
+      const searchInput = document.getElementById('instockRequestsSearch');
+      const statusFilter = document.getElementById('instockRequestsStatusFilter');
+      const assignFilter = document.getElementById('instockRequestsAssignmentFilter');
+
+      if (searchInput) searchInput.value = '';
+      if (statusFilter) statusFilter.value = 'all';
+      if (assignFilter) assignFilter.value = 'all';
+
+      this.renderInstockRequestsTable();
+    }
+
+    openNewRequestModal() {
+      const form = document.getElementById('formNewRequest');
+      if (form) form.reset();
+
+      const editId = document.getElementById('newReqEditId');
+      if (editId) editId.value = '';
+
+      const reqDate = document.getElementById('newReqRequiredDate');
+      if (reqDate) reqDate.value = new Date().toISOString().substring(0, 10);
+
+      this.openModal('modalNewRequest');
+    }
+
+    async handleNewRequestSubmit(event) {
+      if (event && event.preventDefault) event.preventDefault();
+
+      const editId = document.getElementById('newReqEditId')?.value;
+      const employee_name = document.getElementById('newReqEmployeeName')?.value?.trim();
+      const team = document.getElementById('newReqTeam')?.value;
+      const tl = document.getElementById('newReqTl')?.value?.trim();
+      const priority = document.getElementById('newReqPriority')?.value || 'Medium';
+      const hardware_item = document.getElementById('newReqHardwareItem')?.value?.trim();
+      const issue = document.getElementById('newReqIssue')?.value?.trim();
+      const required_date = document.getElementById('newReqRequiredDate')?.value || '';
+      const initial_status = document.getElementById('newReqInitialStatus')?.value || 'Pending';
+      const remark = document.getElementById('newReqRemark')?.value?.trim() || '';
+
+      if (!employee_name || !team || !tl || !hardware_item || !issue) {
+        Utils.showToast('Validation Error', 'Please fill in all required fields.', 'error');
+        return;
+      }
+
+      const payload = {
+        employee_name,
+        user_name: employee_name,
+        user: employee_name,
+        team,
+        department: team,
+        tl,
+        priority,
+        hardware_item,
+        type: hardware_item,
+        reason: issue,
+        notes: issue,
+        date: required_date || new Date().toISOString().substring(0, 10),
+        status: initial_status,
+        asset_assignment_status: 'Non-Assigned',
+        remark
+      };
+
+      try {
+        if (editId) {
+          const res = await fetch(`/api/requirements/${encodeURIComponent(editId)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const item = (store.data.requirements || []).find(r => r.id === editId);
+            if (item) Object.assign(item, data.requirement || payload);
+            store.save();
+            Utils.showToast('Success', `Request ${editId} updated successfully.`, 'success');
+          }
+        } else {
+          const res = await fetch('/api/requirements', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (res.ok) {
+            const newReq = await res.json();
+            if (!store.data.requirements) store.data.requirements = [];
+            store.data.requirements.unshift(newReq);
+            store.save();
+            Utils.showToast('Success', `Hardware request ${newReq.id} created successfully.`, 'success');
+          } else {
+            throw new Error('Server returned error');
+          }
+        }
+      } catch (e) {
+        console.warn('Fallback saving requirement locally:', e);
+        const newReqId = `REQ-${Math.floor(1000 + Math.random() * 9000)}`;
+        const localReq = {
+          id: newReqId,
+          ...payload,
+          created_at: new Date().toISOString()
+        };
+        if (!store.data.requirements) store.data.requirements = [];
+        store.data.requirements.unshift(localReq);
+        store.save();
+        Utils.showToast('Saved Locally', `Hardware request saved.`, 'info');
+      }
+
+      this.closeModal('modalNewRequest');
+      this.renderInstockRequestsTable();
+      this.updateDashboardMetrics();
+    }
+
+    openUpdateReqStatusModal(reqId) {
+      const req = (store.data.requirements || []).find(r => r.id === reqId);
+      if (!req) return;
+
+      const targetId = document.getElementById('updateReqTargetId');
+      const subtitle = document.getElementById('updateReqModalSubtitle');
+      const statusSelect = document.getElementById('updateReqNewStatus');
+      const remarks = document.getElementById('updateReqRemarks');
+
+      if (targetId) targetId.value = reqId;
+      if (subtitle) subtitle.textContent = `Request ${reqId} — ${req.user_name || req.employee_name || 'Staff'}`;
+      if (statusSelect) statusSelect.value = req.status || 'Pending';
+      if (remarks) remarks.value = req.remark || '';
+
+      this.openModal('modalUpdateReqStatus');
+    }
+
+    async handleUpdateReqStatusSubmit(event) {
+      if (event && event.preventDefault) event.preventDefault();
+
+      const reqId = document.getElementById('updateReqTargetId')?.value;
+      const newStatus = document.getElementById('updateReqNewStatus')?.value;
+      const remarks = document.getElementById('updateReqRemarks')?.value?.trim();
+
+      if (!reqId || !newStatus) return;
+
+      const req = (store.data.requirements || []).find(r => r.id === reqId);
+
+      try {
+        const res = await fetch(`/api/requirements/${encodeURIComponent(reqId)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus, remark: remarks })
+        });
+        if (res.ok) {
+          if (req) {
+            req.status = newStatus;
+            if (remarks) req.remark = remarks;
+          }
+          store.save();
+          Utils.showToast('Status Updated', `Request ${reqId} is now ${newStatus}.`, 'success');
+        } else {
+          throw new Error('Update failed');
+        }
+      } catch (e) {
+        if (req) {
+          req.status = newStatus;
+          if (remarks) req.remark = remarks;
+        }
+        store.save();
+        Utils.showToast('Status Updated', `Request status updated.`, 'info');
+      }
+
+      this.closeModal('modalUpdateReqStatus');
+      this.renderInstockRequestsTable();
+      this.updateDashboardMetrics();
+    }
+
+    viewInstockRequest(reqId) {
+      const req = (store.data.requirements || []).find(r => r.id === reqId);
+      if (!req) return;
+
+      this.currentViewingReqId = reqId;
+
+      const idEl = document.getElementById('viewReqId');
+      const dateEl = document.getElementById('viewReqDate');
+      const nameEl = document.getElementById('viewReqName');
+      const teamEl = document.getElementById('viewReqTeam');
+      const tlEl = document.getElementById('viewReqTl');
+      const prioEl = document.getElementById('viewReqPriority');
+      const issueEl = document.getElementById('viewReqIssue');
+      const hwEl = document.getElementById('viewReqHardware');
+      const statusBadge = document.getElementById('viewReqStatusBadge');
+      const assignBadge = document.getElementById('viewReqAssignmentBadge');
+      const assetBox = document.getElementById('viewReqAssignedAssetBox');
+      const assetInfo = document.getElementById('viewReqAssignedAssetInfo');
+      const remarksEl = document.getElementById('viewReqRemarks');
+      const btnAssign = document.getElementById('btnViewReqAssignHw');
+
+      if (idEl) idEl.textContent = req.id;
+      if (dateEl) dateEl.textContent = req.date || req.created_at || '—';
+      if (nameEl) nameEl.textContent = req.user_name || req.employee_name || req.user || '—';
+      if (teamEl) teamEl.textContent = req.team || req.department || '—';
+      if (tlEl) tlEl.textContent = req.tl || req.team_lead || '—';
+      if (prioEl) prioEl.innerHTML = `<span class="badge" style="background:#eff6ff; color:#2563eb;">${Utils.escapeHtml(req.priority || 'Medium')}</span>`;
+      if (issueEl) issueEl.textContent = req.reason || req.requirement || req.notes || '—';
+      if (hwEl) hwEl.textContent = req.hardware_item || req.item || req.type || 'Hardware';
+      if (remarksEl) remarksEl.textContent = req.remark || 'None';
+
+      const st = req.status || 'Pending';
+      if (statusBadge) {
+        statusBadge.className = `instock-badge ${st === 'Approved' ? 'badge-req-approved' : st === 'Completed' ? 'badge-req-completed' : st === 'Rejected' ? 'badge-req-rejected' : 'badge-req-pending'}`;
+        statusBadge.textContent = st;
+      }
+
+      const assignStatus = req.asset_assignment_status || (req.assigned_asset_id ? 'Assigned' : 'Non-Assigned');
+      if (assignBadge) {
+        assignBadge.className = `instock-badge ${assignStatus === 'Assigned' ? 'badge-assign-status-assigned' : 'badge-assign-status-awaiting'}`;
+        assignBadge.textContent = assignStatus;
+      }
+
+      if (assignStatus === 'Assigned' && req.assigned_asset_id) {
+        if (assetBox) assetBox.style.display = 'block';
+        if (assetInfo) assetInfo.textContent = `Asset ID: ${req.assigned_asset_id}`;
+        if (btnAssign) btnAssign.style.display = 'none';
+      } else {
+        if (assetBox) assetBox.style.display = 'none';
+        if (btnAssign) btnAssign.style.display = 'inline-block';
+      }
+
+      this.openModal('modalViewRequest');
+    }
+
+    openAssignHwModalFromView() {
+      const id = this.currentViewingReqId;
+      this.closeModal('modalViewRequest');
+      if (id) {
+        this.openAssignHardwareToReqModal(id);
+      }
+    }
+
+    openAssignHardwareToReqModal(reqId) {
+      const req = (store.data.requirements || []).find(r => r.id === reqId);
+      if (!req) return;
+
+      const targetId = document.getElementById('assignReqTargetId');
+      const dispId = document.getElementById('assignReqDisplayId');
+      const dispName = document.getElementById('assignReqDisplayName');
+      const dispTeam = document.getElementById('assignReqDisplayTeam');
+      const dispTl = document.getElementById('assignReqDisplayTl');
+      const dispItem = document.getElementById('assignReqDisplayItem');
+      const hwSelect = document.getElementById('assignReqSelectHardware');
+      const dateInput = document.getElementById('assignReqDate');
+      const confirmBtn = document.getElementById('btnConfirmAssignReq');
+
+      if (targetId) targetId.value = reqId;
+      if (dispId) dispId.textContent = req.id;
+      if (dispName) dispName.textContent = req.user_name || req.employee_name || 'Staff';
+      if (dispTeam) dispTeam.textContent = req.team || req.department || '—';
+      if (dispTl) dispTl.textContent = req.tl || req.team_lead || '—';
+      if (dispItem) dispItem.textContent = req.hardware_item || req.item || req.type || 'Hardware';
+      if (dateInput) dateInput.value = new Date().toISOString().substring(0, 10);
+
+      // Populate available hardware ONLY
+      if (hwSelect) {
+        const availableItems = (store.data.instockHardware || []).filter(i => (i.status || 'Available') === 'Available');
+        if (availableItems.length === 0) {
+          hwSelect.innerHTML = `<option value="" disabled selected>⚠️ No Available hardware items currently in stock</option>`;
+          if (confirmBtn) confirmBtn.disabled = true;
+        } else {
+          hwSelect.innerHTML = `<option value="">Select available stock hardware item (${availableItems.length} available)...</option>` +
+            availableItems.map(item => `
+              <option value="${item.id}">
+                [${item.component_type}] ${item.spec} — S/N: ${item.serial_number} (${item.id})
+              </option>
+            `).join('');
+          if (confirmBtn) confirmBtn.disabled = false;
+        }
+      }
+
+      this.openModal('modalAssignHardwareToReq');
+    }
+
+    async handleAssignHardwareToReqSubmit(event) {
+      if (event && event.preventDefault) event.preventDefault();
+
+      const reqId = document.getElementById('assignReqTargetId')?.value;
+      const assetId = document.getElementById('assignReqSelectHardware')?.value;
+      const assignedDate = document.getElementById('assignReqDate')?.value;
+
+      if (!reqId || !assetId || !assignedDate) {
+        Utils.showToast('Validation Error', 'Please select a hardware item and assignment date.', 'error');
+        return;
+      }
+
+      const req = (store.data.requirements || []).find(r => r.id === reqId);
+      const hw = (store.data.instockHardware || []).find(i => i.id === assetId);
+
+      if (!hw || hw.status === 'Assigned') {
+        Utils.showToast('Error', 'Selected asset is no longer available.', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/requirements/${encodeURIComponent(reqId)}/assign-hardware`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ asset_id: assetId, assigned_date: assignedDate })
+        });
+
+        if (res.ok) {
+          const result = await res.json();
+          // Synchronize local state
+          if (req) {
+            req.asset_assignment_status = 'Assigned';
+            req.assigned_asset_id = assetId;
+            if (req.status === 'Pending') req.status = 'Approved';
+          }
+          if (hw) {
+            hw.status = 'Assigned';
+            hw.assigned_user = req ? (req.user_name || req.employee_name) : '';
+            hw.assigned_date = assignedDate;
+            hw.team = req ? req.team : '';
+            hw.tl = req ? (req.tl || req.team_lead) : '';
+          }
+          if (result.allocation) {
+            if (!store.data.instockAllocations) store.data.instockAllocations = [];
+            store.data.instockAllocations.unshift(result.allocation);
+          }
+          store.save();
+          Utils.showToast('Hardware Assigned', `Asset ${assetId} successfully assigned to request ${reqId}.`, 'success');
+        } else {
+          const err = await res.json();
+          throw new Error(err.error || 'Server rejected hardware assignment');
+        }
+      } catch (err) {
+        console.warn('Fallback local requirement hardware assignment:', err);
+        if (req) {
+          req.asset_assignment_status = 'Assigned';
+          req.assigned_asset_id = assetId;
+          if (req.status === 'Pending') req.status = 'Approved';
+        }
+        if (hw) {
+          hw.status = 'Assigned';
+          hw.assigned_user = req ? (req.user_name || req.employee_name) : '';
+          hw.assigned_date = assignedDate;
+          hw.team = req ? req.team : '';
+          hw.tl = req ? (req.tl || req.team_lead) : '';
+        }
+        const newAlloc = {
+          id: `ALC-${Math.floor(1000 + Math.random() * 9000)}`,
+          asset_id: assetId,
+          user_name: req ? (req.user_name || req.employee_name) : 'Staff',
+          team: req ? req.team : 'SYSTEM ADMIN',
+          tl_name: req ? (req.tl || req.team_lead) : 'Sundar Pichai',
+          component_type: hw ? hw.component_type : 'OTHER',
+          spec: hw ? hw.spec : '',
+          serial_number: hw ? hw.serial_number : '',
+          assigned_date: assignedDate,
+          purpose: `Fulfilled Hardware Request ${reqId}`,
+          status: 'Assigned',
+          assigned_by: 'Sundar Pichai (SysAdmin)',
+          remark: ''
+        };
+        if (!store.data.instockAllocations) store.data.instockAllocations = [];
+        store.data.instockAllocations.unshift(newAlloc);
+        store.save();
+        Utils.showToast('Hardware Assigned', `Asset ${assetId} assigned locally to request.`, 'info');
+      }
+
+      this.closeModal('modalAssignHardwareToReq');
+      this.renderInstockRequestsTable();
+      this.renderInstockDashboard();
+      this.renderInstockInventoryView();
+      this.renderAssignedItemsTable();
+    }
+
+    async deleteInstockRequest(reqId) {
+      if (!confirm(`Permanently delete request ${reqId}?`)) return;
+
+      try {
+        await fetch(`/api/requirements/${encodeURIComponent(reqId)}`, { method: 'DELETE' });
+      } catch (e) {}
+
+      store.data.requirements = (store.data.requirements || []).filter(r => r.id !== reqId);
+      store.save();
+      Utils.showToast('Deleted', `Request ${reqId} deleted.`, 'warning');
+
+      this.renderInstockRequestsTable();
+      this.updateDashboardMetrics();
     }
 
     /* ==========================================================================
@@ -10120,17 +11266,31 @@ Remarks: ${r.remark || 'None'}`);
 
       const assets = store.data.assets || [];
 
-      // Categorize existing database assets
-      const inStockAssets = assets.filter(a => 
+      // Check if an asset or user is "Currently Working"
+      const isCurrentlyWorking = (a) => {
+        const ws = (a.workStatus || '').trim().toLowerCase();
+        const st = (a.status || '').trim().toLowerCase();
+        if (a.workStatus === 'Currently Working' || a.status === 'Currently Working' || ws === 'currently working' || ws === 'working' || ws === 'active' || st === 'currently working') return true;
+        // Also check against users table if linked
+        if (a.user) {
+          const u = (store.data.users || []).find(user => (user.name || '').toLowerCase() === a.user.toLowerCase());
+          if (u) {
+            const uws = (u.workStatus || u.status || '').trim().toLowerCase();
+            if (uws === 'currently working' || uws === 'working' || uws === 'active') return true;
+          }
+        }
+        return false;
+      };
+
+      // Strict exclusion of all "Currently Working" users from dropdown
+      const eligibleAssets = assets.filter(a => !isCurrentlyWorking(a));
+
+      const inStockAssets = eligibleAssets.filter(a => 
         ((a.status === 'Non-Assigned' || a.status === 'Available' || a.status === 'Spare' || (a.workStatus && a.workStatus.toLowerCase().includes('stock'))) && a.status !== 'Assigned' && a.id)
       );
 
-      const userExitAssets = assets.filter(a => 
+      const userExitAssets = eligibleAssets.filter(a => 
         ((a.workStatus && (a.workStatus.toLowerCase().includes('exit') || a.workStatus.toLowerCase().includes('resigned'))) || a.status === 'User Exit') && a.id
-      );
-
-      const assignedAssets = assets.filter(a =>
-        a.status === 'Assigned' && a.user && !(a.workStatus && a.workStatus.toLowerCase().includes('exit')) && a.id
       );
 
       const formatOption = (a, defaultLabel) => {
@@ -10169,11 +11329,6 @@ Remarks: ${r.remark || 'None'}`);
         if (userExitAssets.length > 0) {
           html += `<optgroup label="🔴 User Exit Systems (${userExitAssets.length})">` +
             userExitAssets.map(a => formatOption(a, 'Exit User System')).join('') +
-            '</optgroup>';
-        }
-        if (assignedAssets.length > 0) {
-          html += `<optgroup label="👤 Currently Assigned Systems (${assignedAssets.length})">` +
-            assignedAssets.map(a => formatOption(a, 'Assigned User')).join('') +
             '</optgroup>';
         }
       }
@@ -10728,7 +11883,7 @@ Remarks: ${r.remark || 'None'}`);
     },
 
     // View Modal
-    async viewAsset(assetId) {
+async viewAsset(assetId) {
       let asset = (store.data.assets || []).find(a => a.id === assetId || (a.id && a.id.toLowerCase() === (assetId || '').toLowerCase()));
       if (!asset) {
         try {
@@ -10768,72 +11923,51 @@ Remarks: ${r.remark || 'None'}`);
       const prevUserObj = (previousUserName && previousUserName !== 'None') ? (store.data.users || []).find(u => u.name.toLowerCase() === previousUserName.toLowerCase()) : null;
       const prevTeam = prevUserObj?.team || swapRecord?.oldTeam || '—';
 
-      // Warranty status logic & Component Lifecycle Tracking
-      let components = [];
-      try {
-        const compRes = await fetch(`/api/assets/${encodeURIComponent(asset.id)}/components`);
-        if (compRes.ok) {
-          components = await compRes.json();
-        }
-      } catch (e) {
-        components = [];
-      }
+      // Warranty status logic
+      const isNoWarranty = !asset.warrantyEnd || asset.warrantyEnd === '-' || asset.warrantyEnd === '—' || asset.warrantyEnd.toLowerCase() === 'none' || asset.warrantyEnd.toLowerCase() === 'non-warranty' || asset.warrantyEnd.toLowerCase() === 'nil' || (asset.warrantyType && asset.warrantyType.toLowerCase() === 'non-warranty');
 
-      // Normalize components from asset.warrantyComponents or backend or getWarrantyComponentsForAsset
-      if (asset.warrantyComponents && Array.isArray(asset.warrantyComponents) && asset.warrantyComponents.length > 0) {
-        components = asset.warrantyComponents.map(c => ({
-          id: c.id || ('clc-' + asset.id + '-' + (c.type || 'RAM').toLowerCase()),
-          asset_id: asset.id,
-          component_type: c.type || 'Hardware',
-          component_name: c.spec ? `${c.type} (${c.spec})` : (c.type || 'Hardware'),
-          model: c.spec || c.type || '',
-          serial_number: c.serialNumber || 'SN-OEM',
-          manufacturer: c.manufacturer || 'Enterprise OEM',
-          assigned_date: c.assignedDate || asset.assignedDate || '',
-          warranty_start: c.assignedDate || asset.assignedDate || '',
-          warranty_expiry: c.expiryDate || asset.warrantyEnd || '',
-          status: c.status || 'Active',
-          coverage: c.coverage || 'warranty',
-          spec: c.spec || (app.getComponentSpecText ? app.getComponentSpecText(asset, c.type) : '')
-        }));
-      } else if (components.length === 0) {
-        const getCompsFn = (typeof app !== "undefined" && app.getWarrantyComponentsForAsset) ? app.getWarrantyComponentsForAsset.bind(app) : this.getWarrantyComponentsForAsset.bind(this);
-        components = getCompsFn(asset).map(c => ({
-          id: c.id,
-          asset_id: asset.id,
-          component_type: c.type || 'Hardware',
-          component_name: c.spec ? `${c.type} (${c.spec})` : (c.type || 'Hardware'),
-          model: c.spec || c.type || '',
-          serial_number: c.serialNumber || 'SN-OEM',
-          manufacturer: c.manufacturer || 'Enterprise OEM',
-          assigned_date: c.assignedDate || asset.assignedDate || '',
-          warranty_start: c.assignedDate || asset.assignedDate || '',
-          warranty_expiry: c.expiryDate || asset.warrantyEnd || '',
-          status: c.status || 'Active',
-          coverage: c.coverage || 'warranty',
-          spec: c.spec || (app.getComponentSpecText ? app.getComponentSpecText(asset, c.type) : '')
-        }));
+      let warrantyBadgeHtml = '';
+      let warrantyRemainingHtml = '';
+
+      if (isNoWarranty) {
+        warrantyBadgeHtml = `<span class="warranty-badge badge-non-warranty">Non-Warranty</span>`;
+        warrantyRemainingHtml = `<span style="color:var(--text-muted); font-size:0.84rem;">Non-Warranty</span>`;
       } else {
-        components = components.map(c => ({
-          ...c,
-          component_type: c.component_type || c.type || 'Hardware',
-          coverage: c.coverage || (c.warranty_expiry && c.warranty_expiry !== 'Non-Warranty' ? 'warranty' : 'non-warranty'),
-          spec: c.spec || c.model || (app.getComponentSpecText ? app.getComponentSpecText(asset, c.component_type || c.type) : '')
-        }));
+        const days = Utils.getDaysRemaining(asset.warrantyEnd);
+        if (days !== null && days <= 0) {
+          warrantyBadgeHtml = `<span class="warranty-badge badge-expired">Expired</span>`;
+          warrantyRemainingHtml = `<span style="color:#dc2626; font-weight:700; font-size:0.85rem;">Expired (${Math.abs(days)} days ago)</span>`;
+        } else {
+          const isComponent = (asset.warrantyType && asset.warrantyType.toLowerCase().includes('component'));
+          const badgeLabel = isComponent ? 'Component Warranty' : 'Full System';
+          warrantyBadgeHtml = `<span class="warranty-badge badge-active">${badgeLabel}</span>`;
+          warrantyRemainingHtml = `<span style="color:#16a34a; font-weight:700; font-size:0.85rem;">Active (${days} Days Remaining)</span>`;
+        }
       }
 
-      // Filter to items actively under warranty (Active or Expiring Soon, exclude expired, non-warranty, and replaced/retired)
-      const underWarrantyItems = components.filter(c => {
-        if (c.status === 'Retired' || c.status === 'Replaced') return false;
-        if (c.coverage === 'non-warranty' || c.component_type === 'Non-Warranty' || c.type === 'Non-Warranty') return false;
-        const expiry = c.warranty_expiry || c.expiryDate;
-        if (!expiry || expiry === 'Non-Warranty' || expiry === 'None' || expiry === '-') return false;
-        const assigned = c.assigned_date || c.assignedDate || '';
-        const w = (app.calculateComponentWarranty || this.calculateComponentWarranty)(assigned, expiry);
-        return w.status === 'Active' || w.status === 'Expiring Soon';
-      });
-
-      const underWarrantyCount = underWarrantyItems.length;
+      // Check warranty components
+      let rawComponents = [];
+      if (Array.isArray(asset.warrantyComponents)) {
+        rawComponents = asset.warrantyComponents;
+      } else if (typeof asset.warrantyComponents === 'string') {
+        try { rawComponents = JSON.parse(asset.warrantyComponents); } catch (e) {}
+      }
+      if (rawComponents.length === 0) {
+        try {
+          const compRes = await fetch(`/api/assets/${encodeURIComponent(asset.id)}/components`);
+          if (compRes.ok) {
+            const data = await compRes.json();
+            if (Array.isArray(data) && data.length > 0) {
+              rawComponents = data.map(c => ({
+                type: c.component_type || c.type,
+                assignedDate: c.assigned_date || c.assignedDate || asset.assignedDate,
+                expiryDate: c.warranty_expiry || c.expiryDate || asset.warrantyEnd,
+                coverage: c.coverage || 'warranty'
+              }));
+            }
+          }
+        } catch (e) {}
+      }
 
       const body = document.getElementById('viewAssetModalBody');
       if (body) {
@@ -10882,7 +12016,7 @@ Remarks: ${r.remark || 'None'}`);
                 <div class="spec-col" style="gap: 18px;">
                   <!-- ASSIGNED USER -->
                   <div class="spec-item">
-                    <span class="spec-label" style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 6px;">SYSTEM ALLOTTED USER</span>
+                    <span class="spec-label" style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 6px;">ASSIGNED USER</span>
                     <div style="display: flex; align-items: center; gap: 10px;">
                       <div style="width: 32px; height: 32px; border-radius: 50%; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #2563eb; flex-shrink: 0;">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -10952,21 +12086,21 @@ Remarks: ${r.remark || 'None'}`);
                   <div class="hw-panel-grid">
                     <!-- Row 1 -->
                     <div class="spec-item">
-                      <span class="spec-label">PROCESSOR (CPU)</span>
+                      <span class="spec-label">CPU</span>
                       <span class="spec-value spec-value-strong">${Utils.escapeHtml(asset.cpu || '—')}</span>
                     </div>
                     <div class="spec-item">
-                      <span class="spec-label">SYSTEM RAM</span>
+                      <span class="spec-label">RAM</span>
                       <span class="spec-value spec-value-strong">${Utils.escapeHtml(asset.ram || '—')}</span>
                     </div>
 
                     <!-- Row 2 -->
                     <div class="spec-item">
-                      <span class="spec-label">SSD STORAGE</span>
+                      <span class="spec-label">SSD</span>
                       <span class="spec-value">${Utils.escapeHtml((asset.ssd && asset.ssd !== 'None' && asset.ssd !== 'Nil') ? asset.ssd : 'None')}</span>
                     </div>
                     <div class="spec-item">
-                      <span class="spec-label">HDD STORAGE</span>
+                      <span class="spec-label">HDD</span>
                       <span class="spec-value">${Utils.escapeHtml((asset.hdd && asset.hdd !== 'None' && asset.hdd !== 'Nil') ? asset.hdd : 'None')}</span>
                     </div>
 
@@ -10982,7 +12116,7 @@ Remarks: ${r.remark || 'None'}`);
 
                     <!-- Row 4 -->
                     <div class="spec-item" style="grid-column: 1 / -1;">
-                      <span class="spec-label">MAC ADDRESS / SERIAL NO</span>
+                      <span class="spec-label">MAC ADDRESS</span>
                       <span class="spec-value" style="font-family:var(--font-mono); letter-spacing:0.4px;">${Utils.escapeHtml((asset.serialNumber || asset.macAddress || '—').toUpperCase())}</span>
                     </div>
                   </div>
@@ -10993,7 +12127,7 @@ Remarks: ${r.remark || 'None'}`);
                   <div class="hw-panel-title">DISPLAY & PERIPHERALS</div>
                   <div class="hw-panel-grid-single">
                     <div class="spec-item">
-                      <span class="spec-label">PRIMARY MONITOR</span>
+                      <span class="spec-label">MONITOR</span>
                       <span class="spec-value">${Utils.escapeHtml((asset.monitor && asset.monitor !== '-' && asset.monitor.toLowerCase() !== 'none') ? asset.monitor : 'None')}</span>
                     </div>
                   </div>
@@ -11002,97 +12136,82 @@ Remarks: ${r.remark || 'None'}`);
             </div>
           </div>
 
-          <!-- 3. WARRANTY & HARDWARE LIFECYCLE (ACTIVE WARRANTY ITEMS ONLY) -->
+          <!-- 3. WARRANTY INFORMATION -->
           <div class="spec-card">
-            <div class="spec-card-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 14px 20px; border-bottom: 1px solid #f1f5f9;">
-              <div class="warranty-brand-group" style="display: flex; align-items: center; gap: 10px;">
-                <svg class="warranty-brand-shield-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                  <path d="M12 22V2c-4 0-8 3-8 3v7c0 6 8 10 8 10z" fill="rgba(37,99,235,0.18)"/>
-                </svg>
-                <div style="display: flex; flex-direction: column;">
-                  <span class="warranty-brand-title" style="font-size: 1.02rem; font-weight: 700; color: #0f172a; line-height: 1.2;">Warranty &amp; Hardware Lifecycle</span>
-                  <span class="warranty-brand-sub" style="font-size: 0.75rem; color: #64748b; font-weight: 500;">Active Component Warranty Registry</span>
-                </div>
+            <div class="spec-card-header"${isNoWarranty ? ' style="border-bottom:none;"' : ''}>
+              <div class="spec-card-title">
+                <span>🛡️</span>
+                <span>Warranty Information</span>
               </div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                ${underWarrantyCount > 0 ? `
-                  <span class="warranty-badge badge-active" style="background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; padding:4px 12px; border-radius:9999px; font-weight:700; font-size:0.75rem; display:inline-flex; align-items:center; gap:6px;">
-                    <span class="badge-dot" style="background:#10b981; width:7px; height:7px; border-radius:50%; display:inline-block;"></span>
-                    <span>${underWarrantyCount} Active Warranty Item${underWarrantyCount === 1 ? '' : 's'}</span>
-                  </span>
-                ` : `
-                  <span class="badge-non-warranty" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-weight:700; padding:4px 12px; border-radius:9999px; font-size:0.75rem;">
-                    0 Items Under Warranty
-                  </span>
-                `}
-              </div>
+              <div>${warrantyBadgeHtml}</div>
             </div>
+            ${isNoWarranty ? '' : `
+            <div class="spec-card-body">
+              ${(() => {
+                // Filter out components that have 'No Warranty' (hide them from display)
+                const warrantedComponents = rawComponents.filter(c => {
+                  const statusObj = (app.calculateWarrantyStatus || this.calculateWarrantyStatus)(c.assignedDate, c.expiryDate, c.type);
+                  return statusObj && statusObj.status !== 'nowarranty';
+                });
 
-            <div class="spec-card-body" style="padding: 18px 20px;">
-              ${underWarrantyCount === 0 ? `
-                <div style="padding:28px 20px; text-align:center; color:#64748b; background:#f8fafc; border-radius:8px; border:1px dashed #cbd5e1;">
-                  <span style="font-size:1.8rem; display:block; margin-bottom:6px;">🛡️</span>
-                  <strong style="color:#334155; font-size:0.95rem;">No Components Under Active Warranty</strong>
-                  <p style="margin:4px 0 0; font-size:0.8rem; color:#94a3b8;">All components for this asset are either non-warranty, expired, or retired.</p>
-                </div>
-              ` : `
-                <div class="itam-table-wrapper">
-                  <table class="itam-table">
-                    <thead>
-                      <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
-                        <th style="padding:10px 14px; font-size:0.7rem; font-weight:700; text-transform:uppercase; color:#475569; width:38%;">Component / Specification</th>
-                        <th style="padding:10px 14px; font-size:0.7rem; font-weight:700; text-transform:uppercase; color:#475569; width:20%;">Assigned / Installed</th>
-                        <th style="padding:10px 14px; font-size:0.7rem; font-weight:700; text-transform:uppercase; color:#475569; width:20%;">Warranty Expiry</th>
-                        <th style="padding:10px 14px; font-size:0.7rem; font-weight:700; text-transform:uppercase; color:#475569; width:22%;">Status &amp; Period</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${underWarrantyItems.map(c => {
-                        const compType = c.component_type || c.type || 'Hardware';
-                        const specText = c.spec || c.model || (app.getComponentSpecText ? app.getComponentSpecText(asset, compType) : '');
-                        const icon = (app.getComponentIcon || this.getComponentIcon)(compType);
-                        const assigned = c.assigned_date || c.assignedDate || '';
-                        const expiry = c.warranty_expiry || c.expiryDate || '';
-                        const w = (app.calculateComponentWarranty || this.calculateComponentWarranty)(assigned, expiry);
-
+                if (rawComponents.length > 0) {
+                  if (warrantedComponents.length === 0) {
+                    return `
+                      <div style="padding:14px; text-align:center; color:var(--text-muted); font-size:0.85rem; background:#f8fafc; border-radius:6px; border:1px dashed #cbd5e1;">
+                        No individual hardware components currently under warranty.
+                      </div>
+                    `;
+                  }
+                  return `
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                      ${warrantedComponents.map(c => {
+                        const statusObj = (app.calculateWarrantyStatus || this.calculateWarrantyStatus)(c.assignedDate, c.expiryDate, c.type);
                         return `
-                          <tr style="border-bottom:1px solid #f1f5f9;">
-                            <td style="padding:10px 14px;">
-                              <div style="display:flex; align-items:center; gap:10px;">
-                                <div style="width:34px; height:34px; border-radius:6px; background:#eff6ff; display:flex; align-items:center; justify-content:center; font-size:1.15rem; flex-shrink:0; border:1px solid #dbeafe;">
-                                  ${icon}
-                                </div>
-                                <div>
-                                  <strong style="color:#0f172a; font-size:0.88rem; display:block;">${Utils.escapeHtml(compType)}</strong>
-                                  ${specText ? `<span style="font-size:0.78rem; color:#475569; font-weight:600;">${Utils.escapeHtml(specText)}</span>` : ''}
-                                  ${c.serial_number && c.serial_number !== 'SN-OEM' ? `<div style="font-size:0.7rem; color:#94a3b8; font-family:monospace;">SN: ${Utils.escapeHtml(c.serial_number)}</div>` : ''}
-                                </div>
+                          <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:10px 14px; flex-wrap:wrap; gap:8px;">
+                            <div>
+                              <strong style="color:var(--text-main); font-size:0.88rem;">${Utils.escapeHtml(c.type)}</strong>
+                              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">
+                                Assigned: <strong>${Utils.formatDate(c.assignedDate)}</strong> • Expiry: <strong>${Utils.formatDate(c.expiryDate)}</strong>
                               </div>
-                            </td>
-                            <td style="padding:10px 14px; font-family:monospace; color:#334155; font-size:0.82rem;">
-                              ${Utils.formatDate(assigned)}
-                            </td>
-                            <td style="padding:10px 14px; font-family:monospace; color:#334155; font-size:0.82rem; font-weight:600;">
-                              ${Utils.formatDate(expiry)}
-                            </td>
-                            <td style="padding:10px 14px;">
-                              <div style="display:flex; flex-direction:column; gap:4px;">
-                                <span class="smart-warranty-badge ${w.badgeClass}" style="height:24px; padding:2px 8px; font-size:0.72rem; width:fit-content; border-radius:9999px; background:${w.badgeBg}; color:${w.badgeColor}; border:1px solid ${w.badgeBorder}; font-weight:700; display:inline-flex; align-items:center; gap:4px;">
-                                  <span class="badge-dot" style="background:${w.badgeColor}; width:6px; height:6px; border-radius:50%; display:inline-block;"></span>
-                                  <span>${Utils.escapeHtml(w.status)}</span>
-                                </span>
-                                <span style="font-size:0.72rem; color:${w.badgeColor}; font-weight:600;">⏱️ ${Utils.escapeHtml(w.daysText)}</span>
-                              </div>
-                            </td>
-                          </tr>
+                            </div>
+                            <span class="smart-warranty-badge ${statusObj.badgeClass}" style="height:28px; padding:4px 10px; font-size:0.75rem;">
+                              <span class="badge-dot"></span>
+                              <span>${Utils.escapeHtml(statusObj.text)}</span>
+                            </span>
+                          </div>
                         `;
                       }).join('')}
-                    </tbody>
-                  </table>
-                </div>
-              `}
+                    </div>
+                  `;
+                }
+
+                return `
+                  <div class="spec-grid-2col">
+                    <div class="spec-col">
+                      <div class="spec-item">
+                        <span class="spec-label">Warranty Component</span>
+                        <span class="spec-value">${Utils.escapeHtml(asset.warrantyType || 'Full System')}</span>
+                      </div>
+                      <div class="spec-item">
+                        <span class="spec-label">Warranty Start Date</span>
+                        <span class="spec-value">${Utils.formatDate(asset.assignedDate || '2024-01-01')}</span>
+                      </div>
+                    </div>
+                    <div class="spec-col">
+                      <div class="spec-item">
+                        <span class="spec-label">Warranty Expiry Date</span>
+                        <span class="spec-value font-mono">${Utils.formatDate(asset.warrantyEnd)}</span>
+                      </div>
+                      <div class="spec-item">
+                        <span class="spec-label">Remaining Days</span>
+                        <div class="spec-value">${warrantyRemainingHtml}</div>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              })()}
             </div>
+            `}
           </div>
 
           <!-- 4. PREVIOUS USER & ALLOCATION HISTORY (BEFORE ADMIN REMARKS) -->
@@ -11112,7 +12231,7 @@ Remarks: ${r.remark || 'None'}`);
             <div class="spec-card-body">
               <div class="allocation-transition-box">
                 <div class="transition-user-node">
-                  <span class="transition-node-label">OLD USER NAME</span>
+                  <span class="transition-node-label">Previous User</span>
                   <span class="transition-node-name">${(hasPreviousUser || (swapRecord && swapRecord.oldUserId)) ? Utils.escapeHtml(previousUserName) : '<span style="color:var(--text-faint);">None</span>'}</span>
                   <span class="transition-node-sub">${(hasPreviousUser || (swapRecord && swapRecord.oldUserId)) ? (prevTeam !== '—' ? prevTeam : 'Prior Department') : 'Initial Asset Allocation'}</span>
                 </div>
@@ -11650,6 +12769,12 @@ Remarks: ${r.remark || 'None'}`);
     openInstockEntryModal(defaultType = null, editId = null) {
       app.openInstockEntryModal(defaultType, editId);
     },
+    handleInstockCategoryChange() {
+      app.handleInstockCategoryChange();
+    },
+    getNextInstockAssetId(cat) {
+      return app.getNextInstockAssetId(cat);
+    },
     toggleInstockAssignmentFields() {
       app.toggleInstockAssignmentFields();
     },
@@ -11739,6 +12864,80 @@ Remarks: ${r.remark || 'None'}`);
     },
     openEditAllocationFromView() {
       app.openEditAllocationFromView();
+    },
+
+    // Subpage Navigation & Instock Module APIs
+    navTo(viewId) {
+      app.navigateTo(viewId);
+    },
+    renderInstockAssetDetailsPage() {
+      app.renderInstockAssetDetailsPage();
+    },
+    renderInstockEntryPage() {
+      app.renderInstockEntryPage();
+    },
+    renderPageInstockEntryTable() {
+      app.renderPageInstockEntryTable();
+    },
+    toggleEntryPageAssignmentFields() {
+      app.toggleEntryPageAssignmentFields();
+    },
+    handlePageInstockEntrySubmit(event) {
+      return app.handlePageInstockEntrySubmit(event);
+    },
+    editPageInstockEntry(id) {
+      app.editPageInstockEntry(id);
+    },
+    resetPageInstockEntryForm() {
+      app.resetPageInstockEntryForm();
+    },
+    cancelEditPageInstockEntry() {
+      app.cancelEditPageInstockEntry();
+    },
+    openEditFromAssetDetails(id) {
+      app.openEditFromAssetDetails(id);
+    },
+    toggleAssetDrawer(assetId) {
+      app.toggleAssetDrawer(assetId);
+    },
+    renderInstockRequestsPage() {
+      app.renderInstockRequestsPage();
+    },
+    renderInstockRequestsTable() {
+      app.renderInstockRequestsTable();
+    },
+    filterInstockRequests() {
+      app.filterInstockRequests();
+    },
+    resetInstockRequestsFilters() {
+      app.resetInstockRequestsFilters();
+    },
+    openNewRequestModal() {
+      app.openNewRequestModal();
+    },
+    handleNewRequestSubmit(event) {
+      return app.handleNewRequestSubmit(event);
+    },
+    openUpdateReqStatusModal(reqId) {
+      app.openUpdateReqStatusModal(reqId);
+    },
+    handleUpdateReqStatusSubmit(event) {
+      return app.handleUpdateReqStatusSubmit(event);
+    },
+    viewInstockRequest(reqId) {
+      app.viewInstockRequest(reqId);
+    },
+    openAssignHwModalFromView() {
+      app.openAssignHwModalFromView();
+    },
+    openAssignHardwareToReqModal(reqId) {
+      app.openAssignHardwareToReqModal(reqId);
+    },
+    handleAssignHardwareToReqSubmit(event) {
+      return app.handleAssignHardwareToReqSubmit(event);
+    },
+    deleteInstockRequest(reqId) {
+      app.deleteInstockRequest(reqId);
     },
 
 

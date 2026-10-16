@@ -345,6 +345,11 @@ html, body {
   background: var(--primary-500);
 }
 
+/* Hide Users sidebar section completely */
+#navItemUsers {
+  display: none !important;
+}
+
 /* Sidebar Footer */
 .sidebar-footer {
   padding: 14px 16px;
@@ -2316,83 +2321,39 @@ th.sortable-th:hover {
   background: transparent;
 }
 
-/* Glowing LED lighting dot */
+/* Clean status LED dot / indicator light */
 .workstatus-led {
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
   display: inline-block;
   position: relative;
-  transition: all 0.25s ease;
   flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 1. Green Lighting: Currently Working */
+/* 1. Green Indicator: Currently Working */
 .workstatus-light-green .workstatus-led {
-  background: radial-gradient(circle at 35% 35%, #86efac 0%, #10b981 60%, #047857 100%);
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25), 
-              0 0 8px rgba(16, 185, 129, 0.8), 
-              0 0 14px rgba(16, 185, 129, 0.45);
-  animation: led-pulse-green 2s infinite ease-in-out;
-}
-@keyframes led-pulse-green {
-  0%, 100% {
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25), 0 0 6px rgba(16, 185, 129, 0.75), 0 0 12px rgba(16, 185, 129, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.45), 0 0 12px rgba(16, 185, 129, 0.95), 0 0 18px rgba(16, 185, 129, 0.6);
-  }
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22), 0 0 6px rgba(16, 185, 129, 0.45);
 }
 
-/* 2. Blue Lighting: Work From Home */
+/* 2. Blue Indicator: Work From Home */
 .workstatus-light-blue .workstatus-led {
-  background: radial-gradient(circle at 35% 35%, #93c5fd 0%, #3b82f6 60%, #1d4ed8 100%);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25), 
-              0 0 8px rgba(59, 130, 246, 0.8), 
-              0 0 14px rgba(59, 130, 246, 0.45);
-  animation: led-pulse-blue 2s infinite ease-in-out;
-}
-@keyframes led-pulse-blue {
-  0%, 100% {
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25), 0 0 6px rgba(59, 130, 246, 0.75), 0 0 12px rgba(59, 130, 246, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.45), 0 0 12px rgba(59, 130, 246, 0.95), 0 0 18px rgba(59, 130, 246, 0.6);
-  }
+  background: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.22), 0 0 6px rgba(59, 130, 246, 0.45);
 }
 
-/* 3. Red Lighting: User Exit */
+/* 3. Red Indicator: User Exit */
 .workstatus-light-red .workstatus-led {
-  background: radial-gradient(circle at 35% 35%, #fca5a5 0%, #ef4444 60%, #b91c1c 100%);
-  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25), 
-              0 0 8px rgba(239, 68, 68, 0.8), 
-              0 0 14px rgba(239, 68, 68, 0.45);
-  animation: led-pulse-red 2s infinite ease-in-out;
-}
-@keyframes led-pulse-red {
-  0%, 100% {
-    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25), 0 0 6px rgba(239, 68, 68, 0.75), 0 0 12px rgba(239, 68, 68, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.45), 0 0 12px rgba(239, 68, 68, 0.95), 0 0 18px rgba(239, 68, 68, 0.6);
-  }
+  background: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.22), 0 0 6px rgba(239, 68, 68, 0.45);
 }
 
-/* 4. Amber/Orange Lighting: In Stock */
+/* 4. Amber/Orange Indicator: In Stock */
 .workstatus-light-amber .workstatus-led {
-  background: radial-gradient(circle at 35% 35%, #fde68a 0%, #f59e0b 60%, #b45309 100%);
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25), 
-              0 0 8px rgba(245, 158, 11, 0.8), 
-              0 0 14px rgba(245, 158, 11, 0.45);
-  animation: led-pulse-amber 2s infinite ease-in-out;
-}
-@keyframes led-pulse-amber {
-  0%, 100% {
-    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25), 0 0 6px rgba(245, 158, 11, 0.75), 0 0 12px rgba(245, 158, 11, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.45), 0 0 12px rgba(245, 158, 11, 0.95), 0 0 18px rgba(245, 158, 11, 0.6);
-  }
+  background: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.22), 0 0 6px rgba(245, 158, 11, 0.45);
 }
 
 /* Modal / Detailed pill with light */
@@ -2461,26 +2422,34 @@ th.sortable-th:hover {
 th.th-work-status {
   text-align: center !important;
   vertical-align: middle !important;
-  min-width: 95px;
-  width: 95px;
+  min-width: 85px;
+  width: 85px;
   white-space: nowrap;
 }
 
 td.cell-work-status {
   text-align: center !important;
   vertical-align: middle !important;
-  min-width: 95px;
-  width: 95px;
-  padding: 8px 6px !important;
+  min-width: 85px;
+  width: 85px;
+  padding: 8px 4px !important;
 }
 
 .workstatus-light-wrapper {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 3px 6px;
-  border-radius: 999px;
-  cursor: default;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 0 auto;
+}
+
+.workstatus-light-wrapper:hover {
+  background: rgba(15, 23, 42, 0.08);
+  transform: scale(1.18);
 }
 
 /* ==========================================================================
@@ -3457,453 +3426,6 @@ td.cell-work-status {
 }
 
 /* ==========================================================================
-   ENTERPRISE IT ASSET MANAGEMENT - HARDWARE ASSET SPECIFICATION POPUP
-   Premium, Clean, Compact, View-Only Enterprise Modal Design System
-   ========================================================================== */
-
-.itam-spec-dialog {
-  max-width: 1040px !important;
-  width: 95vw !important;
-  max-height: 90vh !important;
-  display: flex !important;
-  flex-direction: column !important;
-  background: rgba(255, 255, 255, 0.96) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(199, 210, 254, 0.8) !important;
-  border-radius: 16px !important;
-  box-shadow: 
-    0 25px 60px -15px rgba(30, 58, 138, 0.16),
-    0 10px 25px -5px rgba(124, 58, 237, 0.07),
-    0 0 0 1px rgba(255, 255, 255, 0.9) inset !important;
-  overflow: hidden !important;
-}
-
-#modalViewAsset.modal-overlay {
-  background: rgba(15, 23, 42, 0.5) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-}
-
-.itam-spec-dialog .modal-header {
-  padding: 13px 22px !important;
-  background: linear-gradient(135deg, #ffffff 0%, #f8faff 60%, #f5f3ff 100%) !important;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 16px !important;
-  flex-shrink: 0 !important;
-}
-
-.itam-spec-dialog .modal-body {
-  padding: 13px 20px !important;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%) !important;
-  flex: 1 1 auto !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 10px !important;
-}
-
-.itam-spec-dialog .modal-footer {
-  padding: 11px 22px !important;
-  background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%) !important;
-  border-top: 1px solid rgba(226, 232, 240, 0.8) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-end !important;
-  gap: 10px !important;
-  flex-shrink: 0 !important;
-}
-
-#viewAssetEditModalBtn {
-  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%) !important;
-  color: #ffffff !important;
-  border: 1px solid #3b82f6 !important;
-  box-shadow: 0 2px 6px -1px rgba(37, 99, 235, 0.3) !important;
-  transition: all 0.2s ease !important;
-}
-
-#viewAssetEditModalBtn:hover {
-  background: linear-gradient(135deg, #1d4ed8 0%, #4338ca 100%) !important;
-  box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.45) !important;
-  transform: translateY(-1px) !important;
-}
-
-/* Top responsive 2-column layout */
-.itam-spec-top-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  align-items: stretch;
-}
-
-@media (max-width: 860px) {
-  .itam-spec-top-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Base Card */
-.itam-spec-card {
-  background: #ffffff;
-  border: 1px solid rgba(226, 232, 240, 0.85);
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
-  display: flex;
-  flex-direction: column;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.itam-spec-card:hover {
-  border-color: rgba(199, 210, 254, 0.7);
-  box-shadow: 0 4px 12px -2px rgba(30, 58, 138, 0.05);
-}
-
-.itam-spec-card-header {
-  padding: 8px 14px;
-  background: linear-gradient(135deg, #ffffff 0%, #fbfcfe 100%);
-  border-bottom: 1px solid #f1f5f9;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.itam-card-title-group {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.itam-title-icon-box {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  background: linear-gradient(135deg, #eff6ff 0%, #ede9fe 100%);
-  border: 1px solid #dbeafe;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #2563eb;
-  flex-shrink: 0;
-  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.05);
-}
-
-.itam-card-title {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: #0f172a;
-  letter-spacing: -0.2px;
-  margin: 0;
-}
-
-.itam-spec-card-body {
-  padding: 12px 14px;
-}
-
-/* Grid & Info Rows */
-.itam-info-grid-2col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px 16px;
-}
-
-@media (max-width: 560px) {
-  .itam-info-grid-2col {
-    grid-template-columns: 1fr;
-  }
-}
-
-.itam-info-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.itam-info-label {
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.itam-info-value {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #0f172a;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  word-break: break-word;
-}
-
-/* Hardware Specs Tiles */
-.itam-hw-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-  width: 100%;
-}
-
-@media (max-width: 600px) {
-  .itam-hw-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.itam-hw-tile {
-  background: #f8fafc;
-  border: 1px solid #edf2f7;
-  border-radius: 7px;
-  padding: 6px 10px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 2px;
-  transition: all 0.15s ease;
-  min-height: 46px;
-}
-
-.itam-hw-tile:hover {
-  background: #ffffff;
-  border-color: #cbd5e1;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
-}
-
-.itam-hw-tile.span-full {
-  grid-column: 1 / -1;
-}
-
-.itam-hw-tile .itam-info-label {
-  font-size: 0.63rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.35px;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.itam-hw-tile .itam-info-value {
-  font-size: 0.83rem;
-  font-weight: 600;
-  color: #0f172a;
-  line-height: 1.25;
-  word-break: break-word;
-  white-space: normal;
-}
-
-/* Status Badges */
-.itam-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 10px;
-  border-radius: 9999px;
-  font-size: 0.73rem;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.itam-badge-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  display: inline-block;
-  flex-shrink: 0;
-}
-
-.itam-badge-working {
-  background: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
-}
-.itam-badge-working .itam-badge-dot {
-  background: #10b981;
-}
-
-.itam-badge-exit {
-  background: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
-}
-.itam-badge-exit .itam-badge-dot {
-  background: #ef4444;
-}
-
-.itam-badge-stock {
-  background: #eff6ff;
-  color: #1e40af;
-  border: 1px solid #bfdbfe;
-}
-.itam-badge-stock .itam-badge-dot {
-  background: #3b82f6;
-}
-
-.itam-badge-assigned {
-  background: #f0fdf4;
-  color: #166534;
-  border: 1px solid #bbf7d0;
-}
-.itam-badge-assigned .itam-badge-dot {
-  background: #22c55e;
-}
-
-.itam-badge-neutral {
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #cbd5e1;
-}
-.itam-badge-neutral .itam-badge-dot {
-  background: #94a3b8;
-}
-
-.itam-badge-warning {
-  background: #fffbeb;
-  color: #92400e;
-  border: 1px solid #fde68a;
-}
-.itam-badge-warning .itam-badge-dot {
-  background: #f59e0b;
-}
-
-/* Component Lifecycle Table */
-.itam-table-wrapper {
-  overflow-x: auto;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #ffffff;
-  width: 100%;
-  scrollbar-width: thin;
-}
-
-.itam-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.82rem;
-  text-align: left;
-  table-layout: auto;
-}
-
-.itam-table th {
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  color: #475569;
-  font-size: 0.69rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.35px;
-  padding: 8px 12px;
-  border-bottom: 1px solid #e2e8f0;
-  white-space: nowrap;
-}
-
-.itam-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid #f1f5f9;
-  color: #1e293b;
-  vertical-align: middle;
-}
-
-.itam-table tr:last-child td {
-  border-bottom: none;
-}
-
-.itam-table tr:hover td {
-  background: #f8faff;
-}
-
-/* User Allocation Panels (Previous vs Current) */
-.itam-user-panels-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-@media (max-width: 680px) {
-  .itam-user-panels-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.itam-user-panel {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 8px 11px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  transition: all 0.15s ease;
-}
-
-.itam-user-panel.is-current {
-  border-color: #bfdbfe;
-  background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
-  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.04);
-}
-
-.itam-user-panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 4px;
-  margin-bottom: 2px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-/* Timeline List */
-.itam-timeline-container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  position: relative;
-  padding-left: 20px;
-  border-left: 2px solid #e2e8f0;
-  margin-left: 10px;
-}
-
-.itam-timeline-item {
-  position: relative;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 10px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.itam-timeline-item::before {
-  content: '';
-  position: absolute;
-  left: -27px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #2563eb;
-  border: 2px solid #ffffff;
-  box-shadow: 0 0 0 2px #bfdbfe;
-}
-
-.itam-timeline-item.is-prev::before {
-  background: #94a3b8;
-  box-shadow: 0 0 0 2px #e2e8f0;
-}
-
-/* ==========================================================================
    ENTERPRISE ASSET MANAGEMENT - DEDICATED TRACKING CARDS & HISTORY VIEWS
    Card 1: Employee Asset History | Card 2: Asset Lifecycle History
    ========================================================================== */
@@ -4849,6 +4371,145 @@ a[href="#non-it-assets"],
   transform: translateY(-1px);
   box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
 }
+
+/* ==========================================================================
+   INSTOCK ENHANCEMENT: SUBNAV, ASSIGNMENT DRAWER & REQUESTS STYLING
+   ========================================================================== */
+.instock-subnav-pills {
+  display: flex;
+  background: rgba(15, 23, 42, 0.06);
+  padding: 4px;
+  border-radius: 10px;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.instock-subnav-btn {
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 6px 14px;
+  font-size: 0.84rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: transparent;
+  color: var(--text-secondary);
+}
+.instock-subnav-btn.active {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.28);
+}
+.instock-subnav-btn:hover:not(.active) {
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--text-primary);
+}
+
+/* Expandable Assignment Drawer */
+.assignment-drawer-row {
+  background: #f8fafc;
+  transition: all 0.2s ease;
+}
+.assignment-drawer-card {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 6px 10px 10px 10px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
+}
+.assignment-drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+.assignment-drawer-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.assignment-drawer-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.03em;
+}
+.assignment-drawer-value {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+.assignment-drawer-history-box {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #bfdbfe;
+}
+
+/* Request Status Badges */
+.badge-req {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.badge-req-pending {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+.badge-req-approved {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+.badge-req-rejected {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+.badge-req-completed {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+.badge-req-purchase {
+  background: #faf5ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+
+/* Asset Assignment Status Badges */
+.badge-assign-status-assigned {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.badge-assign-status-awaiting {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 
 
 

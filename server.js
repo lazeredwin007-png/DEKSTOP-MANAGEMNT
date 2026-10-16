@@ -339,16 +339,29 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
+      if (pathname.startsWith('/api/requirements/') && pathname.endsWith('/assign-hardware') && method === 'POST') {
+        const id = decodeURIComponent(pathname.replace('/api/requirements/', '').replace('/assign-hardware', ''));
+        const body = await parseJsonBody(req);
+        try {
+          const hardwareId = body.hardwareId || body.asset_id;
+          const assignedDate = body.assignedDate || body.assigned_date;
+          const result = db.assignHardwareToRequirement(id, hardwareId, assignedDate);
+          return sendJson(res, 200, { success: true, ...result });
+        } catch (err) {
+          return sendJson(res, 400, { success: false, error: err.message });
+        }
+      }
+
       if (pathname.startsWith('/api/requirements/')) {
         const id = decodeURIComponent(pathname.replace('/api/requirements/', ''));
         if (method === 'PUT') {
           const body = await parseJsonBody(req);
-          db.updateRequirement(id, body.status);
-          return sendJson(res, 200, { success: true });
+          const updated = db.updateRequirement(id, body);
+          return sendJson(res, 200, { success: true, requirement: updated });
         }
         if (method === 'DELETE') {
           db.deleteRequirement(id);
-          return sendJson(res, 200, { success: true });
+          return sendJson(res, 200, { success: true, message: `Requirement ${id} deleted` });
         }
       }
 
@@ -418,6 +431,30 @@ const server = http.createServer(async (req, res) => {
         }
         if (method === 'POST') {
           const body = await parseJsonBody(req);
+          // Required fields validation
+          if (!body.component_type || !body.spec || !body.serial_number || !body.purchase_date) {
+            return sendJson(res, 400, { error: 'Category, Specification / Model, Serial Number, and Purchase Date are required.' });
+          }
+
+          const targetId = body.id ? body.id.trim() : null;
+          const allItems = db.getInstockHardware() || [];
+
+          // Validate duplicate Asset ID
+          if (targetId) {
+            const exists = allItems.some(i => (i.id || '').toLowerCase() === targetId.toLowerCase());
+            if (exists) {
+              return sendJson(res, 409, { error: `Duplicate Asset ID: An asset with ID "${targetId}" already exists in stock.` });
+            }
+          }
+
+          // Validate duplicate Serial Number
+          if (body.serial_number) {
+            const dupSerial = allItems.find(i => (i.serial_number || '').toLowerCase() === body.serial_number.trim().toLowerCase());
+            if (dupSerial) {
+              return sendJson(res, 409, { error: `Duplicate Serial Number: Serial number "${body.serial_number}" is already registered on asset ${dupSerial.id}.` });
+            }
+          }
+
           const item = db.insertInstockHardware(body);
           return sendJson(res, 201, item);
         }
@@ -427,6 +464,13 @@ const server = http.createServer(async (req, res) => {
         const id = decodeURIComponent(pathname.replace('/api/instock/', ''));
         if (method === 'PUT') {
           const body = await parseJsonBody(req);
+          if (body.serial_number) {
+            const allItems = db.getInstockHardware() || [];
+            const dupSerial = allItems.find(i => i.id !== id && (i.serial_number || '').toLowerCase() === body.serial_number.trim().toLowerCase());
+            if (dupSerial) {
+              return sendJson(res, 409, { error: `Duplicate Serial Number: Serial number "${body.serial_number}" is already registered on asset ${dupSerial.id}.` });
+            }
+          }
           const updated = db.updateInstockHardware(id, body);
           return sendJson(res, 200, updated);
         }
