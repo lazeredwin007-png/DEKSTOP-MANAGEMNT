@@ -1458,7 +1458,6 @@
                   <span style="opacity:0.4;">•</span>
                   <span class="fleet-pill-badge fleet-pill-lpt" id="cardAvailLaptopPill" onclick="event.stopPropagation(); window.ITApp.filterNonAssigned('Laptop')" title="Click to view only Non-Assigned Laptops">💻 0 Lpt</span>
                 </span>
-                <span class="metric-trend trend-up">⚡ In Stock</span>
               </div>
             </div>
           </div>
@@ -1542,48 +1541,6 @@
                 </thead>
                 <tbody id="nonAssignedTableBody">
                   <!-- Injected via JavaScript -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <!-- ==================================================================
-               SECTION 2: CURRENTLY ASSIGNED SYSTEMS (DESKTOPS & LAPTOPS)
-               ================================================================== -->
-          <div class="section-card" style="margin-top: 24px;">
-            <div class="section-header-row" style="flex-wrap:wrap; gap:12px;">
-              <div>
-                <h3 class="section-heading-title" style="margin-bottom:2px;">💻 Currently Assigned Systems</h3>
-                <span style="font-size:0.78rem; color:var(--text-muted);">Active desktop &amp; laptop deployments with live user allocation and return controls</span>
-              </div>
-              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                <input type="text" class="filter-input" id="assignedSystemsSearch" placeholder="Search Asset, User, Emp ID, Team..." oninput="window.ITApp.renderAssignedSystemsTable()" style="width: 240px;" aria-label="Search Asset, User, Emp ID, Team...">
-                <div style="display:flex; gap:4px;" id="assignedSystemsFilterTabs">
-                  <button type="button" class="activity-filter-btn assigned-filter-btn active" data-filter="all" onclick="window.ITApp.filterAssignedSystems('all')">All Assigned</button>
-                  <button type="button" class="activity-filter-btn assigned-filter-btn" data-filter="Desktop" onclick="window.ITApp.filterAssignedSystems('Desktop')">🖥️ Desktops</button>
-                  <button type="button" class="activity-filter-btn assigned-filter-btn" data-filter="Laptop" onclick="window.ITApp.filterAssignedSystems('Laptop')">💻 Laptops</button>
-                </div>
-              </div>
-            </div>
-            
-            <div class="table-container">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Asset ID</th>
-                    <th>Type</th>
-                    <th>Current User</th>
-                    <th>Employee ID</th>
-                    <th>Team</th>
-                    <th>CPU</th>
-                    <th>RAM</th>
-                    <th>SSD</th>
-                    <th>Assigned Date</th>
-                    <th>Work Station Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody id="currentlyAssignedTableBody">
-                  <!-- Populated via JavaScript -->
                 </tbody>
               </table>
             </div>
@@ -2064,75 +2021,6 @@
                     + New Entry
                   </button>
                 </div>
-              </div>
-            </div>
-
-            <!-- 3. Stock Inventory Table Directly Below Category Cards -->
-            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,0.03);" id="stockInventorySection">
-              <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
-                <div>
-                  <h3 style="font-size:1.1rem; font-weight:700; margin:0; color:var(--text-primary); display:flex; align-items:center; gap:8px;">
-                    <span>🗄️ Stock Inventory</span>
-                    <span id="instockInventoryCountBadge" class="badge" style="background:#eff6ff; color:#2563eb; font-weight:600; font-size:0.75rem; border:1px solid #bfdbfe; padding:2px 8px; border-radius:12px;">
-                      0 Items
-                    </span>
-                  </h3>
-                  <p style="font-size:0.8rem; color:var(--text-secondary); margin:4px 0 0 0;">Manage store room hardware items, assign available stock, or view asset details</p>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px;">
-                  <button type="button" class="btn btn-primary btn-sm" onclick="window.ITApp.openAssignAssetModal()" style="display:inline-flex; align-items:center; gap:5px; border-radius:8px; font-weight:600;">
-                    <span>👤</span> Assign Available Asset
-                  </button>
-                  <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.openInstockEntryModal()" style="display:inline-flex; align-items:center; gap:5px; border-radius:8px; font-weight:600;">
-                    <span>+</span> Add Stock
-                  </button>
-                </div>
-              </div>
-
-              <!-- Search & Filter Toolbar for Inventory -->
-              <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; background:#f8fafc; padding:12px 16px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:16px;">
-                <div style="position:relative; flex:1; min-width:220px;">
-                  <input type="text" id="instockInventorySearch" class="form-control" placeholder="🔍 Search Asset ID, specification / model, or serial..." oninput="window.ITApp.filterInstockDashboard()" style="padding-left:14px; width:100%; border-radius:8px; font-size:0.85rem;" aria-label="🔍 Search Asset ID, specification / model, or serial...">
-                </div>
-                <select id="instockInventoryCategoryFilter" class="form-select" onchange="window.ITApp.filterInstockDashboard()" style="width:auto; min-width:140px; border-radius:8px; font-size:0.85rem;">
-                  <option value="all">All Categories</option>
-                  <option value="CPU">CPU</option>
-                  <option value="SSD">SSD</option>
-                  <option value="RAM">RAM</option>
-                  <option value="SMPS">SMPS</option>
-                  <option value="MONITOR">MONITOR</option>
-                  <option value="OTHER">OTHER</option>
-                </select>
-                <select id="instockInventoryStatusFilter" class="form-select" onchange="window.ITApp.filterInstockDashboard()" style="width:auto; min-width:150px; border-radius:8px; font-size:0.85rem;">
-                  <option value="all">All Statuses</option>
-                  <option value="Available">🟢 Available</option>
-                  <option value="Assigned">👤 Assigned</option>
-                  <option value="Under Maintenance">🛠️ Under Maintenance</option>
-                </select>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.resetInstockDashboardFilters()" title="Reset Filters" style="border-radius:8px; font-weight:600;">
-                  ↺ Reset
-                </button>
-              </div>
-
-              <!-- Inventory Data Table -->
-              <div class="table-container" style="overflow-x:auto; border:1px solid #e2e8f0; border-radius:10px;">
-                <table class="data-table" id="instockInventoryTable">
-                  <thead>
-                    <tr style="background:#f1f5f9; color:#334155;">
-                      <th style="min-width:110px;">Asset ID</th>
-                      <th style="min-width:120px;">Category</th>
-                      <th style="min-width:220px;">Specification / Model</th>
-                      <th style="min-width:140px;">Serial Number</th>
-                      <th style="min-width:115px;">Purchase Date</th>
-                      <th style="min-width:120px;">Current Status</th>
-                      <th style="min-width:170px; text-align:center;">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="instockInventoryTableBody">
-                    <!-- Populated dynamically -->
-                  </tbody>
-                </table>
-              </div>
             </div>
           </div>
         </div>

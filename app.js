@@ -1983,8 +1983,18 @@
           if (!matchSearch) return false;
         }
 
-        if (excludeField !== 'type' && typeVal !== 'all') {
-          if (!a.type || a.type.toLowerCase() !== typeVal.toLowerCase()) return false;
+        if (this.currentView === 'desktop') {
+          if (!a.type || a.type.toLowerCase() !== 'desktop') return false;
+        } else if (this.currentView === 'laptop') {
+          const tLower = (a.type || '').toLowerCase();
+          if (tLower !== 'laptop' && tLower !== 'macbook') return false;
+          if (excludeField !== 'type' && typeVal !== 'all') {
+            if (tLower !== typeVal.toLowerCase()) return false;
+          }
+        } else {
+          if (excludeField !== 'type' && typeVal !== 'all') {
+            if (!a.type || a.type.toLowerCase() !== typeVal.toLowerCase()) return false;
+          }
         }
         if (excludeField !== 'cpu' && cpuVal !== 'all') {
           if (!a.cpu || a.cpu.trim().toLowerCase() !== cpuVal.trim().toLowerCase()) return false;
@@ -2077,12 +2087,20 @@
 
       // Re-populate dropdown HTML options
       if (typeEl) {
-        let typeHtml = '<option value="all">All Types</option>';
-        validTypes.forEach(t => {
-          typeHtml += `<option value="${Utils.escapeHtml(t)}">${Utils.escapeHtml(t)}</option>`;
-        });
-        typeEl.innerHTML = typeHtml;
-        typeEl.value = typeVal;
+        if (this.currentView === 'desktop') {
+          typeEl.innerHTML = '<option value="Desktop">🖥️ Desktop</option>';
+          typeEl.value = 'Desktop';
+        } else if (this.currentView === 'laptop') {
+          typeEl.innerHTML = '<option value="all">All Laptops & MacBooks</option><option value="Laptop">💻 Laptop</option><option value="MacBook">🍎 MacBook</option>';
+          typeEl.value = (typeVal === 'Desktop' || !typeVal) ? 'all' : typeVal;
+        } else {
+          let typeHtml = '<option value="all">All Types</option>';
+          validTypes.forEach(t => {
+            typeHtml += `<option value="${Utils.escapeHtml(t)}">${Utils.escapeHtml(t)}</option>`;
+          });
+          typeEl.innerHTML = typeHtml;
+          typeEl.value = typeVal;
+        }
       }
 
       if (cpuEl) {
@@ -2186,7 +2204,9 @@
       }
       if (breakdownText) {
         const activeFilters = [];
-        if (typeFilter !== 'all') activeFilters.push(`Type: ${typeFilter}`);
+        if (this.currentView === 'desktop') activeFilters.push('Type: Desktop Workstations');
+        else if (this.currentView === 'laptop') activeFilters.push('Type: Laptops & MacBooks');
+        else if (typeFilter !== 'all') activeFilters.push(`Type: ${typeFilter}`);
         if (cpuFilter !== 'all') activeFilters.push(`CPU: ${cpuFilter}`);
         if (teamFilter !== 'all') activeFilters.push(`Dept: ${teamFilter}`);
         if (statusFilter !== 'all') activeFilters.push(`Status: ${statusFilter}`);
@@ -2248,7 +2268,7 @@
               ${prevUserDisplay}
             </td>
             <td class="cell-work-status">
-              ${this.getWorkStatusButton(a.id, a.workStatus)}
+              ${this.getWorkStatusButton(a.id, a.workStatus, true)}
             </td>
             <td>
               <span class="status-pill" style="font-size:0.75rem; background:rgba(37,99,235,0.08); color:var(--primary); font-weight:600;">${Utils.escapeHtml(a.team || 'None')}</span>
@@ -2276,7 +2296,7 @@
       // Re-use all assets view with preset filter
       const typeFilter = document.getElementById('assetsTypeFilter');
       if (typeFilter) {
-        typeFilter.value = type;
+        typeFilter.value = type === 'Laptop' ? 'all' : type;
       }
       const statusFilter = document.getElementById('assetsStatusFilter');
       if (statusFilter) {
@@ -2721,11 +2741,17 @@
     }
 
     renderNonAssignedView(providedList = null) {
-      const allNonAssigned = store.data.assets.filter(a => a.status === 'Non-Assigned');
+      let filteredResult = providedList;
+      if (!filteredResult) {
+        const res = this.updateDependentNonAssignedFilters();
+        filteredResult = res.finalFilteredList;
+      }
+
+      const allNonAssigned = (store.data.assets || []).filter(a => (a.status === 'Non-Assigned' || a.status === 'Available') && a.status !== 'Assigned');
 
       // Metric Summary Cards
       const dskCount = allNonAssigned.filter(a => a.type === 'Desktop').length;
-      const lptCount = allNonAssigned.filter(a => a.type === 'Laptop').length;
+      const lptCount = allNonAssigned.filter(a => a.type === 'Laptop' || a.type === 'MacBook').length;
 
       const setEl = (id, val) => {
         const el = document.getElementById(id);
@@ -2739,38 +2765,13 @@
       const lptPill = document.getElementById('cardAvailLaptopPill');
       if (lptPill) lptPill.textContent = `💻 ${lptCount} Lpt`;
 
-      const filterType = this.nonAssignedTypeFilter || 'all';
-      const searchVal = (document.getElementById('nonAssignedSearchInput')?.value || '').toLowerCase().trim();
-
-      let nonAssigned = filterType === 'all'
-        ? allNonAssigned
-        : allNonAssigned.filter(a => a.type === filterType);
-
-      if (searchVal) {
-        nonAssigned = nonAssigned.filter(a =>
-          (a.id && a.id.toLowerCase().includes(searchVal)) ||
-          (a.oldUsername && a.oldUsername.toLowerCase().includes(searchVal)) ||
-          (a.serialNumber && a.serialNumber.toLowerCase().includes(searchVal)) ||
-          (a.cpu && a.cpu.toLowerCase().includes(searchVal)) ||
-          (a.ram && a.ram.toLowerCase().includes(searchVal)) ||
-          (a.team && a.team.toLowerCase().includes(searchVal))
-        );
-      }
-
-      // Update active filter button tabs in UI
-      document.querySelectorAll('.non-assigned-filter-btn').forEach(btn => {
-        if (btn.getAttribute('data-filter') === filterType) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
-        }
-      });
-
       const tbody = document.getElementById('nonAssignedTableBody');
       if (!tbody) return;
 
+      const nonAssigned = filteredResult;
+
       if (nonAssigned.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" class="empty-state">No available non-assigned ${filterType !== 'all' ? filterType.toLowerCase() + 's' : 'systems'} in stock right now.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" class="empty-state">No matching available systems found in inventory.</td></tr>`;
         return;
       }
 
@@ -3296,13 +3297,8 @@
     }
 
     renderSwapSystemPage() {
-      // 1. Populate Old User Dropdown with currently assigned users
-      const oldUserSelect = document.getElementById('swapOldUserSelect');
-      if (oldUserSelect) {
-        const assignedAssets = store.data.assets.filter(a => a.status === 'Assigned' && a.user);
-        oldUserSelect.innerHTML = `<option value="">-- Select Assigned User to Swap --</option>` +
-          assignedAssets.map(a => `<option value="${Utils.escapeHtml(a.id)}">${Utils.escapeHtml(a.user)} (${Utils.escapeHtml(a.id)} - ${Utils.escapeHtml(a.team)})</option>`).join('');
-      }
+      // 1. Populate Old User Dropdown with categorized In-Stock and User Exit systems
+      this.populateSwapOldUserSelect('all');
 
       // 2. Render Swap History Table
       this.renderSwapHistoryTable();
@@ -4302,10 +4298,14 @@
                 monitorInput.value = asset.monitor || '';
               }
 
-              // Assigned Date
+              // Assigned Date & Swap Date sync
               const assignedDateInput = document.getElementById('swapAssignedDateInput');
+              const swapDateInput = document.getElementById('swapDateInput');
               if (assignedDateInput && !assignedDateInput.value) {
                 assignedDateInput.value = new Date().toISOString().substring(0, 10);
+              }
+              if (swapDateInput && (!swapDateInput.value || !app.swapDateManuallyEdited)) {
+                swapDateInput.value = assignedDateInput ? assignedDateInput.value : new Date().toISOString().substring(0, 10);
               }
 
               // Display visual auto-applied banner
@@ -4323,6 +4323,34 @@
 
               const autoBanner = document.getElementById('swapAutoFillBanner');
               if (autoBanner) autoBanner.style.display = 'none';
+            }
+          });
+        }
+
+        // Auto-link Assigned Date to Swap Date unless manually changed
+        const assignedDateInput = document.getElementById('swapAssignedDateInput');
+        const swapDateInput = document.getElementById('swapDateInput');
+        if (assignedDateInput && swapDateInput) {
+          const syncDates = () => {
+            if (!app.swapDateManuallyEdited || !swapDateInput.value) {
+              swapDateInput.value = assignedDateInput.value;
+            }
+          };
+          assignedDateInput.addEventListener('input', syncDates);
+          assignedDateInput.addEventListener('change', syncDates);
+
+          swapDateInput.addEventListener('input', () => {
+            if (swapDateInput.value !== assignedDateInput.value) {
+              app.swapDateManuallyEdited = true;
+            } else {
+              app.swapDateManuallyEdited = false;
+            }
+          });
+          swapDateInput.addEventListener('change', () => {
+            if (swapDateInput.value !== assignedDateInput.value) {
+              app.swapDateManuallyEdited = true;
+            } else {
+              app.swapDateManuallyEdited = false;
             }
           });
         }
@@ -4593,6 +4621,11 @@
 
       if (!oldAssetId || !newUserName || !cpu) {
         Utils.showToast('Validation Error', 'Please select old user system and provide new user/CPU specs.', 'error');
+        return;
+      }
+
+      if (newAssetId && oldAssetId && newAssetId.trim().toUpperCase() === oldAssetId.trim().toUpperCase()) {
+        Utils.showToast('Validation Error', 'The replacement system cannot be the same asset as the old system being swapped.', 'error');
         return;
       }
 
@@ -7823,11 +7856,11 @@ Remarks: ${r.remark || 'None'}`);
       if (assignedEl) assignedEl.textContent = assignedCount;
       if (maintEl) maintEl.textContent = maintenanceCount;
 
-      // Calculate live Stock & Assigned counts for the 6 Category Cards (Follow Reference Image)
+      // Calculate live Stock & Assigned counts for the 6 Category Cards
       const categories = ['CPU', 'SSD', 'RAM', 'SMPS', 'MONITOR', 'OTHER'];
       categories.forEach(cat => {
         const catItems = items.filter(i => (i.component_type || 'OTHER').toUpperCase() === cat);
-        const catStock = catItems.length;
+        const catStock = catItems.filter(i => (i.status || 'Available') === 'Available').length;
         const catAssigned = catItems.filter(i => i.status === 'Assigned').length;
 
         const stockEl = document.getElementById(`instockCatStock${cat}`);
@@ -7836,8 +7869,9 @@ Remarks: ${r.remark || 'None'}`);
         if (assignedEl) assignedEl.textContent = catAssigned;
       });
 
-      // Render the hardware stock inventory overview table below the category cards
-      this.renderInstockInventoryTable();
+      const reqCount = (store.data.requirements || []).filter(r => r.status !== 'Completed').length;
+      const reqEl = document.getElementById('instockRequestsCount');
+      if (reqEl) reqEl.textContent = reqCount;
     }
 
     filterInventoryByCategory(cat) {
@@ -10080,6 +10114,73 @@ Remarks: ${r.remark || 'None'}`);
     /* ==========================================================================
        SWAP SYSTEM OLD POOL FILTERING
        ========================================================================== */
+    populateSwapOldUserSelect(filterType = 'all') {
+      const select = document.getElementById('swapOldUserSelect');
+      if (!select) return;
+
+      const assets = store.data.assets || [];
+
+      // Categorize existing database assets
+      const inStockAssets = assets.filter(a => 
+        ((a.status === 'Non-Assigned' || a.status === 'Available' || a.status === 'Spare' || (a.workStatus && a.workStatus.toLowerCase().includes('stock'))) && a.status !== 'Assigned' && a.id)
+      );
+
+      const userExitAssets = assets.filter(a => 
+        ((a.workStatus && (a.workStatus.toLowerCase().includes('exit') || a.workStatus.toLowerCase().includes('resigned'))) || a.status === 'User Exit') && a.id
+      );
+
+      const assignedAssets = assets.filter(a =>
+        a.status === 'Assigned' && a.user && !(a.workStatus && a.workStatus.toLowerCase().includes('exit')) && a.id
+      );
+
+      const formatOption = (a, defaultLabel) => {
+        const empName = a.user || a.oldUsername || defaultLabel;
+        const assetId = a.id;
+        const devType = a.type || 'System';
+        const team = a.team ? ` - ${a.team}` : '';
+        const status = a.workStatus || a.status || 'Available';
+        return `<option value="${Utils.escapeHtml(assetId)}" data-asset-id="${Utils.escapeHtml(assetId)}">${Utils.escapeHtml(empName)} — ${Utils.escapeHtml(assetId)} (${Utils.escapeHtml(devType)}${Utils.escapeHtml(team)}) [${Utils.escapeHtml(status)}]</option>`;
+      };
+
+      let html = '<option value="">-- Select Active User System --</option>';
+
+      if (filterType === 'instock') {
+        if (inStockAssets.length === 0) {
+          html += '<option value="" disabled>No In-Stock systems available</option>';
+        } else {
+          html += `<optgroup label="📦 In-Stock / Available Pool (${inStockAssets.length})">` +
+            inStockAssets.map(a => formatOption(a, 'In Stock Item')).join('') +
+            '</optgroup>';
+        }
+      } else if (filterType === 'userexit') {
+        if (userExitAssets.length === 0) {
+          html += '<option value="" disabled>No User Exit systems available</option>';
+        } else {
+          html += `<optgroup label="🔴 User Exit Systems (${userExitAssets.length})">` +
+            userExitAssets.map(a => formatOption(a, 'Exit User System')).join('') +
+            '</optgroup>';
+        }
+      } else {
+        if (inStockAssets.length > 0) {
+          html += `<optgroup label="📦 In-Stock / Available Pool (${inStockAssets.length})">` +
+            inStockAssets.map(a => formatOption(a, 'In Stock Item')).join('') +
+            '</optgroup>';
+        }
+        if (userExitAssets.length > 0) {
+          html += `<optgroup label="🔴 User Exit Systems (${userExitAssets.length})">` +
+            userExitAssets.map(a => formatOption(a, 'Exit User System')).join('') +
+            '</optgroup>';
+        }
+        if (assignedAssets.length > 0) {
+          html += `<optgroup label="👤 Currently Assigned Systems (${assignedAssets.length})">` +
+            assignedAssets.map(a => formatOption(a, 'Assigned User')).join('') +
+            '</optgroup>';
+        }
+      }
+
+      select.innerHTML = html;
+    }
+
     filterSwapOldSystems(filterType = 'all') {
       ['btnFilterSwapPoolAll', 'btnFilterSwapPoolInStock', 'btnFilterSwapPoolUserExit'].forEach(id => {
         const btn = document.getElementById(id);
@@ -10098,25 +10199,32 @@ Remarks: ${r.remark || 'None'}`);
         activeBtn.style.color = '#ffffff';
       }
 
-      const select = document.getElementById('swapOldUserSelect');
-      if (!select) return;
+      this.populateSwapOldUserSelect(filterType);
+    }
 
-      const assets = store.data.assets || [];
-      let filtered = [];
-      if (filterType === 'instock') {
-        filtered = assets.filter(a => (a.status === 'Non-Assigned' || a.status === 'Available' || a.status === 'Spare') && a.id);
-      } else if (filterType === 'userexit') {
-        filtered = assets.filter(a => (a.workStatus && (a.workStatus.toLowerCase().includes('exit') || a.workStatus.toLowerCase().includes('resigned'))) || a.status === 'User Exit');
-      } else {
-        filtered = assets.filter(a => a.status === 'Assigned' && a.user);
-      }
+    filterCategoryStock(cat) {
+      this.navigateTo('instock-inventory');
+      const catSelect = document.getElementById('instockInventoryFullCategoryFilter');
+      if (catSelect) catSelect.value = (cat || 'all').toUpperCase();
+      const statSelect = document.getElementById('instockInventoryFullStatusFilter');
+      if (statSelect) statSelect.value = 'Available';
+      this.filterFullInventoryView();
+    }
 
-      if (filtered.length === 0) {
-        select.innerHTML = '<option value="">-- No matching systems in selected pool --</option>';
-      } else {
-        select.innerHTML = '<option value="">-- Select System to Swap --</option>' +
-          filtered.map(a => `<option value="${Utils.escapeHtml(a.id)}">${Utils.escapeHtml(a.user || 'Unassigned')} (${Utils.escapeHtml(a.id)} - ${Utils.escapeHtml(a.team || 'No Team')})</option>`).join('');
-      }
+    filterCategoryAssigned(cat) {
+      this.navigateTo('instock-assigned');
+      const catSelect = document.getElementById('instockFilterCategory');
+      if (catSelect) catSelect.value = (cat || 'all').toUpperCase();
+      this.filterAssignedItems();
+    }
+
+    filterInventoryByCategory(cat) {
+      this.navigateTo('instock-inventory');
+      const catSelect = document.getElementById('instockInventoryFullCategoryFilter');
+      if (catSelect) catSelect.value = (cat || 'all').toUpperCase();
+      const statSelect = document.getElementById('instockInventoryFullStatusFilter');
+      if (statSelect) statSelect.value = 'all';
+      this.filterFullInventoryView();
     }
 
     navToRequirementsFromInstock() {
@@ -10338,7 +10446,11 @@ Remarks: ${r.remark || 'None'}`);
       const search = document.getElementById('assetsSearchInput');
       if (search) search.value = '';
       const type = document.getElementById('assetsTypeFilter');
-      if (type) type.value = 'all';
+      if (type) {
+        if (app.currentView === 'desktop') type.value = 'Desktop';
+        else if (app.currentView === 'laptop') type.value = 'all';
+        else type.value = 'all';
+      }
       const cpu = document.getElementById('assetsCpuFilter');
       if (cpu) cpu.value = 'all';
       const team = document.getElementById('assetsTeamFilter');
@@ -10413,7 +10525,11 @@ Remarks: ${r.remark || 'None'}`);
     },
     filterNonAssigned(type = 'all') {
       app.nonAssignedTypeFilter = type;
-      app.renderNonAssignedView();
+      const typeEl = document.getElementById('nonAssignedTypeFilter');
+      if (typeEl) {
+        typeEl.value = type;
+      }
+      app.handleNonAssignedFilterChange('type');
     },
 
     // Modal Control
@@ -10732,10 +10848,31 @@ Remarks: ${r.remark || 'None'}`);
                 <span style="font-size: 1.02rem; font-weight: 700; color: #0f172a; letter-spacing: -0.2px;">Asset &amp; User Information</span>
               </div>
               <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 3px;">
-                <div class="pill-user-exit" style="background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; padding: 3px 12px; border-radius: 9999px; font-size: 0.76rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-                  <span style="width: 7px; height: 7px; border-radius: 50%; background: #e11d48; display: inline-block;"></span>
-                  <span>${Utils.escapeHtml(asset.workStatus || 'User Exit')}</span>
-                </div>
+                ${(() => {
+                  const ws = (asset.workStatus || (asset.status === 'Assigned' ? 'Currently Working' : 'In Stock')).trim();
+                  const lower = ws.toLowerCase();
+                  if (lower === 'currently working' || lower === 'working' || lower === 'active') {
+                    return `<div class="pill-work-status pill-currently-working" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; padding: 3px 12px; border-radius: 9999px; font-size: 0.76rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                      <span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+                      <span>Currently Working</span>
+                    </div>`;
+                  } else if (lower === 'user exit' || lower === 'exit') {
+                    return `<div class="pill-user-exit" style="background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; padding: 3px 12px; border-radius: 9999px; font-size: 0.76rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                      <span style="width: 7px; height: 7px; border-radius: 50%; background: #e11d48; display: inline-block;"></span>
+                      <span>User Exit</span>
+                    </div>`;
+                  } else if (lower === 'work from home' || lower === 'wfh') {
+                    return `<div class="pill-work-status pill-wfh" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 3px 12px; border-radius: 9999px; font-size: 0.76rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                      <span style="width: 7px; height: 7px; border-radius: 50%; background: #2563eb; display: inline-block;"></span>
+                      <span>Work From Home</span>
+                    </div>`;
+                  } else {
+                    return `<div class="pill-work-status pill-instock" style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a; padding: 3px 12px; border-radius: 9999px; font-size: 0.76rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                      <span style="width: 7px; height: 7px; border-radius: 50%; background: #f59e0b; display: inline-block;"></span>
+                      <span>${Utils.escapeHtml(ws)}</span>
+                    </div>`;
+                  }
+                })()}
                 <span style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">EMPLOYEE WORK STATUS</span>
               </div>
             </div>
@@ -11614,6 +11751,12 @@ Remarks: ${r.remark || 'None'}`);
     },
     filterSwapOldSystems(filterType) {
       app.filterSwapOldSystems(filterType);
+    },
+    filterCategoryStock(cat) {
+      app.filterCategoryStock(cat);
+    },
+    filterCategoryAssigned(cat) {
+      app.filterCategoryAssigned(cat);
     },
 
     // Employee Asset History
