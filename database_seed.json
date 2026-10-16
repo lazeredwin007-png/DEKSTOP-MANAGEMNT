@@ -1253,13 +1253,48 @@
       "status": "Non-Assigned",
       "condition": "Good",
       "warrantyEnd": "Non-Warranty",
-      "remark": "Bypass IP",
+      "remark": "Re-allocated to YOWAAN V via System Swap. Reason: USER EXIT",
       "workStatus": "User Exit",
       "warrantyType": "Non-Warranty",
       "tl": "Management",
       "doa": "-",
       "userExitDate": "2026-10-07",
-      "availableDate": "2026-10-07"
+      "availableDate": "2026-10-07",
+      "warrantyComponents": [
+        {
+          "id": "wc-PIX_DSK_01-kb",
+          "type": "Keyboard",
+          "name": "Keyboard",
+          "model": "Logitech MX Keys S",
+          "serialNumber": "SN-KB-TEST-002",
+          "coverage": "warranty",
+          "assignedDate": "2025-06-01",
+          "expiryDate": "2028-06-01",
+          "status": "Under Warranty"
+        },
+        {
+          "id": "wc-PIX_DSK_01-ram",
+          "type": "RAM",
+          "name": "RAM",
+          "model": "8 DDR3",
+          "serialNumber": "SN-RAM-DSK_01",
+          "coverage": "warranty",
+          "assignedDate": "2025-01-15",
+          "expiryDate": "2027-01-15",
+          "status": "Under Warranty"
+        },
+        {
+          "id": "wc-PIX_DSK_01-ssd",
+          "type": "SSD",
+          "name": "SSD",
+          "model": "240GB SSD",
+          "serialNumber": "SN-SSD-DSK_01",
+          "coverage": "warranty",
+          "assignedDate": "2025-01-15",
+          "expiryDate": "2027-01-15",
+          "status": "Under Warranty"
+        }
+      ]
     },
     {
       "id": "PIX_DSK_02",

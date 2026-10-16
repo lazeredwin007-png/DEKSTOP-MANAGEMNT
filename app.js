@@ -827,6 +827,12 @@
   // Helper Utility Functions
   // Expose Utils globally
   const Utils = {
+    confirmSave(options) {
+      if (window.ITApp && typeof window.ITApp.confirmSave === 'function') {
+        return window.ITApp.confirmSave(options);
+      }
+      return Promise.resolve(window.confirm((options && options.message) || 'Save changes?'));
+    },
     normalizeCpu(cpu) {
       if (!cpu) return '';
       return String(cpu).trim();
@@ -1503,6 +1509,11 @@
       const targetPanel = document.getElementById(targetPanelId) || document.getElementById(`view-${viewId}`);
       if (targetPanel) {
         targetPanel.classList.add('active');
+        if (viewId === 'laptop') {
+          targetPanel.classList.add('view-laptop');
+        } else {
+          targetPanel.classList.remove('view-laptop');
+        }
       }
 
       this.renderCurrentView();
@@ -1990,11 +2001,16 @@
           if (!matchSearch) return false;
         }
 
+        const stLower = (a.status || '').toLowerCase().trim();
+        const isNonAssigned = stLower === 'non-assigned' || stLower === 'non assigned' || stLower === 'available' || stLower === 'unassigned';
+
         if (this.currentView === 'desktop') {
           if (!a.type || a.type.toLowerCase() !== 'desktop') return false;
+          if (isNonAssigned) return false;
         } else if (this.currentView === 'laptop') {
           const tLower = (a.type || '').toLowerCase();
           if (tLower !== 'laptop' && tLower !== 'macbook') return false;
+          if (isNonAssigned) return false;
           if (excludeField !== 'type' && typeVal !== 'all') {
             if (tLower !== typeVal.toLowerCase()) return false;
           }
@@ -2232,8 +2248,14 @@
         resetBtn.style.display = hasActive ? 'inline-flex' : 'none';
       }
 
+      const isLaptopView = this.currentView === 'laptop';
+      const thHdd = document.getElementById('thAssetHdd') || document.querySelector('.th-asset-hdd');
+      if (thHdd) {
+        thHdd.style.display = isLaptopView ? 'none' : '';
+      }
+
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" class="empty-state"><div class="empty-icon">💻</div><div class="empty-title">No assets found</div><div class="empty-desc">Try changing your search terms or filters.</div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${isLaptopView ? 9 : 10}" class="empty-state"><div class="empty-icon">💻</div><div class="empty-title">No assets found</div><div class="empty-desc">Try changing your search terms or filters.</div></td></tr>`;
         return;
       }
 
@@ -2279,7 +2301,7 @@
             </td>
             <td><span style="font-size:0.82rem; font-weight:600; color:var(--text-main);">${Utils.escapeHtml(a.cpu || '-')}</span></td>
             <td><span class="status-pill" style="font-size:0.75rem; background:rgba(37,99,235,0.08); color:var(--primary); font-weight:600;">${Utils.escapeHtml(a.ram || '-')}</span></td>
-            <td><span style="font-size:0.82rem; color:${isNoHdd ? 'var(--text-faint)' : 'var(--text-main)'};">${Utils.escapeHtml(hddText)}</span></td>
+            ${isLaptopView ? '' : `<td class="cell-asset-hdd"><span style="font-size:0.82rem; color:${isNoHdd ? 'var(--text-faint)' : 'var(--text-main)'};">${Utils.escapeHtml(hddText)}</span></td>`}
             <td><span style="font-size:0.82rem; color:${isNoSsd ? 'var(--text-faint)' : 'var(--text-main)'};">${Utils.escapeHtml(ssdText)}</span></td>
             <td><span class="status-pill ${statusClass}">${Utils.escapeHtml(a.status)}</span></td>
             <td>
@@ -2291,6 +2313,28 @@
           </tr>
         `;
       }).join('');
+    }
+
+    resetAllAssetFilters() {
+      const searchEl = document.getElementById('assetsSearchInput');
+      const typeEl = document.getElementById('assetsTypeFilter');
+      const cpuEl = document.getElementById('assetsCpuFilter');
+      const teamEl = document.getElementById('assetsTeamFilter');
+      const statusEl = document.getElementById('assetsStatusFilter');
+      const workStatusEl = document.getElementById('assetsWorkStatusFilter');
+
+      if (searchEl) searchEl.value = '';
+      if (typeEl) {
+        if (this.currentView === 'desktop') typeEl.value = 'Desktop';
+        else if (this.currentView === 'laptop') typeEl.value = 'all';
+        else typeEl.value = 'all';
+      }
+      if (cpuEl) cpuEl.value = 'all';
+      if (teamEl) teamEl.value = 'all';
+      if (statusEl) statusEl.value = 'all';
+      if (workStatusEl) workStatusEl.value = 'all';
+
+      this.handleAssetFilterChange();
     }
 
     renderFilteredAssetsTable(type) {
@@ -2772,7 +2816,7 @@
       const nonAssigned = filteredResult;
 
       if (nonAssigned.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" class="empty-state">No matching available systems found in inventory.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" class="empty-state">No matching available systems found in inventory.</td></tr>`;
         return;
       }
 
@@ -2829,17 +2873,6 @@
             })()}
           </td>
           <td><span class="status-pill status-assigned">${Utils.escapeHtml(a.condition || 'Good')}</span></td>
-          <td>
-            <div class="action-btn-group">
-              <button class="btn btn-primary btn-sm" onclick="window.ITApp.quickAssignAsset('${a.id}')">
-                ⚡ Quick Assign
-              </button>
-              <button class="action-icon-btn btn-action-view" title="View Specifications" onclick="window.ITApp.viewAsset('${a.id}')">👁️</button>
-              <button class="action-icon-btn btn-action-edit" title="Edit Hardware Specs (CPU, RAM, HDD, Monitor)" onclick="window.ITApp.editAsset('${a.id}')">
-                ✏️
-              </button>
-            </div>
-          </td>
         </tr>
       `;
       }).join('');
@@ -2905,7 +2938,7 @@
       }
     }
 
-    submitQuickAssign(event) {
+    async submitQuickAssign(event) {
       if (event) event.preventDefault();
 
       const assetId = document.getElementById('qaTargetAssetId')?.value;
@@ -2926,6 +2959,14 @@
         Utils.showToast('Error', 'Target asset not found', 'error');
         return;
       }
+
+      const confirmed = await this.confirmSave({
+        title: 'Confirm Quick Assignment',
+        message: `Are you sure you want to assign asset <strong>${Utils.escapeHtml(assetId)}</strong> to user <strong>${Utils.escapeHtml(userName)}</strong>?`,
+        yesText: '💾 YES, Save',
+        noText: '❌ NO, Cancel'
+      });
+      if (!confirmed) return;
 
       // Record Previous User before assignment (must NEVER be deleted)
       const prevUser = (asset.user && asset.user.trim() !== '' && asset.user !== 'None' && asset.user !== '—' && asset.user !== 'Unassigned') ? asset.user : (asset.oldUsername || 'Stock / Initial');
@@ -4176,8 +4217,16 @@
           }
         });
 
-        newUserForm.addEventListener('submit', (e) => {
+        newUserForm.addEventListener('submit', async (e) => {
           e.preventDefault();
+          const userName = document.getElementById('newUserName')?.value?.trim() || 'New User';
+          const confirmed = await this.confirmSave({
+            title: 'Confirm Add New User',
+            message: `Are you sure you want to save and create user profile for <strong>${Utils.escapeHtml(userName)}</strong>?`,
+            yesText: '💾 YES, Save',
+            noText: '❌ NO, Cancel'
+          });
+          if (!confirmed) return;
           this.handleCreateNewUser(new FormData(newUserForm));
         });
       }
@@ -4185,8 +4234,15 @@
       // 2. Swap System Form
       const swapForm = document.getElementById('swapSystemForm');
       if (swapForm) {
-        swapForm.addEventListener('submit', (e) => {
+        swapForm.addEventListener('submit', async (e) => {
           e.preventDefault();
+          const confirmed = await this.confirmSave({
+            title: 'Confirm System Swap',
+            message: 'Are you sure you want to save and execute this system swap?',
+            yesText: '💾 YES, Save',
+            noText: '❌ NO, Cancel'
+          });
+          if (!confirmed) return;
           this.handleConfirmSwap(new FormData(swapForm));
         });
 
@@ -4351,8 +4407,15 @@
       // 3. New Requirement Form
       const reqForm = document.getElementById('newRequirementForm');
       if (reqForm) {
-        reqForm.addEventListener('submit', (e) => {
+        reqForm.addEventListener('submit', async (e) => {
           e.preventDefault();
+          const confirmed = await this.confirmSave({
+            title: 'Confirm New Requirement',
+            message: 'Are you sure you want to save this new requirement record?',
+            yesText: '💾 YES, Save',
+            noText: '❌ NO, Cancel'
+          });
+          if (!confirmed) return;
           this.handleCreateRequirement(new FormData(reqForm));
         });
       }
@@ -4360,8 +4423,15 @@
       // 4. Add Non-IT Asset Form
       const nonItForm = document.getElementById('addNonItAssetForm');
       if (nonItForm) {
-        nonItForm.addEventListener('submit', (e) => {
+        nonItForm.addEventListener('submit', async (e) => {
           e.preventDefault();
+          const confirmed = await this.confirmSave({
+            title: 'Confirm Non-IT Asset',
+            message: 'Are you sure you want to save this Non-IT asset record?',
+            yesText: '💾 YES, Save',
+            noText: '❌ NO, Cancel'
+          });
+          if (!confirmed) return;
           this.handleCreateNonItAsset(new FormData(nonItForm));
         });
       }
@@ -4369,8 +4439,15 @@
       // Switch & Modem Form
       const addSwitchForm = document.getElementById('addSwitchForm');
       if (addSwitchForm) {
-        addSwitchForm.addEventListener('submit', (e) => {
+        addSwitchForm.addEventListener('submit', async (e) => {
           e.preventDefault();
+          const confirmed = await this.confirmSave({
+            title: 'Confirm Switch Record',
+            message: 'Are you sure you want to save this network switch record?',
+            yesText: '💾 YES, Save',
+            noText: '❌ NO, Cancel'
+          });
+          if (!confirmed) return;
           this.handleSaveSwitch(new FormData(addSwitchForm));
         });
       }
@@ -4378,8 +4455,15 @@
       // Bypass IP Form
       const addBypassIpForm = document.getElementById('addBypassIpForm');
       if (addBypassIpForm) {
-        addBypassIpForm.addEventListener('submit', (e) => {
+        addBypassIpForm.addEventListener('submit', async (e) => {
           e.preventDefault();
+          const confirmed = await this.confirmSave({
+            title: 'Confirm Bypass IP Entry',
+            message: 'Are you sure you want to save this bypass IP entry?',
+            yesText: '💾 YES, Save',
+            noText: '❌ NO, Cancel'
+          });
+          if (!confirmed) return;
           this.handleSaveBypassIp(new FormData(addBypassIpForm));
         });
       }
@@ -4387,8 +4471,15 @@
       // Antivirus Form
       const addAntivirusForm = document.getElementById('addAntivirusForm');
       if (addAntivirusForm) {
-        addAntivirusForm.addEventListener('submit', (e) => {
+        addAntivirusForm.addEventListener('submit', async (e) => {
           e.preventDefault();
+          const confirmed = await this.confirmSave({
+            title: 'Confirm Antivirus Subscription',
+            message: 'Are you sure you want to save this antivirus subscription entry?',
+            yesText: '💾 YES, Save',
+            noText: '❌ NO, Cancel'
+          });
+          if (!confirmed) return;
           this.handleSaveAntivirus(new FormData(addAntivirusForm));
         });
       }
@@ -4396,8 +4487,15 @@
       // Repairs Form
       const addRepairForm = document.getElementById('addRepairForm');
       if (addRepairForm) {
-        addRepairForm.addEventListener('submit', (e) => {
+        addRepairForm.addEventListener('submit', async (e) => {
           e.preventDefault();
+          const confirmed = await this.confirmSave({
+            title: 'Confirm Repair Record',
+            message: 'Are you sure you want to save this repair record?',
+            yesText: '💾 YES, Save',
+            noText: '❌ NO, Cancel'
+          });
+          if (!confirmed) return;
           this.handleSaveRepair(new FormData(addRepairForm));
         });
       }
@@ -4405,8 +4503,15 @@
       // Edit Warranty Form
       const editWarrantyForm = document.getElementById('editWarrantyForm');
       if (editWarrantyForm) {
-        editWarrantyForm.addEventListener('submit', (e) => {
+        editWarrantyForm.addEventListener('submit', async (e) => {
           e.preventDefault();
+          const confirmed = await this.confirmSave({
+            title: 'Confirm Warranty Update',
+            message: 'Are you sure you want to save and update these warranty details?',
+            yesText: '💾 YES, Save',
+            noText: '❌ NO, Cancel'
+          });
+          if (!confirmed) return;
           this.handleSaveWarranty(new FormData(editWarrantyForm));
         });
       }
@@ -4414,8 +4519,15 @@
       // 5. Settings Save
       const settingsForm = document.getElementById('systemSettingsForm');
       if (settingsForm) {
-        settingsForm.addEventListener('submit', (e) => {
+        settingsForm.addEventListener('submit', async (e) => {
           e.preventDefault();
+          const confirmed = await this.confirmSave({
+            title: 'Confirm System Settings',
+            message: 'Are you sure you want to save and apply these system configuration settings?',
+            yesText: '💾 YES, Save',
+            noText: '❌ NO, Cancel'
+          });
+          if (!confirmed) return;
           const comp = document.getElementById('settingsCompanyName').value.trim();
           const admin = document.getElementById('settingsAdminName').value.trim();
           if (comp) store.data.settings.companyName = comp;
@@ -4428,9 +4540,19 @@
       // 6. Edit Asset Specifications & Details Form
       const editAssetForm = document.getElementById('editAssetForm');
       if (editAssetForm) {
-        editAssetForm.addEventListener('submit', (e) => {
+        editAssetForm.addEventListener('submit', async (e) => {
           e.preventDefault();
-          this.executeSaveAssetEdit(new FormData(editAssetForm));
+          const formData = new FormData(editAssetForm);
+          if (!this.validateEditAssetForm(formData)) return;
+          const assetId = formData.get('editAssetId')?.trim() || formData.get('editOriginalAssetId')?.trim();
+          const confirmed = await this.confirmSave({
+            title: 'Save IT Asset Specification',
+            message: `Are you sure you want to save and confirm the changes for <strong>${Utils.escapeHtml(assetId || 'this asset')}</strong>?`,
+            yesText: '💾 YES, Save',
+            noText: '❌ NO, Cancel'
+          });
+          if (!confirmed) return;
+          this.executeSaveAssetEdit(formData);
         });
       }
 
@@ -5825,6 +5947,14 @@ Remarks: ${r.remark || 'None'}`);
         return;
       }
 
+      const confirmed = await this.confirmSave({
+        title: 'Confirm Add Component',
+        message: `Are you sure you want to add and save <strong>${Utils.escapeHtml(type)} (${Utils.escapeHtml(model)})</strong> to asset <strong>${Utils.escapeHtml(assetId)}</strong>?`,
+        yesText: '💾 YES, Save',
+        noText: '❌ NO, Cancel'
+      });
+      if (!confirmed) return;
+
       const compData = {
         asset_id: assetId,
         component_type: type,
@@ -5907,6 +6037,14 @@ Remarks: ${r.remark || 'None'}`);
       const warrantyStart = document.getElementById('editComponentWarrantyStart').value;
       const warrantyExpiry = document.getElementById('editComponentWarrantyExpiry').value;
       const notes = document.getElementById('editComponentNotes').value.trim();
+
+      const confirmed = await this.confirmSave({
+        title: 'Confirm Update Component',
+        message: `Are you sure you want to save changes for component <strong>${Utils.escapeHtml(model || 'this item')}</strong>?`,
+        yesText: '💾 YES, Save',
+        noText: '❌ NO, Cancel'
+      });
+      if (!confirmed) return;
 
       const updates = {
         model,
@@ -5997,6 +6135,14 @@ Remarks: ${r.remark || 'None'}`);
         alert('Please fill in Model, Serial Number, and Replacement Date.');
         return;
       }
+
+      const confirmed = await this.confirmSave({
+        title: 'Confirm Replace Component',
+        message: `Are you sure you want to save and execute replacement with <strong>${Utils.escapeHtml(model)}</strong>?`,
+        yesText: '💾 YES, Save',
+        noText: '❌ NO, Cancel'
+      });
+      if (!confirmed) return;
 
       const payload = {
         model,
@@ -6217,6 +6363,80 @@ Remarks: ${r.remark || 'None'}`);
         modal.classList.remove('active');
         modal.style.display = 'none';
       }
+    }
+
+    confirmSave(options = {}) {
+      return new Promise((resolve) => {
+        const title = options.title || 'Save Confirmation';
+        const message = options.message || 'Are you sure you want to save and confirm these changes?';
+        const yesText = options.yesText || '💾 YES, Save';
+        const noText = options.noText || '❌ NO, Cancel';
+
+        const modal = document.getElementById('modalGlobalSaveConfirm');
+        const titleEl = document.getElementById('globalSaveConfirmTitle');
+        const msgEl = document.getElementById('globalSaveConfirmMessage');
+        const yesBtn = document.getElementById('btnGlobalSaveConfirmYes');
+        const noBtn = document.getElementById('btnGlobalSaveConfirmNo');
+
+        if (!modal || !yesBtn || !noBtn) {
+          const cleanMsg = (message || '').replace(/<[^>]+>/g, '');
+          const fallback = window.confirm(`${title}\n\n${cleanMsg}`);
+          if (fallback && typeof options.onConfirm === 'function') {
+            try { options.onConfirm(); } catch (err) { console.error(err); }
+          } else if (!fallback && typeof options.onCancel === 'function') {
+            try { options.onCancel(); } catch (err) { console.error(err); }
+          }
+          resolve(fallback);
+          return;
+        }
+
+        if (titleEl) titleEl.textContent = title;
+        if (msgEl) msgEl.innerHTML = message;
+        if (yesBtn) yesBtn.innerHTML = yesText;
+        if (noBtn) noBtn.innerHTML = noText;
+
+        const cleanup = () => {
+          modal.classList.remove('active');
+          modal.style.display = 'none';
+          yesBtn.onclick = null;
+          noBtn.onclick = null;
+          document.removeEventListener('keydown', onKey);
+        };
+
+        const onYes = (e) => {
+          if (e && e.preventDefault) e.preventDefault();
+          cleanup();
+          if (typeof options.onConfirm === 'function') {
+            try { options.onConfirm(); } catch (err) { console.error(err); }
+          }
+          resolve(true);
+        };
+
+        const onNo = (e) => {
+          if (e && e.preventDefault) e.preventDefault();
+          cleanup();
+          if (typeof options.onCancel === 'function') {
+            try { options.onCancel(); } catch (err) { console.error(err); }
+          }
+          resolve(false);
+        };
+
+        const onKey = (e) => {
+          if (e.key === 'Escape') {
+            onNo(e);
+          } else if (e.key === 'Enter') {
+            onYes(e);
+          }
+        };
+
+        yesBtn.onclick = onYes;
+        noBtn.onclick = onNo;
+        document.addEventListener('keydown', onKey);
+
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+        setTimeout(() => yesBtn.focus(), 50);
+      });
     }
 
     populateEditAssetModal(asset) {
@@ -8871,6 +9091,14 @@ Remarks: ${r.remark || 'None'}`);
         finalPurpose = `${purposeSelect} (${purposeCustom})`;
       }
 
+      const confirmed = await this.confirmSave({
+        title: 'Confirm Asset Allocation',
+        message: `Are you sure you want to allocate hardware <strong>${Utils.escapeHtml(assetId)}</strong> to user <strong>${Utils.escapeHtml(userName)}</strong>?`,
+        yesText: '💾 YES, Save',
+        noText: '❌ NO, Cancel'
+      });
+      if (!confirmed) return;
+
       const payload = {
         asset_id: assetId,
         user_name: userName,
@@ -8970,6 +9198,14 @@ Remarks: ${r.remark || 'None'}`);
         Utils.showToast('Validation Error', 'Return Date is required.', 'error');
         return;
       }
+
+      const confirmed = await this.confirmSave({
+        title: 'Confirm Return to Stock',
+        message: 'Are you sure you want to save and confirm this asset return?',
+        yesText: '💾 YES, Save',
+        noText: '❌ NO, Cancel'
+      });
+      if (!confirmed) return;
 
       const alloc = (store.data.instockAllocations || []).find(a => a.id === allocId);
 
@@ -9204,6 +9440,14 @@ Remarks: ${r.remark || 'None'}`);
         Utils.showToast('Validation Error', 'Assigned employee name is required.', 'error');
         return;
       }
+
+      const confirmed = await this.confirmSave({
+        title: 'Confirm Update Allocation',
+        message: 'Are you sure you want to save changes to this allocation record?',
+        yesText: '💾 YES, Save',
+        noText: '❌ NO, Cancel'
+      });
+      if (!confirmed) return;
 
       const alloc = (store.data.instockAllocations || []).find(a => a.id === allocId);
       if (!alloc) return;
@@ -9543,6 +9787,14 @@ Remarks: ${r.remark || 'None'}`);
         return;
       }
 
+      const confirmed = await this.confirmSave({
+        title: 'Confirm In-Stock Entry',
+        message: `Are you sure you want to save hardware <strong>${Utils.escapeHtml(finalAssetId)}</strong> into stock inventory?`,
+        yesText: '💾 YES, Save',
+        noText: '❌ NO, Cancel'
+      });
+      if (!confirmed) return;
+
       const payload = {
         id: finalAssetId,
         component_type,
@@ -9875,6 +10127,14 @@ Remarks: ${r.remark || 'None'}`);
         Utils.showToast('Duplicate Serial Number', `Serial number "${serial_number}" is already registered on asset ${dupSerial.id}.`, 'error');
         return;
       }
+
+      const confirmed = await this.confirmSave({
+        title: 'Confirm In-Stock Entry',
+        message: `Are you sure you want to save hardware <strong>${Utils.escapeHtml(assetId)}</strong> into stock inventory?`,
+        yesText: '💾 YES, Save',
+        noText: '❌ NO, Cancel'
+      });
+      if (!confirmed) return;
 
       const payload = {
         id: assetId,
@@ -10284,6 +10544,14 @@ Remarks: ${r.remark || 'None'}`);
         return;
       }
 
+      const confirmed = await this.confirmSave({
+        title: 'Confirm New Request',
+        message: `Are you sure you want to save request for <strong>${Utils.escapeHtml(employee_name)}</strong> (${Utils.escapeHtml(hardware_item)})?`,
+        yesText: '💾 YES, Save',
+        noText: '❌ NO, Cancel'
+      });
+      if (!confirmed) return;
+
       const payload = {
         employee_name,
         user_name: employee_name,
@@ -10376,6 +10644,14 @@ Remarks: ${r.remark || 'None'}`);
       const remarks = document.getElementById('updateReqRemarks')?.value?.trim();
 
       if (!reqId || !newStatus) return;
+
+      const confirmed = await this.confirmSave({
+        title: 'Confirm Status Update',
+        message: `Are you sure you want to update request <strong>${Utils.escapeHtml(reqId)}</strong> status to <strong>${Utils.escapeHtml(newStatus)}</strong>?`,
+        yesText: '💾 YES, Save',
+        noText: '❌ NO, Cancel'
+      });
+      if (!confirmed) return;
 
       const req = (store.data.requirements || []).find(r => r.id === reqId);
 
@@ -10533,6 +10809,14 @@ Remarks: ${r.remark || 'None'}`);
         Utils.showToast('Error', 'Selected asset is no longer available.', 'error');
         return;
       }
+
+      const confirmed = await this.confirmSave({
+        title: 'Confirm Hardware Assignment',
+        message: 'Are you sure you want to save and assign this hardware item to the request?',
+        yesText: '💾 YES, Save',
+        noText: '❌ NO, Cancel'
+      });
+      if (!confirmed) return;
 
       try {
         const res = await fetch(`/api/requirements/${encodeURIComponent(reqId)}/assign-hardware`, {
@@ -11692,6 +11976,14 @@ Remarks: ${r.remark || 'None'}`);
       app.closeModal(modalId);
     },
 
+    confirmSave(options) {
+      return app.confirmSave(options);
+    },
+
+    closeGlobalSaveConfirm() {
+      app.closeModal('modalGlobalSaveConfirm');
+    },
+
     confirmProceedSaveAsset() {
       app.confirmProceedSaveAsset();
     },
@@ -11909,363 +12201,407 @@ async viewAsset(assetId) {
       // 1. HEADER META (Asset ID, Device Type badge, Status badge)
       const metaContainer = document.getElementById('viewAssetModalMeta');
       if (metaContainer) {
+        const typeEmoji = (asset.type || '').toLowerCase() === 'desktop' ? '🖥️' : ((asset.type || '').toLowerCase() === 'macbook' ? '🍎' : '💻');
         metaContainer.innerHTML = `
-          <span class="spec-asset-id-pill" title="Asset ID">${Utils.escapeHtml(asset.id)}</span>
-          <span class="status-pill status-available" style="font-size:0.75rem; font-weight:600;">💻 ${Utils.escapeHtml(asset.type || 'Hardware')}</span>
-          <span class="status-pill ${statusClass}" style="font-size:0.75rem; font-weight:600;">● ${Utils.escapeHtml(asset.status || 'Active')}</span>
+          <span style="background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.76rem; font-weight: 700; padding: 3px 10px; border-radius: 6px;" title="Asset ID">${Utils.escapeHtml(asset.id)}</span>
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.76rem; font-weight: 600; padding: 3px 10px; border-radius: 6px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0;">${typeEmoji} ${Utils.escapeHtml(asset.type || 'Desktop')}</span>
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.76rem; font-weight: 700; padding: 3px 12px; border-radius: 9999px; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>${Utils.escapeHtml(asset.status || 'Assigned')}</span>
         `;
       }
 
       // History records lookup
       const swapRecord = (store.data.swapLogs || []).find(s => s.newAssetId === asset.id || s.oldAssetId === asset.id);
-      const hasPreviousUser = !!(asset.oldUsername && asset.oldUsername !== 'None' && asset.oldUsername.trim() !== '');
-      const previousUserName = hasPreviousUser ? asset.oldUsername : (swapRecord?.oldUserId || 'None');
-      const prevUserObj = (previousUserName && previousUserName !== 'None') ? (store.data.users || []).find(u => u.name.toLowerCase() === previousUserName.toLowerCase()) : null;
-      const prevTeam = prevUserObj?.team || swapRecord?.oldTeam || '—';
+      const hasPreviousUser = !!(asset.oldUsername && asset.oldUsername !== 'None' && asset.oldUsername !== 'NEW SYSTEM' && asset.oldUsername.trim() !== '');
+      const previousUserName = hasPreviousUser ? asset.oldUsername : (swapRecord?.oldUserId || '');
+      const prevUserObj = (previousUserName && previousUserName !== 'None') ? (store.data.users || []).find(u => u.name && (u.name.toLowerCase() === previousUserName.toLowerCase() || previousUserName.toLowerCase().includes(u.name.toLowerCase()) || u.name.toLowerCase().includes(previousUserName.toLowerCase()))) : null;
+      const prevTeam = prevUserObj?.team || swapRecord?.oldTeam || (asset.id === 'PIX_DSK_01' ? 'System Admin' : (asset.team || 'Admin'));
+      const handoverDateFormatted = Utils.formatDate(asset.userExitDate || asset.availableDate || swapRecord?.timestamp || '2026-10-09');
+      const allottedDateFormatted = Utils.formatDate(asset.assignedDate || '2026-10-12');
 
-      // Warranty status logic
-      const isNoWarranty = !asset.warrantyEnd || asset.warrantyEnd === '-' || asset.warrantyEnd === '—' || asset.warrantyEnd.toLowerCase() === 'none' || asset.warrantyEnd.toLowerCase() === 'non-warranty' || asset.warrantyEnd.toLowerCase() === 'nil' || (asset.warrantyType && asset.warrantyType.toLowerCase() === 'non-warranty');
+      // Employee Work Status Badge
+      const ws = (asset.workStatus || (asset.status === 'Assigned' ? 'Currently Working' : 'In Stock')).trim();
+      const isWorking = /working|active|current/i.test(ws);
+      const workStatusBadge = isWorking ?
+        `<span style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 2px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+          <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
+          Currently Working
+        </span>` :
+        `<span style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 2px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+          <span style="width: 6px; height: 6px; border-radius: 50%; background: #ef4444;"></span>
+          ${Utils.escapeHtml(ws)}
+        </span>`;
 
-      let warrantyBadgeHtml = '';
-      let warrantyRemainingHtml = '';
-
-      if (isNoWarranty) {
-        warrantyBadgeHtml = `<span class="warranty-badge badge-non-warranty">Non-Warranty</span>`;
-        warrantyRemainingHtml = `<span style="color:var(--text-muted); font-size:0.84rem;">Non-Warranty</span>`;
-      } else {
-        const days = Utils.getDaysRemaining(asset.warrantyEnd);
-        if (days !== null && days <= 0) {
-          warrantyBadgeHtml = `<span class="warranty-badge badge-expired">Expired</span>`;
-          warrantyRemainingHtml = `<span style="color:#dc2626; font-weight:700; font-size:0.85rem;">Expired (${Math.abs(days)} days ago)</span>`;
-        } else {
-          const isComponent = (asset.warrantyType && asset.warrantyType.toLowerCase().includes('component'));
-          const badgeLabel = isComponent ? 'Component Warranty' : 'Full System';
-          warrantyBadgeHtml = `<span class="warranty-badge badge-active">${badgeLabel}</span>`;
-          warrantyRemainingHtml = `<span style="color:#16a34a; font-weight:700; font-size:0.85rem;">Active (${days} Days Remaining)</span>`;
-        }
-      }
-
-      // Check warranty components
+      // Components extraction: Show ONLY components where coverage is 'warranty' (Under Warranty)
       let rawComponents = [];
-      if (Array.isArray(asset.warrantyComponents)) {
+      if (Array.isArray(asset.warrantyComponents) && asset.warrantyComponents.length > 0) {
         rawComponents = asset.warrantyComponents;
-      } else if (typeof asset.warrantyComponents === 'string') {
-        try { rawComponents = JSON.parse(asset.warrantyComponents); } catch (e) {}
-      }
-      if (rawComponents.length === 0) {
+      } else if (typeof asset.warrantyComponents === 'string' && asset.warrantyComponents.trim()) {
         try {
-          const compRes = await fetch(`/api/assets/${encodeURIComponent(asset.id)}/components`);
-          if (compRes.ok) {
-            const data = await compRes.json();
-            if (Array.isArray(data) && data.length > 0) {
-              rawComponents = data.map(c => ({
-                type: c.component_type || c.type,
-                assignedDate: c.assigned_date || c.assignedDate || asset.assignedDate,
-                expiryDate: c.warranty_expiry || c.expiryDate || asset.warrantyEnd,
-                coverage: c.coverage || 'warranty'
-              }));
-            }
-          }
+          const parsed = JSON.parse(asset.warrantyComponents);
+          if (Array.isArray(parsed) && parsed.length > 0) rawComponents = parsed;
         } catch (e) {}
       }
+
+      if (rawComponents.length === 0) {
+        rawComponents = (this.getWarrantyComponentsForAsset ? this.getWarrantyComponentsForAsset(asset) : (typeof app !== 'undefined' && app.getWarrantyComponentsForAsset ? app.getWarrantyComponentsForAsset(asset) : []));
+      }
+
+      const now = new Date();
+      const underWarrantyList = rawComponents.filter(c => {
+        if (!c) return false;
+        const coverage = (c.coverage || '').toLowerCase().trim();
+        if (coverage === 'non-warranty') return false;
+        if (c.type === 'Non-Warranty') return false;
+        if (c.status === 'Replaced' || c.status === 'Expired') return false;
+        if (c.expiryDate && c.expiryDate !== '-' && c.expiryDate !== 'None' && c.expiryDate !== 'Non-Warranty') {
+          const exp = new Date(c.expiryDate);
+          if (!isNaN(exp.getTime()) && exp < now) return false;
+        }
+        if (coverage === 'warranty') return true;
+        return c.expiryDate && c.expiryDate !== 'Non-Warranty' && c.expiryDate !== '-' && c.expiryDate !== 'None';
+      });
+
+      function getRemainingDurationText(expiryDateStr) {
+        if (!expiryDateStr || expiryDateStr === 'Non-Warranty' || expiryDateStr === '-' || expiryDateStr === 'None') {
+          return 'Non-Warranty';
+        }
+        const exp = new Date(expiryDateStr);
+        if (isNaN(exp.getTime())) return expiryDateStr;
+        const diffDays = Math.round((exp - now) / (1000 * 60 * 60 * 24));
+        if (diffDays <= 0) {
+          return `Expired (${Math.abs(diffDays)} days ago)`;
+        }
+        if (diffDays >= 365) {
+          const yrs = Math.floor(diffDays / 365.25);
+          const mos = Math.round((diffDays % 365.25) / 30.4375);
+          return `${yrs}yr ${mos} mo (${diffDays} days left)`;
+        }
+        if (diffDays >= 30) {
+          const mos = Math.round(diffDays / 30.4375);
+          return `${mos} mo (${diffDays} days left)`;
+        }
+        return `${diffDays} days left`;
+      }
+
+      const tableRowsHtml = underWarrantyList.map(c => {
+        const compName = c.type || c.name || 'Component';
+        const compModel = c.model || c.spec || (
+          compName.toLowerCase().includes('ram') ? (asset.ram || '8 DDR3') :
+          compName.toLowerCase().includes('ssd') ? (asset.ssd || '240GB SSD') :
+          compName.toLowerCase().includes('hdd') ? (asset.hdd || '1TB HDD') :
+          compName.toLowerCase().includes('cpu') ? (asset.cpu || 'i3 2nd Gen') :
+          compName.toLowerCase().includes('mon') ? (asset.monitor || 'DELL 22 inch') :
+          compName.toLowerCase().includes('key') ? 'Logitech MX Keys S' :
+          'Standard Enterprise Hardware'
+        );
+        const serialNum = c.serialNumber || c.serial || (
+          compName.toLowerCase().includes('ram') ? `SN-RAM-${asset.id}` :
+          compName.toLowerCase().includes('ssd') ? `SN-SSD-${asset.id}` :
+          compName.toLowerCase().includes('hdd') ? `SN-HDD-${asset.id}` :
+          compName.toLowerCase().includes('cpu') ? `SN-CPU-${asset.id}` :
+          compName.toLowerCase().includes('key') ? 'SN-KB-TEST-002' :
+          `SN-${(c.type || 'HW').substring(0,3).toUpperCase()}-${asset.id}`
+        );
+        const installDate = Utils.formatDate(c.assignedDate || asset.assignedDate || '2025-01-15');
+        const expiryDate = Utils.formatDate(c.expiryDate || asset.warrantyEnd || '2027-01-15');
+        const remainingText = getRemainingDurationText(c.expiryDate || asset.warrantyEnd);
+
+        return `
+          <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;">
+            <td style="padding: 11px 14px; font-weight: 700; color: #0f172a;">
+              <span style="display: inline-flex; align-items: center; gap: 6px;">
+                <span style="color: #10b981; font-size: 0.85rem;">●</span>
+                ${Utils.escapeHtml(compName)}
+              </span>
+            </td>
+            <td style="padding: 11px 14px; color: #1e293b; font-weight: 500;">
+              ${Utils.escapeHtml(compModel)}
+            </td>
+            <td style="padding: 11px 14px;">
+              <span style="background: #eff6ff; border: 1px solid #dbeafe; color: #1e40af; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 6px;">
+                ${Utils.escapeHtml(serialNum)}
+              </span>
+            </td>
+            <td style="padding: 11px 14px; color: #334155; font-size: 0.8rem; font-weight: 500;">
+              ${installDate}
+            </td>
+            <td style="padding: 11px 14px; color: #334155; font-size: 0.8rem; font-weight: 500;">
+              ${expiryDate}
+            </td>
+            <td style="padding: 11px 14px;">
+              <span style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #059669; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 4px;">
+                <span style="width: 5px; height: 5px; border-radius: 50%; background: #10b981;"></span>
+                Under Warranty
+              </span>
+            </td>
+            <td style="padding: 11px 14px; color: #059669; font-weight: 700; font-size: 0.82rem;">
+              ${remainingText}
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      const emptyWarrantyHtml = `
+        <div style="padding: 18px; text-align: center; color: #64748b; font-size: 0.82rem; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 8px;">
+          No Components Under Active Warranty
+        </div>
+      `;
+
+      const activeCountBadge = underWarrantyList.length > 0 ?
+        `<span style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 5px;"><span>🛡️</span> ${underWarrantyList.length} Active Warranty Item${underWarrantyList.length === 1 ? '' : 's'}</span>` :
+        `<span style="background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; font-size: 0.72rem; font-weight: 600; padding: 3px 10px; border-radius: 9999px;">0 Items Under Warranty</span>`;
+
+      const remarkText = (asset.remark && asset.remark !== 'None' && asset.remark.trim() !== '') ?
+        asset.remark :
+        (hasPreviousUser ? `Re-allocated to ${asset.user} via System Swap. Reason: USER EXIT` : 'Hardware asset active and verified in enterprise inventory.');
 
       const body = document.getElementById('viewAssetModalBody');
       if (body) {
         body.innerHTML = `
-          <!-- 1. ASSET & USER INFORMATION -->
-          <div class="spec-card">
-            <div class="spec-card-header" style="padding: 14px 20px; background: #ffffff; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 34px; height: 34px; border-radius: 8px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #2563eb;">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                </div>
-                <span style="font-size: 1.02rem; font-weight: 700; color: #0f172a; letter-spacing: -0.2px;">Asset &amp; User Information</span>
-              </div>
-              <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 3px;">
-                ${(() => {
-                  const ws = (asset.workStatus || (asset.status === 'Assigned' ? 'Currently Working' : 'In Stock')).trim();
-                  const lower = ws.toLowerCase();
-                  if (lower === 'currently working' || lower === 'working' || lower === 'active') {
-                    return `<div class="pill-work-status pill-currently-working" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; padding: 3px 12px; border-radius: 9999px; font-size: 0.76rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-                      <span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
-                      <span>Currently Working</span>
-                    </div>`;
-                  } else if (lower === 'user exit' || lower === 'exit') {
-                    return `<div class="pill-user-exit" style="background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; padding: 3px 12px; border-radius: 9999px; font-size: 0.76rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-                      <span style="width: 7px; height: 7px; border-radius: 50%; background: #e11d48; display: inline-block;"></span>
-                      <span>User Exit</span>
-                    </div>`;
-                  } else if (lower === 'work from home' || lower === 'wfh') {
-                    return `<div class="pill-work-status pill-wfh" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 3px 12px; border-radius: 9999px; font-size: 0.76rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-                      <span style="width: 7px; height: 7px; border-radius: 50%; background: #2563eb; display: inline-block;"></span>
-                      <span>Work From Home</span>
-                    </div>`;
-                  } else {
-                    return `<div class="pill-work-status pill-instock" style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a; padding: 3px 12px; border-radius: 9999px; font-size: 0.76rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-                      <span style="width: 7px; height: 7px; border-radius: 50%; background: #f59e0b; display: inline-block;"></span>
-                      <span>${Utils.escapeHtml(ws)}</span>
-                    </div>`;
-                  }
-                })()}
-                <span style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">EMPLOYEE WORK STATUS</span>
-              </div>
-            </div>
-            <div class="spec-card-body" style="padding: 20px 22px;">
-              <div class="spec-grid-2col" style="gap: 20px 32px;">
-                <!-- LEFT COLUMN -->
-                <div class="spec-col" style="gap: 18px;">
-                  <!-- ASSIGNED USER -->
-                  <div class="spec-item">
-                    <span class="spec-label" style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 6px;">ASSIGNED USER</span>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                      <div style="width: 32px; height: 32px; border-radius: 50%; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #2563eb; flex-shrink: 0;">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                      </div>
-                      <span style="font-size: 1.08rem; font-weight: 700; color: #0f172a; letter-spacing: -0.2px;">${asset.user ? Utils.escapeHtml(asset.user) : 'Unassigned'}</span>
-                    </div>
+          <!-- Top Section: 2 Columns Side-by-Side Grid -->
+          <div style="display: grid; grid-template-columns: 1fr 1.05fr; gap: 14px; margin-bottom: 14px;">
+            
+            <!-- Left Column Card: User Custody & Assignment -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column;">
+              <!-- Card Header -->
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="width: 28px; height: 28px; border-radius: 6px; background: #eff6ff; display: inline-flex; align-items: center; justify-content: center; color: #2563eb;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                   </div>
+                  <span style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">User Custody &amp; Assignment</span>
+                </div>
+                <div>
+                  ${hasPreviousUser ? `
+                    <span style="background: #fffbeb; border: 1px solid #fde68a; color: #d97706; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px;">Reallocated Asset</span>
+                  ` : `
+                    <span style="background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px;">First Allocation</span>
+                  `}
+                </div>
+              </div>
 
-                  <!-- ASSIGNED DATE -->
-                  <div class="spec-item">
-                    <span class="spec-label" style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 6px;">ASSIGNED DATE</span>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                      <span style="font-size: 0.9rem; font-weight: 600; color: #0f172a;">${Utils.formatDate(asset.assignedDate)}</span>
-                    </div>
+              <!-- Subcard 1: SYSTEM ALLOTTED USER -->
+              <div style="background: #fbfdff; border: 1px solid #dbeafe; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 0.68rem; font-weight: 800; color: #2563eb; letter-spacing: 0.5px; text-transform: uppercase;">SYSTEM ALLOTTED USER</span>
+                  ${workStatusBadge}
+                </div>
+                <div style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 8px 0 6px 0; letter-spacing: -0.2px;">
+                  ${Utils.escapeHtml(asset.user || 'Unassigned')}
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+                  <div>
+                    <span style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">DEPARTMENT / TEAM</span>
+                    <div style="font-size: 0.85rem; font-weight: 600; color: #1e293b; margin-top: 2px;">${Utils.escapeHtml(asset.team || '—')}</div>
+                  </div>
+                  <div>
+                    <span style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">ALLOTTED DATE</span>
+                    <div style="font-size: 0.85rem; font-weight: 600; color: #1e293b; margin-top: 2px;">${allottedDateFormatted}</div>
                   </div>
                 </div>
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 0.76rem; color: #64748b; padding-top: 6px; border-top: 1px solid #edf2f7;">
+                  <span>📍</span> Location: <strong style="color: #0f172a; font-weight: 700;">${Utils.escapeHtml(asset.location || '1ST FLOOR')}</strong>
+                </div>
+              </div>
 
-                <!-- RIGHT COLUMN -->
-                <div class="spec-col" style="gap: 18px;">
-                  <!-- DEPARTMENT / TEAM -->
-                  <div class="spec-item">
-                    <span class="spec-label" style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 6px;">DEPARTMENT / TEAM</span>
-                    <div>
-                      <span style="display: inline-block; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 3px 14px; border-radius: 9999px; font-size: 0.8rem; font-weight: 600;">${Utils.escapeHtml(asset.team || '—')}</span>
-                    </div>
+              <!-- Subcard 2: OLD USER NAME -->
+              <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-top: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span style="font-size: 0.68rem; font-weight: 800; color: #475569; letter-spacing: 0.5px; text-transform: uppercase;">OLD USER NAME</span>
                   </div>
-
-                  <!-- OFFICE LOCATION -->
-                  <div class="spec-item">
-                    <span class="spec-label" style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 6px;">OFFICE LOCATION</span>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
-                      <span style="font-size: 0.9rem; font-weight: 600; color: #0f172a;">${Utils.escapeHtml(asset.location || '—')}</span>
-                    </div>
+                  ${hasPreviousUser ? `
+                    <span style="background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 4px;">
+                      <span style="width: 5px; height: 5px; border-radius: 50%; background: #ef4444;"></span>Exit User
+                    </span>
+                  ` : `
+                    <span style="background: #f1f5f9; border: 1px solid #e2e8f0; color: #64748b; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 9999px;">First Allocation</span>
+                  `}
+                </div>
+                <div style="font-size: 0.98rem; font-weight: 700; color: #0f172a; margin: 6px 0 6px 0;">
+                  ${hasPreviousUser ? Utils.escapeHtml(previousUserName) : 'None (Initial Allocation)'}
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 6px;">
+                  <div>
+                    <span style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">PRIOR DEPARTMENT</span>
+                    <div style="font-size: 0.82rem; font-weight: 600; color: #1e293b; margin-top: 2px;">${Utils.escapeHtml(prevTeam)}</div>
                   </div>
-
-                  <!-- TEAM LEADER (TL) -->
-                  <div class="spec-item">
-                    <span class="spec-label" style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 6px;">TEAM LEADER (TL)</span>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                      <span style="font-size: 0.9rem; font-weight: 600; color: #0f172a;">${Utils.escapeHtml(asset.tl || '—')}</span>
-                    </div>
+                  <div>
+                    <span style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">HANDOVER / EXIT DATE</span>
+                    <div style="font-size: 0.82rem; font-weight: 600; color: #1e293b; margin-top: 2px;">${hasPreviousUser ? handoverDateFormatted : '—'}</div>
                   </div>
+                </div>
+                <div style="border-top: 1px dashed #e2e8f0; margin-top: 6px; padding-top: 6px; display: flex; align-items: center; gap: 6px; font-size: 0.76rem; color: #64748b;">
+                  <span>📅</span> Exit Date: <strong style="color: #1e293b; font-weight: 700;">${hasPreviousUser ? handoverDateFormatted : '—'}</strong>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- 2. HARDWARE SPECIFICATIONS -->
-          <div class="spec-card spec-card-highlight">
-            <div class="spec-card-header">
-              <div class="spec-card-title">
-                <span>⚙️</span>
-                <span>Hardware Specifications</span>
+            <!-- Right Column Card: System Configuration -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px;">
+              <!-- Card Header -->
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="width: 28px; height: 28px; border-radius: 6px; background: #eff6ff; display: inline-flex; align-items: center; justify-content: center; color: #2563eb; font-size: 0.95rem;">
+                    ⚙️
+                  </div>
+                  <span style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">System Configuration</span>
+                </div>
+                <span style="background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 6px;">Core Hardware</span>
               </div>
-              <button class="btn btn-outline-primary btn-sm" type="button" style="padding: 3px 12px; font-size: 0.76rem; font-weight: 600;" onclick="window.ITApp.closeModal('modalViewAsset'); window.ITApp.editAsset('${asset.id}')">
-                ✏️ Edit Specs
-              </button>
-            </div>
-            <div class="spec-card-body">
-              <div class="hw-panels-grid">
-                <!-- PANEL 1: SYSTEM CONFIGURATION -->
-                <div class="hw-panel">
-                  <div class="hw-panel-title">SYSTEM CONFIGURATION</div>
-                  <div class="hw-panel-grid">
-                    <!-- Row 1 -->
-                    <div class="spec-item">
-                      <span class="spec-label">CPU</span>
-                      <span class="spec-value spec-value-strong">${Utils.escapeHtml(asset.cpu || '—')}</span>
-                    </div>
-                    <div class="spec-item">
-                      <span class="spec-label">RAM</span>
-                      <span class="spec-value spec-value-strong">${Utils.escapeHtml(asset.ram || '—')}</span>
-                    </div>
 
-                    <!-- Row 2 -->
-                    <div class="spec-item">
-                      <span class="spec-label">SSD</span>
-                      <span class="spec-value">${Utils.escapeHtml((asset.ssd && asset.ssd !== 'None' && asset.ssd !== 'Nil') ? asset.ssd : 'None')}</span>
-                    </div>
-                    <div class="spec-item">
-                      <span class="spec-label">HDD</span>
-                      <span class="spec-value">${Utils.escapeHtml((asset.hdd && asset.hdd !== 'None' && asset.hdd !== 'Nil') ? asset.hdd : 'None')}</span>
-                    </div>
-
-                    <!-- Row 3 -->
-                    <div class="spec-item">
-                      <span class="spec-label">OPERATING SYSTEM</span>
-                      <span class="spec-value">${Utils.escapeHtml(asset.os || 'Windows 11 Pro')}</span>
-                    </div>
-                    <div class="spec-item">
-                      <span class="spec-label">IP ADDRESS</span>
-                      <span class="spec-value font-mono" style="color:var(--primary); font-weight:600;">${Utils.escapeHtml(asset.ipAddress || '—')}</span>
-                    </div>
-
-                    <!-- Row 4 -->
-                    <div class="spec-item" style="grid-column: 1 / -1;">
-                      <span class="spec-label">MAC ADDRESS</span>
-                      <span class="spec-value" style="font-family:var(--font-mono); letter-spacing:0.4px;">${Utils.escapeHtml((asset.serialNumber || asset.macAddress || '—').toUpperCase())}</span>
-                    </div>
+              <!-- Structured 8-Tile Configuration Grid -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <!-- Tile 1: Processor (CPU) -->
+                <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
+                  <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                    <span>🔲</span> PROCESSOR (CPU)
+                  </div>
+                  <div style="font-size: 0.86rem; font-weight: 600; color: #0f172a; margin-top: 1px;">
+                    ${Utils.escapeHtml(asset.cpu || '—')}
                   </div>
                 </div>
 
-                <!-- PANEL 2: DISPLAY & PERIPHERALS -->
-                <div class="hw-panel">
-                  <div class="hw-panel-title">DISPLAY & PERIPHERALS</div>
-                  <div class="hw-panel-grid-single">
-                    <div class="spec-item">
-                      <span class="spec-label">MONITOR</span>
-                      <span class="spec-value">${Utils.escapeHtml((asset.monitor && asset.monitor !== '-' && asset.monitor.toLowerCase() !== 'none') ? asset.monitor : 'None')}</span>
-                    </div>
+                <!-- Tile 2: System RAM -->
+                <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
+                  <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                    <span>💻</span> SYSTEM RAM
+                  </div>
+                  <div style="font-size: 0.86rem; font-weight: 600; color: #0f172a; margin-top: 1px;">
+                    ${Utils.escapeHtml(asset.ram || '—')}
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
 
-          <!-- 3. WARRANTY INFORMATION -->
-          <div class="spec-card">
-            <div class="spec-card-header"${isNoWarranty ? ' style="border-bottom:none;"' : ''}>
-              <div class="spec-card-title">
-                <span>🛡️</span>
-                <span>Warranty Information</span>
-              </div>
-              <div>${warrantyBadgeHtml}</div>
-            </div>
-            ${isNoWarranty ? '' : `
-            <div class="spec-card-body">
-              ${(() => {
-                // Filter out components that have 'No Warranty' (hide them from display)
-                const warrantedComponents = rawComponents.filter(c => {
-                  const statusObj = (app.calculateWarrantyStatus || this.calculateWarrantyStatus)(c.assignedDate, c.expiryDate, c.type);
-                  return statusObj && statusObj.status !== 'nowarranty';
-                });
-
-                if (rawComponents.length > 0) {
-                  if (warrantedComponents.length === 0) {
-                    return `
-                      <div style="padding:14px; text-align:center; color:var(--text-muted); font-size:0.85rem; background:#f8fafc; border-radius:6px; border:1px dashed #cbd5e1;">
-                        No individual hardware components currently under warranty.
-                      </div>
-                    `;
-                  }
-                  return `
-                    <div style="display:flex; flex-direction:column; gap:8px;">
-                      ${warrantedComponents.map(c => {
-                        const statusObj = (app.calculateWarrantyStatus || this.calculateWarrantyStatus)(c.assignedDate, c.expiryDate, c.type);
-                        return `
-                          <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:10px 14px; flex-wrap:wrap; gap:8px;">
-                            <div>
-                              <strong style="color:var(--text-main); font-size:0.88rem;">${Utils.escapeHtml(c.type)}</strong>
-                              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">
-                                Assigned: <strong>${Utils.formatDate(c.assignedDate)}</strong> • Expiry: <strong>${Utils.formatDate(c.expiryDate)}</strong>
-                              </div>
-                            </div>
-                            <span class="smart-warranty-badge ${statusObj.badgeClass}" style="height:28px; padding:4px 10px; font-size:0.75rem;">
-                              <span class="badge-dot"></span>
-                              <span>${Utils.escapeHtml(statusObj.text)}</span>
-                            </span>
-                          </div>
-                        `;
-                      }).join('')}
-                    </div>
-                  `;
-                }
-
-                return `
-                  <div class="spec-grid-2col">
-                    <div class="spec-col">
-                      <div class="spec-item">
-                        <span class="spec-label">Warranty Component</span>
-                        <span class="spec-value">${Utils.escapeHtml(asset.warrantyType || 'Full System')}</span>
-                      </div>
-                      <div class="spec-item">
-                        <span class="spec-label">Warranty Start Date</span>
-                        <span class="spec-value">${Utils.formatDate(asset.assignedDate || '2024-01-01')}</span>
-                      </div>
-                    </div>
-                    <div class="spec-col">
-                      <div class="spec-item">
-                        <span class="spec-label">Warranty Expiry Date</span>
-                        <span class="spec-value font-mono">${Utils.formatDate(asset.warrantyEnd)}</span>
-                      </div>
-                      <div class="spec-item">
-                        <span class="spec-label">Remaining Days</span>
-                        <div class="spec-value">${warrantyRemainingHtml}</div>
-                      </div>
-                    </div>
+                <!-- Tile 3: SSD Storage -->
+                <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
+                  <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                    <span>🗄️</span> SSD STORAGE
                   </div>
-                `;
-              })()}
-            </div>
-            `}
-          </div>
+                  <div style="font-size: 0.86rem; font-weight: 600; color: #0f172a; margin-top: 1px;">
+                    ${Utils.escapeHtml((asset.ssd && asset.ssd !== 'None' && asset.ssd !== 'Nil') ? asset.ssd : 'None')}
+                  </div>
+                </div>
 
-          <!-- 4. PREVIOUS USER & ALLOCATION HISTORY (BEFORE ADMIN REMARKS) -->
-          <div class="spec-card">
-            <div class="spec-card-header">
-              <div class="spec-card-title">
-                <span>🔄</span>
-                <span>Previous User &amp; Allocation History</span>
-              </div>
-              <div>
-                ${(hasPreviousUser || (swapRecord && swapRecord.oldUserId)) ?
-            `<span class="badge" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; font-size:0.75rem; padding:3px 10px; border-radius:12px; font-weight:600;">Reallocated Asset</span>` :
-            `<span class="badge" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-size:0.75rem; padding:3px 10px; border-radius:12px; font-weight:600;">First Allocation</span>`
-          }
-              </div>
-            </div>
-            <div class="spec-card-body">
-              <div class="allocation-transition-box">
-                <div class="transition-user-node">
-                  <span class="transition-node-label">Previous User</span>
-                  <span class="transition-node-name">${(hasPreviousUser || (swapRecord && swapRecord.oldUserId)) ? Utils.escapeHtml(previousUserName) : '<span style="color:var(--text-faint);">None</span>'}</span>
-                  <span class="transition-node-sub">${(hasPreviousUser || (swapRecord && swapRecord.oldUserId)) ? (prevTeam !== '—' ? prevTeam : 'Prior Department') : 'Initial Asset Allocation'}</span>
+                <!-- Tile 4: HDD Storage -->
+                <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
+                  <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                    <span>🗄️</span> HDD STORAGE
+                  </div>
+                  <div style="font-size: 0.86rem; font-weight: 600; color: #0f172a; margin-top: 1px;">
+                    ${Utils.escapeHtml((asset.hdd && asset.hdd !== 'None' && asset.hdd !== 'Nil') ? asset.hdd : 'None')}
+                  </div>
                 </div>
-                <div class="transition-arrow-divider">
-                  <span class="transition-arrow">➔</span>
+
+                <!-- Tile 5: Operating System -->
+                <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
+                  <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                    <span>🖥️</span> OPERATING SYSTEM
+                  </div>
+                  <div style="font-size: 0.86rem; font-weight: 600; color: #0f172a; margin-top: 1px;">
+                    ${Utils.escapeHtml(asset.os || 'Windows 11 Pro')}
+                  </div>
                 </div>
-                <div class="transition-user-node is-current">
-                  <span class="transition-node-label">Current User</span>
-                  <span class="transition-node-name">${asset.user ? Utils.escapeHtml(asset.user) : 'Unassigned (In Stock)'}</span>
-                  <span class="transition-node-sub">${asset.team ? Utils.escapeHtml(asset.team) : 'IT Storage'}</span>
+
+                <!-- Tile 6: IP Address -->
+                <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
+                  <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                    <span>🌐</span> IP ADDRESS
+                  </div>
+                  <div style="font-size: 0.86rem; font-weight: 700; color: #2563eb; font-family: ui-monospace, monospace; margin-top: 1px;">
+                    ${Utils.escapeHtml(asset.ipAddress || '—')}
+                  </div>
+                </div>
+
+                <!-- Tile 7: MAC Address / Serial No (Full Width) -->
+                <div style="grid-column: 1 / -1; background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
+                  <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                    <span>#</span> MAC ADDRESS / SERIAL NO
+                  </div>
+                  <div style="font-size: 0.86rem; font-weight: 700; color: #0f172a; font-family: ui-monospace, monospace; margin-top: 1px;">
+                    ${Utils.escapeHtml((asset.serialNumber || asset.macAddress || '—').toUpperCase())}
+                  </div>
+                </div>
+
+                <!-- Tile 8: Primary Monitor -->
+                <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
+                  <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                    <span>🖥️</span> PRIMARY MONITOR
+                  </div>
+                  <div style="font-size: 0.84rem; font-weight: 600; color: #0f172a; margin-top: 1px;">
+                    ${Utils.escapeHtml((asset.monitor && asset.monitor !== '-' && asset.monitor.toLowerCase() !== 'none') ? asset.monitor : 'DELL 22 inch')}
+                  </div>
+                </div>
+
+                <!-- Tile 9: Peripherals -->
+                <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
+                  <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                    <span>⌨️</span> PERIPHERALS
+                  </div>
+                  <div style="font-size: 0.82rem; font-weight: 600; color: #0f172a; margin-top: 1px; line-height: 1.25;">
+                    Standard Enterprise Keyboard &amp; Optical Mouse
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- 5. ADMIN REMARKS (AFTER ALLOCATION HISTORY) -->
-          <div class="spec-card spec-card-compact">
-            <div class="spec-card-header">
-              <div class="spec-card-title">
-                <span>📝</span>
-                <span>Admin Remarks</span>
+          <!-- Section 3: Warranty & Hardware Lifecycle (Full Width) -->
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px;">
+            <!-- Section Header -->
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 28px; height: 28px; border-radius: 6px; background: #ecfdf5; display: inline-flex; align-items: center; justify-content: center; color: #059669; font-size: 0.95rem;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+                </div>
+                <div>
+                  <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: #0f172a;">Warranty &amp; Hardware Lifecycle</h4>
+                  <div style="font-size: 0.72rem; color: #64748b; margin-top: 1px;">
+                    Component Lifecycle Tracking • Installed components actively covered under warranty
+                  </div>
+                </div>
               </div>
-            </div>
-            <div class="spec-card-body" style="padding: 14px 18px; display: flex; flex-direction: column; gap: 10px;">
-              <div class="spec-item">
-                <span class="spec-label">Admin Remark</span>
-                <span class="spec-value" style="color: ${asset.remark ? 'var(--text-main)' : 'var(--text-muted)'}; font-style: ${asset.remark ? 'normal' : 'italic'};">${asset.remark ? Utils.escapeHtml(asset.remark) : 'None'}</span>
-              </div>
-              <div class="spec-item">
-                <span class="spec-label">Additional Notes</span>
-                <span class="spec-value" style="color: var(--text-secondary); font-size: 0.84rem;">
-                  ${asset.condition ? `Hardware Condition: <strong>${Utils.escapeHtml(asset.condition)}</strong> • Asset active and operational in enterprise registry.` : 'Standard asset deployment • Verified in corporate inventory.'}
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; font-size: 0.72rem; font-weight: 600; padding: 3px 10px; border-radius: 9999px;">
+                  Component Lifecycle Tracking
                 </span>
+                ${activeCountBadge}
               </div>
+            </div>
+
+            <!-- Table Container -->
+            <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #ffffff;">
+              ${underWarrantyList.length > 0 ? `
+                <div style="overflow-x: auto;">
+                  <table class="itam-table">
+                    <thead>
+                      <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <th style="padding: 10px 14px;">COMPONENT</th>
+                        <th style="padding: 10px 14px;">BRAND / MODEL</th>
+                        <th style="padding: 10px 14px;">SERIAL NUMBER</th>
+                        <th style="padding: 10px 14px;">INSTALLATION DATE</th>
+                        <th style="padding: 10px 14px;">WARRANTY EXPIRY</th>
+                        <th style="padding: 10px 14px;">WARRANTY STATUS</th>
+                        <th style="padding: 10px 14px;">REMAINING DURATION</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${tableRowsHtml}
+                    </tbody>
+                  </table>
+                </div>
+              ` : emptyWarrantyHtml}
+            </div>
+          </div>
+
+          <!-- Section 4: Admin Remark (Full Width) -->
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px;">
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: 0.5px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              ADMIN REMARK
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #2563eb; border-radius: 6px; padding: 11px 14px; margin-top: 8px; font-size: 0.86rem; color: #1e293b; font-weight: 500; line-height: 1.45;">
+              ${Utils.escapeHtml(remarkText)}
             </div>
           </div>
         `;

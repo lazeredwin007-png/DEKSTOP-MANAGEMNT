@@ -6,52 +6,21 @@
   <title>Hardware Asset Specification - PIX_DSK_01</title>
   <link rel="stylesheet" href="styles.css">
   <style>
-    /* ==========================================================================
-       ENTERPRISE IT ASSET MANAGEMENT - HARDWARE ASSET SPECIFICATION
-       Clean, Compact, Modern CSS Design System
-       ========================================================================== */
     :root {
       --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", Helvetica, Arial, sans-serif;
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       --bg-page: #f1f5f9;
-      --bg-modal: #ffffff;
       --bg-card: #ffffff;
-      --bg-card-subtle: #f8fafc;
-      --bg-header: #ffffff;
-      
       --border-color: #e2e8f0;
-      --border-subtle: #edf2f7;
-      --border-focus: #3b82f6;
-      
       --text-main: #0f172a;
       --text-secondary: #334155;
       --text-muted: #64748b;
-      --text-faint: #94a3b8;
-      
       --primary: #2563eb;
-      --primary-hover: #1d4ed8;
       --primary-light: #eff6ff;
       --primary-border: #bfdbfe;
-      
-      --success: #16a34a;
-      --success-light: #dcfce7;
-      --success-border: #bbf7d0;
-      
-      --warning: #d97706;
-      --warning-light: #fef3c7;
-      --warning-border: #fde68a;
-      
-      --danger: #dc2626;
-      --danger-light: #fee2e2;
-      --danger-border: #fecaca;
-
-      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-      --radius: 8px;
-      --radius-sm: 6px;
-      --radius-pill: 9999px;
+      --success: #059669;
+      --success-light: #ecfdf5;
+      --success-border: #a7f3d0;
     }
 
     * {
@@ -73,13 +42,10 @@
       min-height: 100vh;
     }
 
-    /* Modal / Page Container */
     .asset-modal {
       width: 100%;
-      max-width: 860px;
-      background: rgba(255, 255, 255, 0.96);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      max-width: 1040px;
+      background: #ffffff;
       border-radius: 16px;
       border: 1px solid rgba(199, 210, 254, 0.8);
       box-shadow: 0 25px 60px -15px rgba(30, 58, 138, 0.16), 0 10px 25px -5px rgba(124, 58, 237, 0.07);
@@ -94,13 +60,10 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* ==========================================================================
-       1. PAGE HEADER
-       ========================================================================== */
     .modal-header {
       padding: 14px 22px;
-      background: linear-gradient(135deg, #ffffff 0%, #f8faff 60%, #f5f3ff 100%);
-      border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -113,1308 +76,709 @@
     .modal-header-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       flex-wrap: wrap;
     }
 
-    .modal-icon {
-      font-size: 1.25rem;
-      line-height: 1;
+    .modal-icon-box {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #eff6ff;
+      border: 1px solid #dbeafe;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      color: #2563eb;
+      flex-shrink: 0;
     }
 
     .modal-title {
-      font-size: 1.05rem;
+      font-size: 1.15rem;
       font-weight: 700;
       color: var(--text-main);
-      letter-spacing: -0.2px;
-    }
-
-    /* Badges */
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 0.74rem;
-      font-weight: 600;
-      padding: 3px 9px;
-      border-radius: var(--radius-sm);
-      line-height: 1.2;
     }
 
     .badge-id {
-      font-family: var(--font-mono);
       background: #eff6ff;
-      color: #1d4ed8;
       border: 1px solid #bfdbfe;
-      letter-spacing: 0.3px;
+      color: #2563eb;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 6px;
     }
 
     .badge-type {
       background: #f1f5f9;
+      border: 1px solid #e2e8f0;
       color: #334155;
-      border: 1px solid #cbd5e1;
+      font-size: 0.76rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
     }
 
-    .badge-status-assigned {
+    .badge-status {
       background: #ecfdf5;
-      color: #047857;
       border: 1px solid #a7f3d0;
-    }
-
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: currentColor;
+      color: #059669;
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 3px 12px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .modal-close-btn {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: #64748b;
+      font-size: 1.25rem;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.1rem;
       transition: all 0.15s ease;
     }
 
     .modal-close-btn:hover {
       background: #f1f5f9;
-      color: var(--text-main);
+      color: #0f172a;
     }
 
-    /* ==========================================================================
-       MODAL BODY & CARD CONTAINER
-       ========================================================================== */
     .modal-body {
-      padding: 18px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      background: #ffffff;
-    }
-
-    /* Specification Card Base */
-    .spec-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
-      transition: border-color 0.15s ease;
-    }
-
-    .spec-card:hover {
-      border-color: #cbd5e1;
-    }
-
-    .spec-card-highlight {
-      border-left: 3.5px solid var(--primary);
-    }
-
-    .spec-card-header {
-      padding: 10px 16px;
-      background: var(--bg-card-subtle);
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .spec-card-title {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
-
-    .spec-card-body {
-      padding: 14px 16px;
-    }
-
-    /* Grid Layouts */
-    .spec-grid-2col {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px 24px;
-    }
-
-    .spec-col {
-      display: flex;
-      flex-direction: column;
-      gap: 11px;
-    }
-
-    .spec-item {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .spec-label {
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-      color: var(--text-muted);
-    }
-
-    .spec-value {
-      font-size: 0.86rem;
-      font-weight: 500;
-      color: var(--text-main);
-      word-break: break-word;
-    }
-
-    .spec-value-strong {
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
-    .spec-value-mono {
-      font-family: var(--font-mono);
-      font-size: 0.83rem;
-      letter-spacing: 0.3px;
-    }
-
-    .spec-value-ip {
-      font-family: var(--font-mono);
-      font-size: 0.86rem;
-      font-weight: 600;
-      color: var(--primary);
-    }
-
-    /* Pills & Tags inside cards */
-    .badge-dept {
-      background: #eff6ff;
-      color: #1e40af;
-      border: 1px solid #dbeafe;
-      padding: 1px 7px;
-      border-radius: 4px;
-      font-size: 0.78rem;
-      font-weight: 600;
-    }
-
-    .pill-user-exit {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #fef2f2;
-      color: #b91c1c;
-      border: 1px solid #fecaca;
-      padding: 2px 8px;
-      border-radius: var(--radius-pill);
-      font-size: 0.76rem;
-      font-weight: 600;
-      width: fit-content;
-    }
-
-    .pill-user-exit .exit-dot {
-      width: 7px;
-      height: 7px;
-      background: #ef4444;
-      border-radius: 50%;
-      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
-    }
-
-    /* Sub-section headers in Hardware card */
-    .sub-section-divider {
-      grid-column: 1 / -1;
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      color: var(--primary);
-      background: #f0f7ff;
-      padding: 5px 10px;
-      border-radius: 4px;
-      border-left: 3px solid var(--primary);
-      margin-top: 4px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .sub-section-divider:first-child {
-      margin-top: 0;
-    }
-
-    /* ==========================================================================
-       BUTTONS
-       ========================================================================== */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      font-family: inherit;
-      font-size: 0.82rem;
-      font-weight: 600;
-      padding: 6px 14px;
-      border-radius: var(--radius-sm);
-      border: 1px solid transparent;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      line-height: 1.25;
-      user-select: none;
-    }
-
-    .btn-sm {
-      padding: 3px 10px;
-      font-size: 0.74rem;
-      font-weight: 600;
-      border-radius: 4px;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: #ffffff;
-      border-color: var(--primary);
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-hover);
-      border-color: var(--primary-hover);
-      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
-    }
-
-    .btn-outline-primary {
-      background: #ffffff;
-      color: var(--primary);
-      border-color: var(--primary-border);
-    }
-
-    .btn-outline-primary:hover {
-      background: var(--primary-light);
-      border-color: var(--primary);
-    }
-
-    .btn-secondary {
-      background: #ffffff;
-      color: var(--text-secondary);
-      border-color: var(--border-color);
-    }
-
-    .btn-secondary:hover {
+      padding: 18px 22px;
       background: #f8fafc;
-      border-color: #cbd5e1;
-      color: var(--text-main);
+      overflow-y: auto;
     }
 
-    /* ==========================================================================
-       4. WARRANTY & HARDWARE LIFECYCLE (COMPONENT LIFECYCLE TRACKING)
-       ========================================================================== */
-    .warranty-compact-header {
-      padding: 12px 16px;
-      background: var(--bg-card-subtle);
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .badge-comp-active {
-      background: #ecfdf5;
-      color: #047857;
-      border: 1px solid #a7f3d0;
-      font-weight: 700;
-      padding: 2.5px 8px;
-      border-radius: var(--radius-pill);
-      font-size: 0.72rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .badge-comp-warning {
-      background: #fffbeb;
-      color: #b45309;
-      border: 1px solid #fde68a;
-      font-weight: 700;
-      padding: 2.5px 8px;
-      border-radius: var(--radius-pill);
-      font-size: 0.72rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .badge-comp-expired {
-      background: #fef2f2;
-      color: #b91c1c;
-      border: 1px solid #fecaca;
-      font-weight: 700;
-      padding: 2.5px 8px;
-      border-radius: var(--radius-pill);
-      font-size: 0.72rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .badge-comp-none {
-      background: #f8fafc;
-      color: #64748b;
-      border: 1px solid #cbd5e1;
-      font-weight: 600;
-      padding: 2.5px 8px;
-      border-radius: var(--radius-pill);
-      font-size: 0.72rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .warranty-components-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 12px;
-      padding: 14px 16px;
-      background: #ffffff;
-    }
-
-    .warranty-component-item {
-      background: #f8fafc;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 12px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      transition: all 0.15s ease;
-    }
-
-    .warranty-component-item:hover {
-      border-color: #cbd5e1;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
-    }
-
-    .warranty-comp-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .warranty-comp-title {
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .warranty-comp-meta {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    .warranty-comp-meta span strong {
-      color: var(--text-secondary);
-    }
-
-    .lifecycle-subheading {
-      padding: 10px 16px;
-      background: #f1f5f9;
-      border-top: 1px solid var(--border-color);
-      border-bottom: 1px solid var(--border-color);
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: #334155;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .lifecycle-table-wrap {
-      padding: 0;
-      overflow-x: auto;
-    }
-
-    .lifecycle-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.78rem;
-      text-align: left;
-    }
-
-    .lifecycle-table th {
-      background: #f8fafc;
-      padding: 8px 12px;
-      font-weight: 600;
-      color: var(--text-muted);
-      border-bottom: 1px solid var(--border-color);
-      white-space: nowrap;
-    }
-
-    .lifecycle-table td {
-      padding: 10px 12px;
-      border-bottom: 1px solid #edf2f7;
-      color: var(--text-secondary);
-      vertical-align: middle;
-    }
-
-    .lifecycle-table tr:hover td {
-      background: #fafafa;
-    }
-
-    .lifecycle-table tr:last-child td {
-      border-bottom: none;
-    }
-
-    /* ==========================================================================
-       6. PREVIOUS USER & ALLOCATION FLOW
-       ========================================================================== */
-    .badge-allocation {
-      background: #e0f2fe;
-      color: #0369a1;
-      border: 1px solid #bae6fd;
-      font-size: 0.73rem;
-      padding: 2.5px 8px;
-      border-radius: var(--radius-pill);
-      font-weight: 600;
-    }
-
-    .allocation-flow-container {
-      background: #f8fafc;
-      border: 1px dashed #cbd5e1;
-      border-radius: var(--radius);
-      padding: 12px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      transition: background 0.15s ease;
-    }
-
-    .allocation-flow-container:hover {
-      background: #f1f5f9;
-    }
-
-    .flow-node {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      flex: 1;
-    }
-
-    .flow-node.current {
-      text-align: right;
-    }
-
-    .flow-label {
-      font-size: 0.68rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-muted);
-    }
-
-    .flow-name {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: var(--text-main);
-    }
-
-    .flow-node.current .flow-name {
-      color: #1d4ed8;
-    }
-
-    .flow-sub {
-      font-size: 0.74rem;
-      color: var(--text-muted);
-    }
-
-    .flow-arrow-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--primary);
-      font-size: 1.15rem;
-      font-weight: bold;
-      user-select: none;
-      padding: 0 4px;
-    }
-
-    /* ==========================================================================
-       7. ADMIN REMARKS
-       ========================================================================== */
-    .remarks-content {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    /* ==========================================================================
-       10. FOOTER BUTTONS
-       ========================================================================== */
     .modal-footer {
-      padding: 12px 20px;
-      background: var(--bg-card-subtle);
-      border-top: 1px solid var(--border-color);
+      padding: 12px 22px;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
       display: flex;
       align-items: center;
       justify-content: flex-end;
       gap: 10px;
     }
 
-    /* Toast Notification */
-    .toast-notification {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: #0f172a;
+    .btn-secondary {
+      padding: 7px 18px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #334155;
+      cursor: pointer;
+    }
+
+    .btn-secondary:hover {
+      background: #f8fafc;
+    }
+
+    .btn-primary {
+      padding: 7px 20px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      border-radius: 8px;
+      background: #2563eb;
       color: #ffffff;
-      padding: 10px 18px;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-md);
-      font-size: 0.84rem;
-      font-weight: 500;
-      display: flex;
+      border: 1px solid #1d4ed8;
+      display: inline-flex;
       align-items: center;
-      gap: 8px;
-      opacity: 0;
-      transform: translateY(10px);
-      transition: all 0.25s ease;
-      z-index: 9999;
-      pointer-events: none;
+      gap: 6px;
+      cursor: pointer;
     }
 
-    .toast-notification.active {
-      opacity: 1;
-      transform: translateY(0);
+    .btn-primary:hover {
+      background: #1d4ed8;
     }
 
-    /* ==========================================================================
-       9. RESPONSIVE DESIGN
-       ========================================================================== */
-    @media (max-width: 640px) {
-      body {
-        padding: 8px;
-      }
+    .itam-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      text-align: left;
+    }
 
-      .modal-header {
-        padding: 12px 14px;
-      }
+    .itam-table thead tr {
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      color: #64748b;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
 
-      .modal-body {
-        padding: 12px 14px;
-        gap: 12px;
-      }
+    .itam-table th,
+    .itam-table td {
+      padding: 10px 14px;
+      vertical-align: middle;
+    }
 
-      .spec-grid-2col {
-        grid-template-columns: 1fr;
-        gap: 10px;
-      }
+    .itam-table tbody tr {
+      border-bottom: 1px solid #f1f5f9;
+      transition: background 0.15s ease;
+    }
 
-      .allocation-flow-container {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-      }
-
-      .flow-node.current {
-        text-align: left;
-      }
-
-      .flow-arrow-wrap {
-        transform: rotate(90deg);
-        align-self: center;
-      }
-
-      .modal-footer {
-        padding: 10px 14px;
-      }
+    .itam-table tbody tr:hover {
+      background: #f8fafc;
     }
   </style>
 </head>
 <body>
 
-  <!-- ==========================================================================
-       MAIN ASSET SPECIFICATION MODAL CONTAINER
-       ========================================================================== -->
   <main class="asset-modal" role="dialog" aria-labelledby="modalTitle">
     
     <!-- 1. PAGE HEADER -->
     <header class="modal-header">
       <div class="modal-header-left">
-        <span class="modal-icon" aria-hidden="true">🖥️</span>
+        <div class="modal-icon-box" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
         <h1 class="modal-title" id="modalTitle">Hardware Asset Specification</h1>
-        <span class="badge badge-id" id="badgeAssetId">PIX_DSK_01</span>
-        <span class="badge badge-type" id="badgeAssetType">Desktop</span>
-        <span class="badge badge-status-assigned" id="badgeAssetStatus">
-          <span class="status-dot"></span>
+        <span class="badge-id" id="badgeAssetId">PIX_DSK_01</span>
+        <span class="badge-type" id="badgeAssetType">🖥️ Desktop</span>
+        <span class="badge-status" id="badgeAssetStatus">
+          <span style="width:6px; height:6px; border-radius:50%; background:#10b981;"></span>
           Assigned
         </span>
       </div>
       <button class="modal-close-btn" id="btnCloseTop" aria-label="Close specification modal" title="Close">✕</button>
     </header>
 
-    <!-- MAIN BODY: ORDERED EXACTLY AS SPECIFIED -->
-    <div class="modal-body">
+    <!-- 2. MAIN BODY -->
+    <div class="modal-body" id="specModalBody">
       
-      <!-- ======================================================================
-           CARD 1: ASSET & USER INFORMATION
-           (Operating System, IP Address & MAC Address completely removed)
-           ====================================================================== -->
-      <section class="spec-card" aria-labelledby="titleUserInfo">
-        <div class="spec-card-header" style="padding: 14px 20px; background: #ffffff; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="width: 34px; height: 34px; border-radius: 8px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #2563eb;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            </div>
-            <span style="font-size: 1.02rem; font-weight: 700; color: #0f172a; letter-spacing: -0.2px;">Asset &amp; User Information</span>
-          </div>
-          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 3px;">
-            <div class="pill-user-exit" style="background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; padding: 3px 12px; border-radius: 9999px; font-size: 0.76rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-              <span style="width: 7px; height: 7px; border-radius: 50%; background: #e11d48; display: inline-block;"></span>
-              <span id="dispWorkStatus">User Exit</span>
-            </div>
-            <span style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">EMPLOYEE WORK STATUS</span>
-          </div>
-        </div>
-        <div class="spec-card-body" style="padding: 20px 22px;">
-          <div class="spec-grid-2col" style="gap: 20px 32px;">
-            <!-- LEFT COLUMN -->
-            <div class="spec-col" style="gap: 18px;">
-              <!-- ASSIGNED USER -->
-              <div class="spec-item">
-                <span class="spec-label" style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 6px;">ASSIGNED USER</span>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <div style="width: 32px; height: 32px; border-radius: 50%; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #2563eb; flex-shrink: 0;">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  </div>
-                  <span style="font-size: 1.08rem; font-weight: 700; color: #0f172a; letter-spacing: -0.2px;" id="dispAssignedUser">Gomez Edwin Lazer Y</span>
-                </div>
+      <!-- Top Section: 2 Columns Side-by-Side Grid -->
+      <div style="display: grid; grid-template-columns: 1fr 1.05fr; gap: 14px; margin-bottom: 14px;">
+        
+        <!-- Left Column Card: User Custody & Assignment -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column;">
+          <!-- Card Header -->
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 28px; height: 28px; border-radius: 6px; background: #eff6ff; display: inline-flex; align-items: center; justify-content: center; color: #2563eb;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               </div>
-
-              <!-- ASSIGNED DATE -->
-              <div class="spec-item">
-                <span class="spec-label" style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 6px;">ASSIGNED DATE</span>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                  <span style="font-size: 0.9rem; font-weight: 600; color: #0f172a;" id="dispAssignedDate">Jan 15, 2025</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- RIGHT COLUMN -->
-            <div class="spec-col" style="gap: 18px;">
-              <!-- DEPARTMENT / TEAM -->
-              <div class="spec-item">
-                <span class="spec-label" style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 6px;">DEPARTMENT / TEAM</span>
-                <div>
-                  <span style="display: inline-block; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 3px 14px; border-radius: 9999px; font-size: 0.8rem; font-weight: 600;" id="dispTeam">Admin</span>
-                </div>
-              </div>
-
-              <!-- OFFICE LOCATION -->
-              <div class="spec-item">
-                <span class="spec-label" style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 6px;">OFFICE LOCATION</span>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
-                  <span style="font-size: 0.9rem; font-weight: 600; color: #0f172a;" id="dispLocation">1ST FLOOR</span>
-                </div>
-              </div>
-
-              <!-- TEAM LEADER (TL) -->
-              <div class="spec-item">
-                <span class="spec-label" style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 6px;">TEAM LEADER (TL)</span>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                  <span style="font-size: 0.9rem; font-weight: 600; color: #0f172a;" id="dispTl">Management</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ======================================================================
-           CARD 2: HARDWARE SPECIFICATIONS
-           (2-Column Layout, visually separated into A & B, with Edit Specs button)
-           ====================================================================== -->
-      <!-- ======================================================================
-           CARD 2: HARDWARE SPECIFICATIONS (VIEW-ONLY)
-           ====================================================================== -->
-      <section class="spec-card spec-card-highlight" aria-labelledby="titleHardwareSpecs">
-        <div class="spec-card-header">
-          <div class="spec-card-title" id="titleHardwareSpecs">
-            <span>⚙️</span>
-            <span>Hardware Specifications</span>
-          </div>
-          <span class="badge" style="background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; font-size:0.7rem; font-weight:600; padding:2px 8px; border-radius:4px;">Core Spec Grid</span>
-        </div>
-        <div class="spec-card-body">
-          <div class="hw-panels-grid">
-            <!-- PANEL 1: SYSTEM CONFIGURATION -->
-            <div class="hw-panel">
-              <div class="hw-panel-title">SYSTEM CONFIGURATION</div>
-              <div class="hw-panel-grid">
-                <!-- Row 1 -->
-                <div class="spec-item">
-                  <span class="spec-label">CPU</span>
-                  <span class="spec-value spec-value-strong" id="dispCpu">i3 2nd Gen</span>
-                </div>
-                <div class="spec-item">
-                  <span class="spec-label">RAM</span>
-                  <span class="spec-value spec-value-strong" id="dispRam">8 DDR3</span>
-                </div>
-
-                <!-- Row 2 -->
-                <div class="spec-item">
-                  <span class="spec-label">SSD</span>
-                  <span class="spec-value" id="dispSsd">240GB SSD</span>
-                </div>
-                <div class="spec-item">
-                  <span class="spec-label">HDD</span>
-                  <span class="spec-value" id="dispHdd">None</span>
-                </div>
-
-                <!-- Row 3 -->
-                <div class="spec-item">
-                  <span class="spec-label">OPERATING SYSTEM</span>
-                  <span class="spec-value" id="dispOs">Windows 11 Pro</span>
-                </div>
-                <div class="spec-item">
-                  <span class="spec-label">IP ADDRESS</span>
-                  <span class="spec-value font-mono" style="color:var(--primary); font-weight:600;" id="dispIp">192.168.6.99</span>
-                </div>
-
-                <!-- Row 4 -->
-                <div class="spec-item" style="grid-column: 1 / -1;">
-                  <span class="spec-label">MAC ADDRESS</span>
-                  <span class="spec-value" style="font-family:var(--font-mono); letter-spacing:0.4px;" id="dispMac">00:E0:4C:4D:7F:01</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- PANEL 2: DISPLAY -->
-            <div class="hw-panel">
-              <div class="hw-panel-title">DISPLAY &amp; MONITOR</div>
-              <div class="hw-panel-grid-single">
-                <div class="spec-item">
-                  <span class="spec-label">PRIMARY MONITOR</span>
-                  <span class="spec-value" id="dispMonitor">DELL 22 inch</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ======================================================================
-           CARD 3: COMPONENT LIFECYCLE TRACKING (VIEW-ONLY)
-           ====================================================================== -->
-      <section class="spec-card" aria-labelledby="titleLifecycle">
-        <div class="spec-card-header" style="padding: 12px 18px; background: #ffffff; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="width: 28px; height: 28px; border-radius: 6px; background: #eff6ff; display: flex; align-items: center; justify-content: center; color: #2563eb; font-size: 0.95rem;">
-              🔧
+              <span style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">User Custody &amp; Assignment</span>
             </div>
             <div>
-              <h2 class="spec-card-title" id="titleLifecycle" style="margin: 0; font-size: 0.95rem; font-weight: 700; color: #0f172a;">
-                Warranty &amp; Hardware Lifecycle
-              </h2>
-              <p style="margin: 2px 0 0 0; font-size: 0.74rem; color: #64748b;">
-                Component Lifecycle Tracking • Installed components actively covered under warranty
-              </p>
+              <span id="badgeReallocatedPill" style="background: #fffbeb; border: 1px solid #fde68a; color: #d97706; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px;">
+                Reallocated Asset
+              </span>
             </div>
           </div>
-          <span class="badge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:0.72rem; font-weight:700; padding:3px 10px; border-radius:9999px;" id="dispWarrantySummaryBadge">
-            Components Tracked
-          </span>
+
+          <!-- Subcard 1: SYSTEM ALLOTTED USER -->
+          <div style="background: #fbfdff; border: 1px solid #dbeafe; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.68rem; font-weight: 800; color: #2563eb; letter-spacing: 0.5px; text-transform: uppercase;">SYSTEM ALLOTTED USER</span>
+              <span id="dispWorkStatusBadge" style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 2px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
+                Currently Working
+              </span>
+            </div>
+            <div style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 8px 0 6px 0; letter-spacing: -0.2px;" id="dispCurrentUserName">
+              YOWAAN V
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+              <div>
+                <span style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">DEPARTMENT / TEAM</span>
+                <div style="font-size: 0.85rem; font-weight: 600; color: #1e293b; margin-top: 2px;" id="dispCurrentTeam">Admin</div>
+              </div>
+              <div>
+                <span style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">ALLOTTED DATE</span>
+                <div style="font-size: 0.85rem; font-weight: 600; color: #1e293b; margin-top: 2px;" id="dispCurrentAllottedDate">Oct 12, 2026</div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.76rem; color: #64748b; padding-top: 6px; border-top: 1px solid #edf2f7;">
+              <span>📍</span> Location: <strong style="color: #0f172a; font-weight: 700;" id="dispLocation">1ST FLOOR</strong>
+            </div>
+          </div>
+
+          <!-- Subcard 2: OLD USER NAME -->
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-top: auto;" id="oldUserContainer">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span style="font-size: 0.68rem; font-weight: 800; color: #475569; letter-spacing: 0.5px; text-transform: uppercase;">OLD USER NAME</span>
+              </div>
+              <span id="dispOldUserStatusBadge" style="background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 4px;">
+                <span style="width: 5px; height: 5px; border-radius: 50%; background: #ef4444;"></span>Exit User
+              </span>
+            </div>
+            <div style="font-size: 0.98rem; font-weight: 700; color: #0f172a; margin: 6px 0 6px 0;" id="dispOldUserName">
+              Gomez Edwin Lazer Y
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 6px;">
+              <div>
+                <span style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">PRIOR DEPARTMENT</span>
+                <div style="font-size: 0.82rem; font-weight: 600; color: #1e293b; margin-top: 2px;" id="dispPriorDept">System Admin</div>
+              </div>
+              <div>
+                <span style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">HANDOVER / EXIT DATE</span>
+                <div style="font-size: 0.82rem; font-weight: 600; color: #1e293b; margin-top: 2px;" id="dispHandoffDate">Oct 9, 2026</div>
+              </div>
+            </div>
+            <div style="border-top: 1px dashed #e2e8f0; margin-top: 6px; padding-top: 6px; display: flex; align-items: center; gap: 6px; font-size: 0.76rem; color: #64748b;">
+              <span>📅</span> Exit Date: <strong style="color: #1e293b; font-weight: 700;" id="dispOldExitDate">Oct 9, 2026</strong>
+            </div>
+          </div>
         </div>
 
-        <div class="spec-card-body" style="padding: 14px 18px;">
-          <div style="overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
-            <table class="lifecycle-table" style="width:100%; border-collapse:collapse; font-size:0.82rem; text-align:left;">
+        <!-- Right Column Card: System Configuration -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px;">
+          <!-- Card Header -->
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 28px; height: 28px; border-radius: 6px; background: #eff6ff; display: inline-flex; align-items: center; justify-content: center; color: #2563eb; font-size: 0.95rem;">
+                ⚙️
+              </div>
+              <span style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">System Configuration</span>
+            </div>
+            <span style="background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 6px;">Core Hardware</span>
+          </div>
+
+          <!-- Structured 8-Tile Configuration Grid -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <!-- Tile 1: Processor (CPU) -->
+            <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
+              <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                <span>🔲</span> PROCESSOR (CPU)
+              </div>
+              <div style="font-size: 0.86rem; font-weight: 600; color: #0f172a; margin-top: 1px;" id="dispCpu">
+                i3 2nd Gen
+              </div>
+            </div>
+
+            <!-- Tile 2: System RAM -->
+            <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
+              <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                <span>💻</span> SYSTEM RAM
+              </div>
+              <div style="font-size: 0.86rem; font-weight: 600; color: #0f172a; margin-top: 1px;" id="dispRam">
+                8 DDR3
+              </div>
+            </div>
+
+            <!-- Tile 3: SSD Storage -->
+            <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
+              <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                <span>🗄️</span> SSD STORAGE
+              </div>
+              <div style="font-size: 0.86rem; font-weight: 600; color: #0f172a; margin-top: 1px;" id="dispSsd">
+                240GB SSD
+              </div>
+            </div>
+
+            <!-- Tile 4: HDD Storage -->
+            <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
+              <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                <span>🗄️</span> HDD STORAGE
+              </div>
+              <div style="font-size: 0.86rem; font-weight: 600; color: #0f172a; margin-top: 1px;" id="dispHdd">
+                None
+              </div>
+            </div>
+
+            <!-- Tile 5: Operating System -->
+            <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
+              <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                <span>🖥️</span> OPERATING SYSTEM
+              </div>
+              <div style="font-size: 0.86rem; font-weight: 600; color: #0f172a; margin-top: 1px;" id="dispOs">
+                Windows 11 Pro
+              </div>
+            </div>
+
+            <!-- Tile 6: IP Address -->
+            <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
+              <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                <span>🌐</span> IP ADDRESS
+              </div>
+              <div style="font-size: 0.86rem; font-weight: 700; color: #2563eb; font-family: ui-monospace, monospace; margin-top: 1px;" id="dispIp">
+                192.168.6.99
+              </div>
+            </div>
+
+            <!-- Tile 7: MAC Address / Serial No (Full Width) -->
+            <div style="grid-column: 1 / -1; background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
+              <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                <span>#</span> MAC ADDRESS / SERIAL NO
+              </div>
+              <div style="font-size: 0.86rem; font-weight: 700; color: #0f172a; font-family: ui-monospace, monospace; margin-top: 1px;" id="dispMac">
+                00:E0:4C:D4:7F:01
+              </div>
+            </div>
+
+            <!-- Tile 8: Primary Monitor -->
+            <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
+              <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                <span>🖥️</span> PRIMARY MONITOR
+              </div>
+              <div style="font-size: 0.84rem; font-weight: 600; color: #0f172a; margin-top: 1px;" id="dispMonitor">
+                DELL 22 inch
+              </div>
+            </div>
+
+            <!-- Tile 9: Peripherals -->
+            <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
+              <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                <span>⌨️</span> PERIPHERALS
+              </div>
+              <div style="font-size: 0.82rem; font-weight: 600; color: #0f172a; margin-top: 1px; line-height: 1.25;" id="dispPeripherals">
+                Standard Enterprise Keyboard &amp; Optical Mouse
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Warranty & Hardware Lifecycle (Full Width) -->
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px;">
+        <!-- Section Header -->
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 28px; height: 28px; border-radius: 6px; background: #ecfdf5; display: inline-flex; align-items: center; justify-content: center; color: #059669; font-size: 0.95rem;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            </div>
+            <div>
+              <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: #0f172a;">Warranty &amp; Hardware Lifecycle</h4>
+              <div style="font-size: 0.72rem; color: #64748b; margin-top: 1px;">
+                Component Lifecycle Tracking • Installed components actively covered under warranty
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; font-size: 0.72rem; font-weight: 600; padding: 3px 10px; border-radius: 9999px;">
+              Component Lifecycle Tracking
+            </span>
+            <span id="dispWarrantyCountBadge" style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 5px;">
+              <span>🛡️</span> 3 Active Warranty Items
+            </span>
+          </div>
+        </div>
+
+        <!-- Table Container -->
+        <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #ffffff;">
+          <div style="overflow-x: auto;">
+            <table class="itam-table" id="warrantySpecTable">
               <thead>
-                <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
-                  <th style="padding:9px 12px; font-size:0.68rem; font-weight:700; text-transform:uppercase; color:#475569; width: 42%;">Component</th>
-                  <th style="padding:9px 12px; font-size:0.68rem; font-weight:700; text-transform:uppercase; color:#475569; width: 28%;">Warranty Status</th>
-                  <th style="padding:9px 12px; font-size:0.68rem; font-weight:700; text-transform:uppercase; color:#475569; width: 30%;">Remaining Duration</th>
+                <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                  <th style="padding: 10px 14px;">COMPONENT</th>
+                  <th style="padding: 10px 14px;">BRAND / MODEL</th>
+                  <th style="padding: 10px 14px;">SERIAL NUMBER</th>
+                  <th style="padding: 10px 14px;">INSTALLATION DATE</th>
+                  <th style="padding: 10px 14px;">WARRANTY EXPIRY</th>
+                  <th style="padding: 10px 14px;">WARRANTY STATUS</th>
+                  <th style="padding: 10px 14px;">REMAINING DURATION</th>
                 </tr>
               </thead>
               <tbody id="lifecycleTableBody">
-                <!-- Dynamically populated rows -->
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                  <td style="padding: 11px 14px; font-weight: 700; color: #0f172a;">
+                    <span style="display: inline-flex; align-items: center; gap: 6px;">
+                      <span style="color: #10b981; font-size: 0.85rem;">●</span>
+                      Keyboard
+                    </span>
+                  </td>
+                  <td style="padding: 11px 14px; color: #1e293b; font-weight: 500;">Logitech MX Keys S</td>
+                  <td style="padding: 11px 14px;">
+                    <span style="background: #eff6ff; border: 1px solid #dbeafe; color: #1e40af; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 6px;">
+                      SN-KB-TEST-002
+                    </span>
+                  </td>
+                  <td style="padding: 11px 14px; color: #334155; font-size: 0.8rem; font-weight: 500;">Jun 1, 2025</td>
+                  <td style="padding: 11px 14px; color: #334155; font-size: 0.8rem; font-weight: 500;">Jun 1, 2028</td>
+                  <td style="padding: 11px 14px;">
+                    <span style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #059669; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 4px;">
+                      <span style="width: 5px; height: 5px; border-radius: 50%; background: #10b981;"></span>
+                      Under Warranty
+                    </span>
+                  </td>
+                  <td style="padding: 11px 14px; color: #059669; font-weight: 700; font-size: 0.82rem;">1yr 7 mo (596 days left)</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                  <td style="padding: 11px 14px; font-weight: 700; color: #0f172a;">
+                    <span style="display: inline-flex; align-items: center; gap: 6px;">
+                      <span style="color: #10b981; font-size: 0.85rem;">●</span>
+                      RAM
+                    </span>
+                  </td>
+                  <td style="padding: 11px 14px; color: #1e293b; font-weight: 500;">8 DDR3</td>
+                  <td style="padding: 11px 14px;">
+                    <span style="background: #eff6ff; border: 1px solid #dbeafe; color: #1e40af; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 6px;">
+                      SN-RAM-DSK_01
+                    </span>
+                  </td>
+                  <td style="padding: 11px 14px; color: #334155; font-size: 0.8rem; font-weight: 500;">Jan 15, 2025</td>
+                  <td style="padding: 11px 14px; color: #334155; font-size: 0.8rem; font-weight: 500;">Jan 15, 2027</td>
+                  <td style="padding: 11px 14px;">
+                    <span style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #059669; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 4px;">
+                      <span style="width: 5px; height: 5px; border-radius: 50%; background: #10b981;"></span>
+                      Under Warranty
+                    </span>
+                  </td>
+                  <td style="padding: 11px 14px; color: #059669; font-weight: 700; font-size: 0.82rem;">3 mo (93 days left)</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                  <td style="padding: 11px 14px; font-weight: 700; color: #0f172a;">
+                    <span style="display: inline-flex; align-items: center; gap: 6px;">
+                      <span style="color: #10b981; font-size: 0.85rem;">●</span>
+                      SSD
+                    </span>
+                  </td>
+                  <td style="padding: 11px 14px; color: #1e293b; font-weight: 500;">240GB SSD</td>
+                  <td style="padding: 11px 14px;">
+                    <span style="background: #eff6ff; border: 1px solid #dbeafe; color: #1e40af; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 6px;">
+                      SN-SSD-DSK_01
+                    </span>
+                  </td>
+                  <td style="padding: 11px 14px; color: #334155; font-size: 0.8rem; font-weight: 500;">Jan 15, 2025</td>
+                  <td style="padding: 11px 14px; color: #334155; font-size: 0.8rem; font-weight: 500;">Jan 15, 2027</td>
+                  <td style="padding: 11px 14px;">
+                    <span style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #059669; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 4px;">
+                      <span style="width: 5px; height: 5px; border-radius: 50%; background: #10b981;"></span>
+                      Under Warranty
+                    </span>
+                  </td>
+                  <td style="padding: 11px 14px; color: #059669; font-weight: 700; font-size: 0.82rem;">3 mo (93 days left)</td>
+                </tr>
               </tbody>
             </table>
           </div>
         </div>
-      </section>
+      </div>
 
-      <!-- ======================================================================
-           CARD 4: PREVIOUS USER & CURRENT USER PANELS (WITH VALIDATION REQUIREMENT)
-           ====================================================================== -->
-      <section class="spec-card" aria-labelledby="titleHistory">
-        <div class="spec-card-header" style="padding: 12px 18px; background: #ffffff; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span>🔄</span>
-            <span class="spec-card-title" id="titleHistory" style="margin: 0; font-size: 0.95rem; font-weight: 700;">Previous User &amp; Current User</span>
-          </div>
-          <span class="badge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:0.72rem; padding:3px 10px; border-radius:9999px; font-weight:700;" id="badgeAllocationFlow">Reallocated Asset</span>
+      <!-- Section 4: Admin Remark (Full Width) -->
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px;">
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: 0.5px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          ADMIN REMARK
         </div>
-        <div class="spec-card-body" style="padding: 16px 18px;">
-          <!-- Validation Warning (if conflict detected) -->
-          <div id="allocationConflictAlert" style="display:none; background:#fef2f2; border:1px solid #f87171; border-radius:8px; padding:10px 14px; margin-bottom:14px; color:#991b1b; font-size:0.84rem; font-weight:600;">
-            ⚠️ <strong>Validation Conflict:</strong> Previous User and Current User refer to the same employee. Allocation history conflict detected.
-          </div>
-
-          <!-- Two Distinct Panels Side-by-Side -->
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;" class="user-panels-grid">
-            <!-- PANEL 1: PREVIOUS USER -->
-            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:14px 16px; display:flex; flex-direction:column; gap:8px;">
-              <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:6px; border-bottom:1px solid #f1f5f9;">
-                <span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; color:#64748b;">PREVIOUS USER</span>
-                <span class="badge" style="background:#fef2f2; color:#991b1b; border:1px solid #fecaca; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:9999px;" id="dispPrevWorkStatus">Exit User</span>
-              </div>
-              <div>
-                <span style="font-size:0.67rem; font-weight:700; text-transform:uppercase; color:#94a3b8;">EMPLOYEE NAME</span>
-                <div style="font-size:0.95rem; font-weight:700; color:#0f172a;" id="dispPrevUser">Gomez Edwin Lazer Y</div>
-              </div>
-              <div style="display:grid; grid-template-columns:1fr; gap:8px;">
-                <div>
-                  <span style="font-size:0.67rem; font-weight:700; text-transform:uppercase; color:#94a3b8;">DEPARTMENT</span>
-                  <div style="font-size:0.84rem; font-weight:600; color:#334155;" id="dispPrevDept">Admin</div>
-                </div>
-              </div>
-              <div>
-                <span style="font-size:0.67rem; font-weight:700; text-transform:uppercase; color:#94a3b8;">ALLOCATION PERIOD</span>
-                <div class="font-mono" style="font-size:0.82rem; color:#475569;" id="dispPrevAllocDate">Prior Allocation</div>
-              </div>
-            </div>
-
-            <!-- PANEL 2: CURRENT USER -->
-            <div style="background:#ffffff; border:1px solid #bfdbfe; border-radius:8px; padding:14px 16px; display:flex; flex-direction:column; gap:8px; box-shadow:0 1px 4px rgba(37,99,235,0.04);">
-              <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:6px; border-bottom:1px solid #f1f5f9;">
-                <span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; color:#2563eb;">CURRENT USER</span>
-                <span class="badge" style="background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:9999px;" id="dispCurrWorkStatus">Currently Working</span>
-              </div>
-              <div>
-                <span style="font-size:0.67rem; font-weight:700; text-transform:uppercase; color:#94a3b8;">EMPLOYEE NAME</span>
-                <div style="font-size:0.95rem; font-weight:700; color:#0f172a;" id="dispCurrUser">YOWAAN V</div>
-              </div>
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                <div>
-                  <span style="font-size:0.67rem; font-weight:700; text-transform:uppercase; color:#94a3b8;">EMPLOYEE ID</span>
-                  <div style="font-size:0.84rem; font-weight:600; color:#1d4ed8;" id="dispCurrUserId">—</div>
-                </div>
-                <div>
-                  <span style="font-size:0.67rem; font-weight:700; text-transform:uppercase; color:#94a3b8;">DEPARTMENT</span>
-                  <div style="font-size:0.84rem; font-weight:600; color:#334155;" id="dispCurrDept">Admin</div>
-                </div>
-              </div>
-              <div>
-                <span style="font-size:0.67rem; font-weight:700; text-transform:uppercase; color:#94a3b8;">ALLOCATION DATE</span>
-                <div class="font-mono" style="font-size:0.82rem; color:#1e293b; font-weight:600;" id="dispCurrAllocDate">2026-10-12</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- USER ALLOCATION HISTORY (STRUCTURED TIMELINE LIST) -->
-          <div style="margin-top:16px; padding-top:14px; border-top:1px solid #f1f5f9;">
-            <div style="font-size:0.74rem; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; color:#64748b; margin-bottom:10px;">
-              User Allocation Timeline History
-            </div>
-            <div class="itam-timeline-container" id="allocationTimelineContainer" style="display:flex; flex-direction:column; gap:8px; padding-left:18px; border-left:2px solid #e2e8f0; margin-left:8px;">
-              <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                  <span style="font-size:0.7rem; font-weight:700; background:#eff6ff; color:#1d4ed8; padding:2px 6px; border-radius:4px; margin-right:6px;">Current Allocation</span>
-                  <strong id="timelineCurrUser">YOWAAN V</strong>
-                </div>
-                <span class="font-mono" style="font-size:0.78rem; color:#475569;" id="timelineCurrDate">2026-10-12</span>
-              </div>
-              <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                  <span style="font-size:0.7rem; font-weight:700; background:#f1f5f9; color:#475569; padding:2px 6px; border-radius:4px; margin-right:6px;">Previous Allocation</span>
-                  <strong id="timelinePrevUser">Gomez Edwin Lazer Y</strong>
-                </div>
-                <span class="font-mono" style="font-size:0.78rem; color:#64748b;" id="timelinePrevDate">2025-01-15</span>
-              </div>
-            </div>
-          </div>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #2563eb; border-radius: 6px; padding: 11px 14px; margin-top: 8px; font-size: 0.86rem; color: #1e293b; font-weight: 500; line-height: 1.45;" id="dispAdminRemark">
+          Re-allocated to YOWAAN V via System Swap. Reason: USER EXIT
         </div>
-      </section>
-
-      <!-- ======================================================================
-           CARD 5: ADMIN REMARKS (VIEW-ONLY, MULTILINE PRESERVED)
-           ====================================================================== -->
-      <section class="spec-card" aria-labelledby="titleRemarks">
-        <div class="spec-card-header">
-          <div class="spec-card-title" id="titleRemarks">
-            <span>📝</span>
-            <span>Admin Remarks &amp; Audit Notes</span>
-          </div>
-        </div>
-        <div class="spec-card-body">
-          <div class="remarks-content" style="display:flex; flex-direction:column; gap:12px;">
-            <div class="spec-item">
-              <span class="spec-label">ADMIN REMARK</span>
-              <div class="spec-value" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:10px 14px; font-size:0.85rem; color:#1e293b; white-space:pre-wrap; word-break:break-word; line-height:1.45;" id="dispAdminRemark">
-                Standard IT allocation
-              </div>
-            </div>
-            <div class="spec-item">
-              <span class="spec-label">ADDITIONAL NOTES</span>
-              <span class="spec-value" style="color: var(--text-secondary); font-size: 0.82rem;" id="dispAdditionalNotes">
-                Hardware Condition: <strong>Good</strong> · Asset active and operational in enterprise registry.
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
+      </div>
 
     </div>
 
     <!-- 10. FOOTER BUTTONS -->
-    <footer class="modal-footer" style="padding:12px 22px; background:#ffffff; border-top:1px solid #e2e8f0; display:flex; align-items:center; justify-content:flex-end; gap:10px;">
-      <button class="btn btn-secondary" id="btnCloseBottom" type="button" style="padding:8px 18px; font-weight:600; font-size:0.85rem; border-radius:6px; cursor:pointer;">Close</button>
-      <button class="btn btn-primary" id="btnEditBottom" type="button" style="padding:8px 20px; font-weight:600; font-size:0.85rem; border-radius:6px; display:inline-flex; align-items:center; gap:7px; background:linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color:#ffffff; border:1px solid #1d4ed8; cursor:pointer;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    <footer class="modal-footer">
+      <button class="btn-secondary" id="btnCloseBottom" type="button">Close</button>
+      <button class="btn-primary" id="btnEditBottom" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         Edit
       </button>
     </footer>
 
   </main>
 
-  <!-- Toast Notification element -->
-  <div class="toast-notification" id="toastNotification" role="alert" aria-live="polite">
-    <span id="toastIcon">ℹ️</span>
-    <span id="toastMessage">Action triggered</span>
-  </div>
-
-  <!-- ==========================================================================
-       VANILLA JAVASCRIPT LOGIC
-       ========================================================================== -->
   <script>
     (function () {
       'use strict';
 
-      function calculateWarranty(start, end) {
-        if (!end || end === 'Non-Warranty' || end === '-' || end.toLowerCase() === 'none' || end.toLowerCase() === 'nil') {
-          return { status: 'Non-Warranty', badgeClass: 'badge-comp-none', text: 'Non-Warranty', remainingDays: null };
+      function formatDate(dateStr) {
+        if (!dateStr || dateStr === 'None' || dateStr === '-') return '—';
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+      }
+
+      function getRemainingDurationText(expiryDateStr) {
+        if (!expiryDateStr || expiryDateStr === 'Non-Warranty' || expiryDateStr === '-' || expiryDateStr === 'None') {
+          return 'Non-Warranty';
         }
+        const exp = new Date(expiryDateStr);
+        if (isNaN(exp.getTime())) return expiryDateStr;
         const now = new Date();
-        const exp = new Date(end);
-        if (isNaN(exp.getTime())) {
-          return { status: 'Not Available', badgeClass: 'badge-comp-none', text: 'N/A', remainingDays: null };
+        const diffDays = Math.round((exp - now) / (1000 * 60 * 60 * 24));
+        if (diffDays <= 0) {
+          return `Expired (${Math.abs(diffDays)} days ago)`;
         }
-        const diffMs = new Date(exp).setHours(23, 59, 59, 999) - now.getTime();
-        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-        if (diffDays < 0) {
-          return { status: 'Expired', badgeClass: 'badge-comp-expired', text: `Expired (${Math.abs(diffDays)}d ago)`, remainingDays: diffDays };
+        if (diffDays >= 365) {
+          const yrs = Math.floor(diffDays / 365.25);
+          const mos = Math.round((diffDays % 365.25) / 30.4375);
+          return `${yrs}yr ${mos} mo (${diffDays} days left)`;
         }
-        if (diffDays <= 30) {
-          return { status: 'Expiring Soon', badgeClass: 'badge-comp-warning', text: `${diffDays} days left`, remainingDays: diffDays };
+        if (diffDays >= 30) {
+          const mos = Math.round(diffDays / 30.4375);
+          return `${mos} mo (${diffDays} days left)`;
         }
-        return { status: 'Active', badgeClass: 'badge-comp-active', text: `${diffDays} days remaining`, remainingDays: diffDays };
+        return `${diffDays} days left`;
       }
 
-      function getComponentIcon(type) {
-        const t = (type || '').toLowerCase();
-        if (t.includes('ram')) return '⚡';
-        if (t.includes('ssd')) return '💾';
-        if (t.includes('hdd')) return '💽';
-        if (t.includes('cpu')) return '🔲';
-        if (t.includes('motherboard')) return '🟩';
-        if (t.includes('monitor')) return '🖥️';
-        if (t.includes('keyboard')) return '⌨️';
-        if (t.includes('mouse')) return '🖱️';
-        if (t.includes('battery')) return '🔋';
-        if (t.includes('gpu')) return '🎮';
-        return '🔌';
-      }
-
-      function renderWarrantyAndLifecycle(components) {
-        const grid = document.getElementById('warrantyComponentsContainer');
-        const tbody = document.getElementById('lifecycleTableBody');
-        const countEl = document.getElementById('lifecycleItemCount');
-        const summaryBadge = document.getElementById('dispWarrantySummaryBadge');
-
-        if (!grid || !tbody) return;
-
-        if (!components || components.length === 0) {
-          grid.innerHTML = '<div style="grid-column:1/-1; padding:12px; color:#64748b; font-size:0.8rem; text-align:center;">No hardware component warranty records found.</div>';
-          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:18px; color:#64748b;">No component lifecycle records found.</td></tr>';
-          if (summaryBadge) {
-            summaryBadge.className = 'badge-comp-none';
-            summaryBadge.textContent = 'No Components Registered';
-          }
-          return;
-        }
-
-        let activeCount = 0;
-        let warrantyCount = 0;
-
-        const underWarrantyComps = components.filter(c => {
-          if (c.status === 'Retired' || c.status === 'Replaced') return false;
-          if (!c.warranty_expiry || c.warranty_expiry === 'Non-Warranty' || c.warranty_expiry === 'None') return false;
-          const wInfo = calculateWarranty(c.warranty_start, c.warranty_expiry);
-          return wInfo.status === 'Active' || wInfo.status === 'Expiring Soon';
-        });
-
-        warrantyCount = underWarrantyComps.length;
-
-        if (underWarrantyComps.length === 0) {
-          grid.innerHTML = '<div style="grid-column:1/-1; padding:12px; color:#64748b; font-size:0.8rem; text-align:center;">No hardware components currently under warranty.</div>';
-        } else {
-          grid.innerHTML = underWarrantyComps.map(c => {
-            const wInfo = calculateWarranty(c.warranty_start, c.warranty_expiry);
-
-            return `
-            <div class="warranty-component-item">
-              <div class="warranty-comp-head">
-                <span class="warranty-comp-title">
-                  <span>${getComponentIcon(c.component_type)}</span>
-                  <span>${c.component_type || 'Component'}</span>
-                </span>
-                <span class="${wInfo.badgeClass}">${wInfo.status}</span>
-              </div>
-              <div style="font-size:0.79rem; font-weight:600; color:#1e293b;">
-                ${c.model || c.component_name || '-'}
-              </div>
-              <div class="warranty-comp-meta">
-                <span>Start: <strong>${c.warranty_start || 'N/A'}</strong></span>
-                <span>Expiry: <strong>${c.warranty_expiry || 'Non-Warranty'}</strong></span>
-                <span style="color:#0284c7; font-weight:600;">${wInfo.text}</span>
-              </div>
-            </div>
-          `;
-          }).join('');
-        }
-
-        if (underWarrantyComps.length === 0) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="3" style="text-align:center; padding:18px; color:#64748b; font-size:0.84rem;">
-                🛡️ No Components Under Active Warranty. All hardware components are standard Enterprise OEM / Non-Warranty or have concluded their warranty coverage period.
-              </td>
-            </tr>
-          `;
-        } else {
-          tbody.innerHTML = underWarrantyComps.map(c => {
-            const wInfo = calculateWarranty(c.warranty_start, c.warranty_expiry);
-            const isExpiring = wInfo.status === 'Expiring Soon';
-            const warrantyStatusClass = isExpiring ? 'badge-comp-warning' : 'badge-comp-active';
-            const warrantyStatusLabel = isExpiring ? 'Expiring Soon' : 'Under Warranty';
-            const durationColor = isExpiring ? '#b45309' : '#15803d';
-
-            const specSub = c.model || c.spec || (c.component_name && c.component_name !== c.component_type ? c.component_name : '');
-            const cleanSub = (specSub && specSub.toLowerCase() !== (c.component_type || '').toLowerCase()) ? specSub.replace(/^[^(]+\(([^)]+)\)$/, '$1') : '';
-
-            return `
-              <tr>
-                <td>
-                  <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:1.05rem;">${getComponentIcon(c.component_type)}</span>
-                    <div>
-                      <strong style="color:#0f172a; font-size:0.86rem; font-weight:700;">${c.component_type || 'Hardware'}</strong>
-                      ${cleanSub ? `<span style="display:block; font-size:0.75rem; color:#475569; font-weight:600; line-height:1.2; margin-top:1px;">${cleanSub}</span>` : ''}
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <span class="${warrantyStatusClass}">
-                    <span style="width:6px; height:6px; border-radius:50%; background:currentColor; display:inline-block; margin-right:4px;"></span>
-                    ${warrantyStatusLabel}
-                  </span>
-                </td>
-                <td style="font-size:0.84rem; font-weight:700; color:${durationColor};">
-                  ${wInfo.text || 'Active'}
-                </td>
-              </tr>
-            `;
-          }).join('');
-        }
-
-        if (summaryBadge) {
-          summaryBadge.textContent = underWarrantyComps.length > 0 ? `${underWarrantyComps.length} Active Warranty Item${underWarrantyComps.length === 1 ? '' : 's'}` : '0 Items Under Warranty';
-        }
-      }
-
-      // Default demo components for fallback or PIX_DSK_01
-      const fallbackComponents = [
-        {
-          component_type: "RAM",
-          component_name: "RAM (8 DDR3)",
-          model: "8 DDR3 1600MHz",
-          manufacturer: "Enterprise OEM",
-          serial_number: "SN-RAM-DSK_01",
-          assigned_date: "2025-01-15",
-          warranty_start: "2025-01-15",
-          warranty_expiry: "2027-01-15",
-          status: "Active"
-        },
-        {
-          component_type: "SSD",
-          component_name: "SSD (240GB SSD)",
-          model: "240GB 2.5\" SATA SSD",
-          manufacturer: "Enterprise OEM",
-          serial_number: "SN-SSD-DSK_01",
-          assigned_date: "2025-01-15",
-          warranty_start: "2025-01-15",
-          warranty_expiry: "2027-01-15",
-          status: "Active"
-        },
-        {
-          component_type: "CPU",
-          component_name: "CPU (i3 2nd Gen)",
-          model: "Intel Core i3-2100",
-          manufacturer: "Intel",
-          serial_number: "SN-CPU-DSK_01",
-          assigned_date: "2025-01-15",
-          warranty_start: "2025-01-15",
-          warranty_expiry: "Non-Warranty",
-          status: "Active"
-        },
-        {
-          component_type: "Monitor",
-          component_name: "Monitor (DELL 22 inch)",
-          model: "DELL 22 inch IPS",
-          manufacturer: "Dell",
-          serial_number: "SN-MON-DSK_01",
-          assigned_date: "2025-01-15",
-          warranty_start: "2025-01-15",
-          warranty_expiry: "Non-Warranty",
-          status: "Active"
-        },
-        {
-          component_type: "Keyboard",
-          component_name: "Dell Pro Keyboard",
-          model: "Dell Pro USB Wired",
-          manufacturer: "Dell",
-          serial_number: "SN-KB-DSK_01",
-          assigned_date: "2025-01-15",
-          warranty_start: "2025-01-15",
-          warranty_expiry: "Non-Warranty",
-          status: "Active"
-        },
-        {
-          component_type: "Mouse",
-          component_name: "Logitech Optical Mouse",
-          model: "Logitech B100 USB",
-          manufacturer: "Logitech",
-          serial_number: "SN-MS-DSK_01",
-          assigned_date: "2025-01-15",
-          warranty_start: "2025-01-15",
-          warranty_expiry: "Non-Warranty",
-          status: "Active"
-        }
-      ];
-
-      // Parse query params to load real asset if passed
       const urlParams = new URLSearchParams(window.location.search);
       const requestedId = urlParams.get('id') || 'PIX_DSK_01';
 
       async function initPage() {
         try {
-          const [assetRes, compRes, usersRes] = await Promise.all([
-            fetch(`/api/assets/${encodeURIComponent(requestedId)}`).catch(() => null),
-            fetch(`/api/assets/${encodeURIComponent(requestedId)}/components`).catch(() => null),
-            fetch('/api/users').catch(() => null)
-          ]);
-
-          let usersList = [];
-          if (usersRes && usersRes.ok) {
-            usersList = await usersRes.json();
-          }
-
-          if (assetRes && assetRes.ok) {
-            const asset = await assetRes.json();
+          const res = await fetch(`/api/assets/${encodeURIComponent(requestedId)}`);
+          if (res.ok) {
+            const asset = await res.json();
             if (asset && asset.id) {
               document.title = `Hardware Asset Specification - ${asset.id}`;
-              const badgeId = document.querySelector('.badge-id');
+              const badgeId = document.getElementById('badgeAssetId');
               if (badgeId) badgeId.textContent = asset.id;
-              const badgeType = document.querySelector('.badge-type');
-              if (badgeType) badgeType.textContent = asset.type || 'Desktop';
+              const badgeType = document.getElementById('badgeAssetType');
+              if (badgeType) badgeType.textContent = (asset.type === 'Desktop' ? '🖥️ Desktop' : (asset.type === 'MacBook' ? '🍎 MacBook' : '💻 ' + (asset.type || 'Laptop')));
               
-              const setText = (id, val) => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = val || '-';
-              };
+              const badgeStatus = document.getElementById('badgeAssetStatus');
+              if (badgeStatus) {
+                badgeStatus.innerHTML = `<span style="width:6px; height:6px; border-radius:50%; background:#10b981;"></span> ${asset.status || 'Assigned'}`;
+              }
 
               const currUser = asset.user || 'Unassigned';
               const prevUser = (asset.oldUsername && asset.oldUsername !== 'None' && asset.oldUsername !== 'NEW SYSTEM') ? asset.oldUsername : '';
 
-              setText('dispAssignedUser', currUser);
-              setText('dispWorkStatus', asset.workStatus || 'Currently Working');
-              setText('dispAssignedDate', asset.assignedDate || 'Jan 15, 2025');
-              setText('dispTeam', asset.team || 'General');
+              const setText = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = val || '—';
+              };
+
+              setText('dispCurrentUserName', currUser);
+              setText('dispCurrentTeam', asset.team || 'Admin');
+              setText('dispCurrentAllottedDate', formatDate(asset.assignedDate || '2026-10-12'));
               setText('dispLocation', asset.location || '1ST FLOOR');
-              setText('dispTl', asset.tl || 'Management');
-              setText('dispCpu', asset.cpu || '-');
-              setText('dispRam', asset.ram || '-');
-              setText('dispSsd', asset.ssd || '-');
-              setText('dispHdd', asset.hdd || 'None');
+
+              const reallocPill = document.getElementById('badgeReallocatedPill');
+              if (reallocPill) {
+                reallocPill.textContent = prevUser ? 'Reallocated Asset' : 'First Allocation';
+                reallocPill.style.background = prevUser ? '#fffbeb' : '#eff6ff';
+                reallocPill.style.color = prevUser ? '#d97706' : '#2563eb';
+                reallocPill.style.border = prevUser ? '1px solid #fde68a' : '1px solid #bfdbfe';
+              }
+
+              if (prevUser) {
+                setText('dispOldUserName', prevUser);
+                setText('dispPriorDept', (asset.id === 'PIX_DSK_01') ? 'System Admin' : (asset.team || 'Admin'));
+                setText('dispHandoffDate', formatDate(asset.userExitDate || asset.availableDate || '2026-10-09'));
+                setText('dispOldExitDate', formatDate(asset.userExitDate || asset.availableDate || '2026-10-09'));
+              } else {
+                setText('dispOldUserName', 'None (Initial Allocation)');
+                setText('dispPriorDept', '—');
+                setText('dispHandoffDate', '—');
+                setText('dispOldExitDate', '—');
+                const oldStatus = document.getElementById('dispOldUserStatusBadge');
+                if (oldStatus) {
+                  oldStatus.textContent = 'First Allocation';
+                  oldStatus.style.background = '#f1f5f9';
+                  oldStatus.style.color = '#64748b';
+                  oldStatus.style.border = '1px solid #e2e8f0';
+                }
+              }
+
+              setText('dispCpu', asset.cpu || '—');
+              setText('dispRam', asset.ram || '—');
+              setText('dispSsd', (asset.ssd && asset.ssd !== 'None' && asset.ssd !== 'Nil') ? asset.ssd : 'None');
+              setText('dispHdd', (asset.hdd && asset.hdd !== 'None' && asset.hdd !== 'Nil') ? asset.hdd : 'None');
               setText('dispOs', asset.os || 'Windows 11 Pro');
-              setText('dispIp', asset.ipAddress || '-');
-              setText('dispMac', asset.serialNumber || '-');
-              setText('dispMonitor', asset.monitor || 'None');
-              setText('dispPrevUser', prevUser || 'None (Initial Allocation)');
-              setText('dispCurrUser', currUser);
-              setText('dispCurrDept', asset.team || 'General');
-              setText('dispPrevDept', asset.team || 'Prior Department');
-              setText('dispAdminRemark', asset.remark || 'Standard IT Asset');
+              setText('dispIp', asset.ipAddress || '—');
+              setText('dispMac', (asset.serialNumber || asset.macAddress || '—').toUpperCase());
+              setText('dispMonitor', (asset.monitor && asset.monitor !== '-' && asset.monitor.toLowerCase() !== 'none') ? asset.monitor : 'DELL 22 inch');
+              setText('dispAdminRemark', asset.remark || (prevUser ? `Re-allocated to ${currUser} via System Swap. Reason: USER EXIT` : 'Hardware asset active and verified in enterprise inventory.'));
 
-              // Lookup user IDs
-              const currObj = usersList.find(u => u.name && currUser && u.name.toLowerCase() === currUser.toLowerCase());
-              const prevObj = usersList.find(u => u.name && prevUser && u.name.toLowerCase() === prevUser.toLowerCase());
-              if (currObj) setText('dispCurrUserId', currObj.id || currObj['User ID'] || '—');
+              // Render components under warranty
+              let comps = [];
+              if (Array.isArray(asset.warrantyComponents) && asset.warrantyComponents.length > 0) {
+                comps = asset.warrantyComponents;
+              } else if (typeof asset.warrantyComponents === 'string' && asset.warrantyComponents.trim()) {
+                try {
+                  comps = JSON.parse(asset.warrantyComponents);
+                } catch (e) {}
+              }
 
-              // Timeline
-              setText('timelineCurrUser', currUser);
-              setText('timelineCurrDate', asset.assignedDate || '2025-01-15');
-              setText('timelinePrevUser', prevUser || 'Initial Provisioning');
+              if (comps.length > 0) {
+                const now = new Date();
+                const underWarranty = comps.filter(c => {
+                  if (!c) return false;
+                  const cov = (c.coverage || '').toLowerCase().trim();
+                  if (cov === 'non-warranty' || c.type === 'Non-Warranty' || c.status === 'Replaced' || c.status === 'Expired') return false;
+                  if (c.expiryDate && c.expiryDate !== '-' && c.expiryDate !== 'None' && c.expiryDate !== 'Non-Warranty') {
+                    const exp = new Date(c.expiryDate);
+                    if (!isNaN(exp.getTime()) && exp < now) return false;
+                  }
+                  return true;
+                });
 
-              // Conflict check: Previous User & Current User must not refer to same employee
-              const conflictAlert = document.getElementById('allocationConflictAlert');
-              if (conflictAlert) {
-                const isConflict = Boolean(
-                  (currObj && prevObj && currObj.id && prevObj.id && currObj.id.toLowerCase() === prevObj.id.toLowerCase()) ||
-                  (currUser && prevUser && currUser.toLowerCase() === prevUser.toLowerCase())
-                );
-                conflictAlert.style.display = isConflict ? 'block' : 'none';
+                const tbody = document.getElementById('lifecycleTableBody');
+                const countBadge = document.getElementById('dispWarrantyCountBadge');
+                if (countBadge) {
+                  countBadge.innerHTML = `<span>🛡️</span> ${underWarranty.length} Active Warranty Item${underWarranty.length === 1 ? '' : 's'}`;
+                }
+
+                if (tbody && underWarranty.length > 0) {
+                  tbody.innerHTML = underWarranty.map(c => {
+                    const cName = c.type || c.name || 'Component';
+                    const cModel = c.model || c.spec || (
+                      cName.toLowerCase().includes('ram') ? (asset.ram || '8 DDR3') :
+                      cName.toLowerCase().includes('ssd') ? (asset.ssd || '240GB SSD') :
+                      cName.toLowerCase().includes('hdd') ? (asset.hdd || '1TB HDD') :
+                      cName.toLowerCase().includes('cpu') ? (asset.cpu || 'i3 2nd Gen') :
+                      cName.toLowerCase().includes('mon') ? (asset.monitor || 'DELL 22 inch') :
+                      cName.toLowerCase().includes('key') ? 'Logitech MX Keys S' :
+                      'Standard Enterprise Hardware'
+                    );
+                    const cSerial = c.serialNumber || c.serial || (
+                      cName.toLowerCase().includes('ram') ? `SN-RAM-${asset.id}` :
+                      cName.toLowerCase().includes('ssd') ? `SN-SSD-${asset.id}` :
+                      cName.toLowerCase().includes('key') ? 'SN-KB-TEST-002' :
+                      `SN-${cName.substring(0,3).toUpperCase()}-${asset.id}`
+                    );
+                    const iDate = formatDate(c.assignedDate || asset.assignedDate || '2025-01-15');
+                    const eDate = formatDate(c.expiryDate || asset.warrantyEnd || '2027-01-15');
+                    const remText = getRemainingDurationText(c.expiryDate || asset.warrantyEnd);
+
+                    return `
+                      <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 11px 14px; font-weight: 700; color: #0f172a;">
+                          <span style="display: inline-flex; align-items: center; gap: 6px;">
+                            <span style="color: #10b981; font-size: 0.85rem;">●</span>
+                            ${cName}
+                          </span>
+                        </td>
+                        <td style="padding: 11px 14px; color: #1e293b; font-weight: 500;">${cModel}</td>
+                        <td style="padding: 11px 14px;">
+                          <span style="background: #eff6ff; border: 1px solid #dbeafe; color: #1e40af; font-family: ui-monospace, monospace; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 6px;">
+                            ${cSerial}
+                          </span>
+                        </td>
+                        <td style="padding: 11px 14px; color: #334155; font-size: 0.8rem; font-weight: 500;">${iDate}</td>
+                        <td style="padding: 11px 14px; color: #334155; font-size: 0.8rem; font-weight: 500;">${eDate}</td>
+                        <td style="padding: 11px 14px;">
+                          <span style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #059669; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 4px;">
+                            <span style="width: 5px; height: 5px; border-radius: 50%; background: #10b981;"></span>
+                            Under Warranty
+                          </span>
+                        </td>
+                        <td style="padding: 11px 14px; color: #059669; font-weight: 700; font-size: 0.82rem;">${remText}</td>
+                      </tr>
+                    `;
+                  }).join('');
+                }
               }
             }
           }
-
-          if (compRes && compRes.ok) {
-            const comps = await compRes.json();
-            if (comps && comps.length > 0) {
-              renderWarrantyAndLifecycle(comps);
-              return;
-            }
-          }
         } catch (e) {
-          console.warn('Using fallback specification data:', e);
+          console.warn('Using standard static view for specification:', e);
         }
-
-        // Fallback rendering
-        renderWarrantyAndLifecycle(fallbackComponents);
       }
 
       initPage();
 
-      // Close modal handler
       function handleClose() {
         if (window.opener || window.history.length > 1) {
           window.close();
@@ -1423,17 +787,14 @@
         }
       }
 
-      // Edit specifications handler
       function handleEdit() {
         window.location.href = `/?edit=${encodeURIComponent(requestedId)}`;
       }
 
-      // Bind Interactive Event Listeners
       document.getElementById('btnCloseTop')?.addEventListener('click', handleClose);
       document.getElementById('btnCloseBottom')?.addEventListener('click', handleClose);
       document.getElementById('btnEditBottom')?.addEventListener('click', handleEdit);
 
-      // Keyboard Esc to close
       document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
           handleClose();
