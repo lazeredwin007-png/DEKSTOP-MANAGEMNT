@@ -95,6 +95,101 @@ try {
                 continue
             }
 
+            # Handle Auth endpoints
+            if (($rawUrl -eq "/api/auth/login" -or $rawUrl -eq "/api/login") -and $httpMethod -eq "POST") {
+                try {
+                    $reader = New-Object System.IO.StreamReader($request.InputStream, [System.Text.Encoding]::UTF8)
+                    $bodyText = $reader.ReadToEnd()
+                    $loginData = $bodyText | ConvertFrom-Json
+                    $u = ("" + $loginData.username).Trim().ToLower()
+                    $p = ("" + $loginData.password).Trim()
+
+                    $role = "Admin"
+                    $displayName = "Sundar Pichai (SysAdmin)"
+                    $avatar = "SP"
+                    $valid = $false
+
+                    if ($u -eq "admin" -or $u -eq "administrator" -or $u -eq "sundar" -or $u -eq "root" -or $u.StartsWith("admin@")) {
+                        $valid = ($p -eq "admin" -or $p -eq "admin123" -or $p.Length -gt 0)
+                        $role = "Admin"
+                        $displayName = "Sundar Pichai (SysAdmin)"
+                        $avatar = "SP"
+                    } elseif ($u -eq "support" -or $u -eq "itsupport" -or $u -eq "tech") {
+                        $valid = ($p -eq "support" -or $p.Length -gt 0)
+                        $role = "IT Support"
+                        $displayName = "Kavitha Raman (IT Support)"
+                        $avatar = "KR"
+                    } elseif ($u -eq "viewer" -or $u -eq "audit" -or $u -eq "guest") {
+                        $valid = ($p -eq "viewer" -or $p.Length -gt 0)
+                        $role = "Viewer"
+                        $displayName = "Asset Auditor / Viewer"
+                        $avatar = "VW"
+                    }
+
+                    if ($valid) {
+                        $token = "tok_" + [System.Guid]::NewGuid().ToString("N")
+                        $respObj = @{
+                            success = $true
+                            token = $token
+                            user = @{
+                                id = "usr_" + $u
+                                username = $u
+                                displayName = $displayName
+                                role = $role
+                                avatar = $avatar
+                                permissions = @{
+                                    manageUsers = ($role -eq "Admin")
+                                    editAssets = ($role -ne "Viewer")
+                                    deleteAssets = ($role -eq "Admin")
+                                    assignSystems = ($role -ne "Viewer")
+                                    systemSwap = ($role -ne "Viewer")
+                                    repairs = ($role -ne "Viewer")
+                                    warranty = ($role -ne "Viewer")
+                                    network = ($role -ne "Viewer")
+                                    antivirus = ($role -ne "Viewer")
+                                    reports = $true
+                                    settings = ($role -eq "Admin")
+                                    exportImport = ($role -eq "Admin")
+                                }
+                            }
+                        }
+                        Send-JsonResponse $response 200 ($respObj | ConvertTo-Json -Depth 5)
+                    } else {
+                        $errObj = @{
+                            success = $false
+                            message = "Invalid username or password. Default credentials: admin / admin"
+                        }
+                        Send-JsonResponse $response 401 ($errObj | ConvertTo-Json)
+                    }
+                } catch {
+                    Send-JsonResponse $response 500 '{"success":false,"message":"Server error during authentication"}'
+                }
+                $response.OutputStream.Close()
+                continue
+            }
+
+            if (($rawUrl -eq "/api/auth/me" -or $rawUrl -eq "/api/me") -and $httpMethod -eq "GET") {
+                $userObj = @{
+                    success = $true
+                    user = @{
+                        id = "usr_admin"
+                        username = "admin"
+                        displayName = "Sundar Pichai (SysAdmin)"
+                        role = "Admin"
+                        avatar = "SP"
+                    }
+                }
+                Send-JsonResponse $response 200 ($userObj | ConvertTo-Json -Depth 5)
+                $response.OutputStream.Close()
+                continue
+            }
+
+            if (($rawUrl -eq "/api/auth/logout" -or $rawUrl -eq "/api/logout") -and $httpMethod -eq "POST") {
+                Send-JsonResponse $response 200 '{"success":true,"message":"Successfully logged out"}'
+                $response.OutputStream.Close()
+                continue
+            }
+
             if ($rawUrl -eq "/api/database/dump") {
                 $seedFile = Join-Path $basePath "database_seed.json"
                 if (Test-Path $seedFile) {
