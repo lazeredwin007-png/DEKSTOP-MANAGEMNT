@@ -4246,52 +4246,61 @@
           this.handleConfirmSwap(new FormData(swapForm));
         });
 
+        const self = this;
+
         swapForm.addEventListener('reset', () => {
           setTimeout(() => {
             const autoBanner = document.getElementById('swapAutoFillBanner');
             if (autoBanner) autoBanner.style.display = 'none';
+            const assetTypeSelect = document.getElementById('swapAssetTypeSelect');
+            if (assetTypeSelect) assetTypeSelect.value = '';
+            const newAssetIdInput = document.getElementById('swapNewAssetId');
+            if (newAssetIdInput) newAssetIdInput.placeholder = 'Leave empty for auto-tag';
           }, 50);
         });
 
-        // Auto populate old system details AND auto-apply specs to Replacement System
+        // Auto populate old system details AND auto-apply specs & exact SAME asset type to Replacement System
         const oldUserSelect = document.getElementById('swapOldUserSelect');
         if (oldUserSelect) {
           oldUserSelect.addEventListener('change', (e) => {
-            const assetId = e.target.value;
-            const asset = store.data.assets.find(a => a.id === assetId);
-            if (asset) {
+            const assetId = (e.target.value || '').trim();
+            const asset = store.data.assets.find(a => (a.id || '').toUpperCase() === assetId.toUpperCase());
+            if (asset || assetId) {
+              const matchedId = asset ? (asset.id || assetId) : assetId;
+
               // 1. Populate Left Column (OLD USER / CURRENT SYSTEM)
-              document.getElementById('swapOldTeam').value = asset.team || '';
-              document.getElementById('swapOldAssetId').value = asset.id || '';
-              document.getElementById('swapOldDetails').value = `${asset.type} • ${asset.cpu} • ${asset.ram} • ${asset.ssd || asset.hdd}`;
-              document.getElementById('swapOldUsername').value = asset.user || '';
+              document.getElementById('swapOldTeam').value = asset ? (asset.team || '') : '';
+              const oldAssetInput = document.getElementById('swapOldAssetId');
+              if (oldAssetInput) {
+                oldAssetInput.value = matchedId;
+              }
+              const displayType = asset ? (asset.type || self.resolveAssetType(asset, matchedId)) : self.resolveAssetType(null, matchedId);
+              document.getElementById('swapOldDetails').value = asset ? `${displayType} • ${asset.cpu || ''} • ${asset.ram || ''} • ${asset.ssd || asset.hdd || ''}` : `${matchedId} (Selected System)`;
+              document.getElementById('swapOldUsername').value = asset ? (asset.user || '') : '';
 
               // 2. Auto-apply to Right Column (NEW REPLACEMENT SYSTEM ALLOCATION)
               // User Name (Default to same user, editable)
               const newUserInput = document.getElementById('swapNewUserInput');
-              if (newUserInput) newUserInput.value = asset.user || '';
+              if (newUserInput) newUserInput.value = asset ? (asset.user || '') : '';
 
               // Team
               const newTeamSelect = document.getElementById('swapNewTeamSelect');
-              if (newTeamSelect && asset.team) {
+              if (newTeamSelect && asset && asset.team) {
                 newTeamSelect.value = asset.team;
               }
 
-              // Replacement Asset Type (Desktop or Laptop)
-              const assetTypeSelect = document.getElementById('swapAssetTypeSelect');
-              if (assetTypeSelect && asset.type) {
-                assetTypeSelect.value = asset.type;
-              }
+              // Replacement Asset Type: GUARANTEED SAME AS OLD ASSET TYPE!
+              const matchedType = self.syncSwapOldAssetToReplacement(matchedId, asset);
 
               // CPU Configuration (Auto-apply old CPU)
               const cpuInput = document.getElementById('swapCpuInput');
-              if (cpuInput) {
+              if (cpuInput && asset) {
                 cpuInput.value = asset.cpu || '';
               }
 
               // RAM (Auto-apply old RAM)
               const ramSelect = document.getElementById('swapRamSelect');
-              if (ramSelect && asset.ram) {
+              if (ramSelect && asset && asset.ram) {
                 let found = false;
                 for (let i = 0; i < ramSelect.options.length; i++) {
                   if (ramSelect.options[i].value.toLowerCase() === asset.ram.toLowerCase()) {
@@ -4308,7 +4317,7 @@
 
               // SSD (Auto-apply old SSD)
               const ssdSelect = document.getElementById('swapSsdSelect');
-              if (ssdSelect && asset.ssd) {
+              if (ssdSelect && asset && asset.ssd) {
                 let found = false;
                 for (let i = 0; i < ssdSelect.options.length; i++) {
                   if (ssdSelect.options[i].value.toLowerCase() === asset.ssd.toLowerCase()) {
@@ -4325,7 +4334,7 @@
 
               // HDD (Auto-apply old HDD)
               const hddSelect = document.getElementById('swapHddSelect');
-              if (hddSelect && asset.hdd) {
+              if (hddSelect && asset && asset.hdd) {
                 let found = false;
                 for (let i = 0; i < hddSelect.options.length; i++) {
                   if (hddSelect.options[i].value.toLowerCase() === asset.hdd.toLowerCase()) {
@@ -4342,7 +4351,7 @@
 
               // Monitor Model (Auto-apply old Monitor)
               const monitorInput = document.getElementById('swapMonitorInput');
-              if (monitorInput) {
+              if (monitorInput && asset) {
                 monitorInput.value = asset.monitor || '';
               }
 
@@ -4352,7 +4361,7 @@
               if (assignedDateInput && !assignedDateInput.value) {
                 assignedDateInput.value = new Date().toISOString().substring(0, 10);
               }
-              if (swapDateInput && (!swapDateInput.value || !app.swapDateManuallyEdited)) {
+              if (swapDateInput && (!swapDateInput.value || !self.swapDateManuallyEdited)) {
                 swapDateInput.value = assignedDateInput ? assignedDateInput.value : new Date().toISOString().substring(0, 10);
               }
 
@@ -4362,17 +4371,111 @@
                 autoBanner.style.display = 'flex';
               }
 
-              Utils.showToast('Specs Auto-Applied', `Applied ${asset.user || asset.id}'s CPU (${asset.cpu}) & RAM (${asset.ram}) to Replacement System.`);
+              const autoBadge = document.getElementById('swapAutoFillTypeBadge');
+              if (autoBadge) autoBadge.textContent = matchedType || 'Matched';
+
+              Utils.showToast('Specs & Type Auto-Applied', `Applied ${asset ? (asset.user || asset.id) : matchedId}'s type (${matchedType}), CPU & RAM to Replacement System.`);
             } else {
               document.getElementById('swapOldTeam').value = '';
-              document.getElementById('swapOldAssetId').value = '';
+              const oldAssetInput = document.getElementById('swapOldAssetId');
+              if (oldAssetInput) oldAssetInput.value = '';
               document.getElementById('swapOldDetails').value = '';
               document.getElementById('swapOldUsername').value = '';
+
+              const assetTypeSelect = document.getElementById('swapAssetTypeSelect');
+              if (assetTypeSelect) assetTypeSelect.value = '';
 
               const autoBanner = document.getElementById('swapAutoFillBanner');
               if (autoBanner) autoBanner.style.display = 'none';
             }
           });
+        }
+
+        // Auto-sync when Old Asset ID is typed or changed directly
+        const oldAssetIdInput = document.getElementById('swapOldAssetId');
+        if (oldAssetIdInput) {
+          const handleOldAssetIdChange = () => {
+            const enteredId = (oldAssetIdInput.value || '').trim();
+            if (!enteredId) {
+              const assetTypeSelect = document.getElementById('swapAssetTypeSelect');
+              if (assetTypeSelect) assetTypeSelect.value = '';
+              const autoBanner = document.getElementById('swapAutoFillBanner');
+              if (autoBanner) autoBanner.style.display = 'none';
+              return;
+            }
+
+            // Look up asset in store
+            const matchedAsset = (store.data.assets || []).find(a => 
+              (a.id && a.id.toUpperCase() === enteredId.toUpperCase()) ||
+              (a.assetId && a.assetId.toUpperCase() === enteredId.toUpperCase())
+            );
+
+            // Sync Replacement Asset Type to the EXACT SAME type as Old Asset ID
+            const matchedType = self.syncSwapOldAssetToReplacement(enteredId, matchedAsset);
+
+            // If found in store, auto-populate other fields if empty or if matching
+            if (matchedAsset) {
+              const oldSelect = document.getElementById('swapOldUserSelect');
+              if (oldSelect) {
+                for (let i = 0; i < oldSelect.options.length; i++) {
+                  if ((oldSelect.options[i].value || '').toUpperCase() === matchedAsset.id.toUpperCase()) {
+                    oldSelect.selectedIndex = i;
+                    break;
+                  }
+                }
+              }
+
+              const oldTeam = document.getElementById('swapOldTeam');
+              if (oldTeam && (!oldTeam.value || oldTeam.value === 'Auto-populated')) oldTeam.value = matchedAsset.team || '';
+
+              const oldDetails = document.getElementById('swapOldDetails');
+              if (oldDetails) oldDetails.value = `${matchedType} • ${matchedAsset.cpu || ''} • ${matchedAsset.ram || ''} • ${matchedAsset.ssd || matchedAsset.hdd || ''}`;
+
+              const oldUsername = document.getElementById('swapOldUsername');
+              if (oldUsername && (!oldUsername.value || oldUsername.value === 'Auto-populated')) oldUsername.value = matchedAsset.user || '';
+
+              const newUserInput = document.getElementById('swapNewUserInput');
+              if (newUserInput && !newUserInput.value) newUserInput.value = matchedAsset.user || '';
+
+              const newTeamSelect = document.getElementById('swapNewTeamSelect');
+              if (newTeamSelect && (!newTeamSelect.value || newTeamSelect.value === 'PHP') && matchedAsset.team) {
+                newTeamSelect.value = matchedAsset.team;
+              }
+
+              const cpuInput = document.getElementById('swapCpuInput');
+              if (cpuInput && (!cpuInput.value || cpuInput.value.includes('i7-13700')) && matchedAsset.cpu) {
+                cpuInput.value = matchedAsset.cpu;
+              }
+
+              const autoBanner = document.getElementById('swapAutoFillBanner');
+              if (autoBanner) autoBanner.style.display = 'flex';
+              const autoBadge = document.getElementById('swapAutoFillTypeBadge');
+              if (autoBadge) autoBadge.textContent = matchedType;
+            }
+          };
+
+          oldAssetIdInput.addEventListener('input', handleOldAssetIdChange);
+          oldAssetIdInput.addEventListener('change', handleOldAssetIdChange);
+
+          // Property setter hook to catch any direct programmatic assignment: el.value = '...'
+          try {
+            const inputProto = (typeof HTMLInputElement !== 'undefined') ? HTMLInputElement.prototype : (oldAssetIdInput && Object.getPrototypeOf(oldAssetIdInput));
+            const descriptor = inputProto ? Object.getOwnPropertyDescriptor(inputProto, 'value') : null;
+            if (descriptor && descriptor.set) {
+              Object.defineProperty(oldAssetIdInput, 'value', {
+                get() {
+                  return descriptor.get.call(this);
+                },
+                set(v) {
+                  descriptor.set.call(this, v);
+                  self.syncSwapOldAssetToReplacement(v);
+                },
+                configurable: true
+              });
+            }
+          } catch (e) {
+            console.warn('Property descriptor hook on swapOldAssetId not installed:', e);
+          }
         }
 
         // Auto-link Assigned Date to Swap Date unless manually changed
@@ -4721,7 +4824,8 @@
       const newUserName = formData.get('swapNewUser')?.trim();
       const newTeam = formData.get('swapNewTeam');
       const assetType = formData.get('swapAssetType') || 'Desktop';
-      const newAssetId = formData.get('swapNewAssetId')?.trim() || `AST-${assetType === 'Laptop' ? 'LPT' : 'DSK'}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const typePrefix = (assetType.toLowerCase() === 'laptop') ? 'LPT' : (assetType.toLowerCase() === 'macbook') ? 'MAC' : 'DSK';
+      const newAssetId = formData.get('swapNewAssetId')?.trim() || `AST-${typePrefix}-${Math.floor(1000 + Math.random() * 9000)}`;
       const cpu = formData.get('swapCpu')?.trim();
       const ram = formData.get('swapRam');
       const hdd = formData.get('swapHdd') || 'None';
@@ -7250,7 +7354,9 @@ Remarks: ${r.remark || 'None'}`);
       if (newTeamSelect) newTeamSelect.value = swap.newTeam;
 
       const assetTypeSelect = document.getElementById('swapAssetTypeSelect');
-      if (assetTypeSelect) assetTypeSelect.value = newAsset?.type || (swap.newAssetId.includes('LPT') ? 'Laptop' : 'Desktop');
+      if (assetTypeSelect) {
+        assetTypeSelect.value = newAsset?.type || (oldAsset ? oldAsset.type : '') || this.resolveAssetType(oldAsset, swap.oldAssetId);
+      }
 
       const newAssetIdInput = document.getElementById('swapNewAssetId');
       if (newAssetIdInput) newAssetIdInput.value = swap.newAssetId;
@@ -11618,6 +11724,14 @@ Remarks: ${r.remark || 'None'}`);
       }
 
       select.innerHTML = html;
+
+      // Also populate swapOldAssetDatalist with all system assets for direct autocomplete
+      const dl = document.getElementById('swapOldAssetDatalist');
+      if (dl) {
+        dl.innerHTML = assets.map(a => 
+          `<option value="${Utils.escapeHtml(a.id)}">${Utils.escapeHtml(a.id)} (${Utils.escapeHtml(a.type || 'System')} - ${Utils.escapeHtml(a.user || 'Available')})</option>`
+        ).join('');
+      }
     }
 
     filterSwapOldSystems(filterType = 'all') {
@@ -11639,6 +11753,66 @@ Remarks: ${r.remark || 'None'}`);
       }
 
       this.populateSwapOldUserSelect(filterType);
+    }
+
+    resolveAssetType(assetObj, idString) {
+      if (assetObj && assetObj.type && String(assetObj.type).trim()) {
+        const raw = String(assetObj.type).trim();
+        const low = raw.toLowerCase();
+        if (low === 'laptop' || low.includes('laptop') || low.includes('notebook')) return 'Laptop';
+        if (low === 'desktop' || low.includes('desktop') || low.includes('pc') || low.includes('cpu')) return 'Desktop';
+        if (low === 'macbook' || low.includes('macbook') || low.includes('mac') || low.includes('apple')) return 'MacBook';
+        return raw;
+      }
+      const id = String(idString || (assetObj && assetObj.id) || '').trim().toUpperCase();
+      if (id && store && store.data && store.data.assets) {
+        const found = store.data.assets.find(a => 
+          (a.id && a.id.toUpperCase() === id) || (a.assetId && a.assetId.toUpperCase() === id)
+        );
+        if (found && found.type && String(found.type).trim()) {
+          return this.resolveAssetType(found, id);
+        }
+      }
+      if (id.includes('LAP') || id.includes('LPT') || id.includes('OWN') || id.includes('NOTEBOOK')) return 'Laptop';
+      if (id.includes('MAC') || id.includes('APPLE')) return 'MacBook';
+      if (id.includes('CPU') || id.includes('DSK') || id.includes('DESK') || id.includes('SYS')) return 'Desktop';
+      return 'Desktop';
+    }
+
+    syncSwapOldAssetToReplacement(oldAssetId, assetObj) {
+      const targetInput = document.getElementById('swapAssetTypeSelect');
+      const rawId = String(oldAssetId || '').trim();
+      if (!targetInput) return '';
+
+      if (!rawId) {
+        targetInput.value = '';
+        return '';
+      }
+
+      let asset = assetObj;
+      if (!asset && store && store.data && store.data.assets) {
+        asset = store.data.assets.find(a => 
+          (a.id && a.id.toUpperCase() === rawId.toUpperCase()) ||
+          (a.assetId && a.assetId.toUpperCase() === rawId.toUpperCase())
+        );
+      }
+
+      const matchedType = this.resolveAssetType(asset, rawId);
+      targetInput.value = matchedType;
+
+      // Update new asset ID auto-generation placeholder
+      const newAssetIdInput = document.getElementById('swapNewAssetId');
+      if (newAssetIdInput) {
+        const prefix = matchedType === 'Laptop' ? 'LPT' : (matchedType === 'MacBook' ? 'MAC' : 'DSK');
+        newAssetIdInput.placeholder = `e.g. AST-${prefix}-${Math.floor(1000 + Math.random() * 9000)} (or leave empty)`;
+      }
+
+      const autoBannerTypeBadge = document.getElementById('swapAutoFillTypeBadge');
+      if (autoBannerTypeBadge) {
+        autoBannerTypeBadge.textContent = matchedType;
+      }
+
+      return matchedType;
     }
 
     filterCategoryStock(cat) {
@@ -13286,6 +13460,12 @@ async viewAsset(assetId) {
     },
     filterSwapOldSystems(filterType) {
       app.filterSwapOldSystems(filterType);
+    },
+    resolveAssetType(assetObj, idString) {
+      return app.resolveAssetType(assetObj, idString);
+    },
+    syncSwapOldAssetToReplacement(oldAssetId, assetObj) {
+      return app.syncSwapOldAssetToReplacement(oldAssetId, assetObj);
     },
     filterCategoryStock(cat) {
       app.filterCategoryStock(cat);

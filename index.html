@@ -836,6 +836,11 @@
                   <datalist id="assetTypeList">
                     <option value="Desktop">
                     <option value="Laptop">
+                    <option value="MacBook">
+                    <option value="Workstation">
+                    <option value="All-in-One">
+                    <option value="Mini PC">
+                    <option value="Server">
                   </datalist>
                 </div>
 
@@ -1122,8 +1127,9 @@
                   </div>
 
                   <div class="form-group" style="margin-bottom: 12px;">
-                    <label class="form-label" for="swapOldAssetId">Old Asset ID</label>
-                    <input type="text" class="form-control" name="swapOldAssetId" id="swapOldAssetId" readonly placeholder="Auto-populated">
+                    <label class="form-label" for="swapOldAssetId">Old Asset ID <span class="req">*</span></label>
+                    <input type="text" class="form-control" name="swapOldAssetId" id="swapOldAssetId" placeholder="Auto-populated or enter Asset ID..." list="swapOldAssetDatalist" autocomplete="off" required>
+                    <datalist id="swapOldAssetDatalist"></datalist>
                   </div>
 
                   <div class="form-group" style="margin-bottom: 12px;">
@@ -1147,7 +1153,7 @@
 
                   <!-- Auto-fill indicator banner -->
                   <div id="swapAutoFillBanner" style="display:none; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:var(--radius-sm); padding:8px 12px; margin-bottom:14px; font-size:0.78rem; color:#065f46; align-items:center; justify-content:space-between;">
-                    <span>✨ <strong>Old Specs Auto-Applied:</strong> CPU, RAM, Storage, Monitor copied as baseline.</span>
+                    <span>✨ <strong>Old Specs & Asset Type Auto-Applied:</strong> Replacement Type (<strong id="swapAutoFillTypeBadge">Same as Old Asset</strong>), CPU, RAM, Storage copied from Old Asset.</span>
                     <span style="font-size:0.72rem; color:#047857; font-weight:600;">You can modify if upgrading</span>
                   </div>
 
@@ -1164,7 +1170,7 @@
                   <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom: 12px;">
                     <div class="form-group">
                       <label class="form-label" for="swapAssetTypeSelect">Replacement Asset Type <span class="req">*</span></label>
-                      <input type="text" class="form-control" name="swapAssetType" id="swapAssetTypeSelect" placeholder="Select or type Asset Type..." required list="assetTypeList" autocomplete="off" value="Desktop">
+                      <input type="text" class="form-control" name="swapAssetType" id="swapAssetTypeSelect" placeholder="Auto-matched to Old Asset (or select)..." required list="assetTypeList" autocomplete="off" value="">
                     </div>
                     <div class="form-group">
                       <label class="form-label" for="swapNewAssetId">New Asset ID</label>
