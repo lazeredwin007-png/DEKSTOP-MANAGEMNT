@@ -67,7 +67,7 @@ async function asyncTest(name, fn) {
   // --- STEP 1: ADD STOCK FORM VERIFICATION ---
   console.log('--- 1. Add Stock Form Verification ---');
 
-  test('Form contains all 5 required fields: Category, Spec/Model, Serial, Purchase Date, Current Status', () => {
+  test('Form contains all required fields: Category, Spec/Model, Serial, Purchase Date, Current Status', () => {
     assert(html.includes('id="instockComponentType"'), 'Must have Category select');
     assert(html.includes('id="instockModel"'), 'Must have Hardware Item / Model input');
     assert(html.includes('id="instockSpec"'), 'Must have Specification input');
@@ -76,6 +76,7 @@ async function asyncTest(name, fn) {
     assert(html.includes('id="instockStatus"'), 'Must have Current Status select');
     assert(html.includes('Non-Assigned (Available in Stock)'), 'Status dropdown must include Non-Assigned');
     assert(html.includes('value="Assigned"'), 'Status dropdown must include Assigned');
+    assert(!html.includes('Under Maintenance (Non-Assigned)'), 'Under Maintenance (Non-Assigned) must be removed');
   });
 
   test('Required validation enforces mandatory fields and duplicates', () => {
@@ -92,25 +93,24 @@ async function asyncTest(name, fn) {
   // --- STEP 2: EDIT STOCK FORM & STATUS-DEPENDENT BEHAVIOR ---
   console.log('\n--- 2. Edit Stock Form & Status-Dependent Behavior ---');
 
-  test('Edit form includes assigned fields, team, tl, reason, and date', () => {
-    assert(html.includes('id="instockAssignedUser"'), 'Must have Assigned User field');
-    assert(html.includes('id="instockAssignedTeam"'), 'Must have Team select');
-    assert(html.includes('id="instockAssignedTl"'), 'Must have TL field');
-    assert(html.includes('id="instockReason"'), 'Must have Hardware Item / Reason field');
-    assert(html.includes('id="instockAssignedDate"'), 'Must have Assigned Date field');
+  test('Edit form removes Assigned User Name, Assigned Date, and Remarks fields', () => {
+    assert(!html.includes('Assigned User Name (yaruku)'), 'Assigned User Name (yaruku) must be removed');
+    assert(!html.includes('Assigned Date (yapo)'), 'Assigned Date (yapo) must be removed');
+    assert(!html.includes('id="instockRemark"'), 'Remarks field (instockRemark) must be removed from Edit form');
   });
 
-  test('Non-Assigned state clears stale assignment inputs and does not display stale values', () => {
-    assert(appJs.includes('When Non-Assigned, ensure stale assignment details are NEVER displayed as current values'), 'Code explicitly clears stale values when editing Non-Assigned');
-    assert(appJs.includes('userInput.value = \'\''), 'Clears assigned user input');
-    assert(appJs.includes('reasonInput.value = \'\''), 'Clears reason input');
-    assert(appJs.includes('assignedDateInput.value = \'\''), 'Clears assigned date input');
+  test('Form does not require removed fields to save', () => {
+    assert(!appJs.includes('Assigned User Name is required when status is Assigned.'), 'Assigned User Name is not required');
+    assert(!appJs.includes('Assigned Date is required when status is Assigned.'), 'Assigned Date is not required');
   });
 
-  test('Assigned status requires employee name, assigned date, and reason', () => {
-    assert(appJs.includes('Assigned User Name is required when status is Assigned.'), 'Validates assigned user');
-    assert(appJs.includes('Assigned Date is required when status is Assigned.'), 'Validates assigned date');
-    assert(appJs.includes('Hardware Item / Reason is required when status is Assigned.'), 'Validates reason');
+  test('Status badges display Non-Assigned in red and Assigned in green', () => {
+    assert(appJs.includes('🔴 Non-Assigned (Available in Stock)'), 'Non-Assigned displays red indicator and exact label');
+    assert(appJs.includes('🟢 Assigned'), 'Assigned displays green indicator and exact label');
+    assert(appJs.includes('#fef2f2'), 'Non-Assigned uses light red background');
+    assert(appJs.includes('#991b1b'), 'Non-Assigned uses dark red text');
+    assert(appJs.includes('#f0fdf4'), 'Assigned uses light green background');
+    assert(appJs.includes('#166534'), 'Assigned uses dark green text');
   });
 
   // --- STEP 3: STOCK & ASSIGNMENT HISTORY ACTION & MODAL ---

@@ -8375,14 +8375,12 @@ Remarks: ${r.remark || 'None'}`);
         const st = item.status || 'Available';
 
         let statusBadge = '';
-        if (st === 'Available') {
-          statusBadge = `<span class="badge" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; font-weight:700; font-size:0.75rem; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">🟢 Available</span>`;
+        if (st === 'Assigned') {
+          statusBadge = `<span class="badge" style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; font-weight:700; font-size:0.75rem; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;"><span style="width:6px; height:6px; border-radius:50%; background:#16a34a; display:inline-block;"></span>🟢 Assigned</span>`;
         } else if (st === 'Ready for Assignment' || st === 'Ready') {
           statusBadge = `<span class="badge" style="background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe; font-weight:700; font-size:0.75rem; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">⚡ Ready for Assignment</span>`;
-        } else if (st === 'Assigned') {
-          statusBadge = `<span class="badge" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-weight:700; font-size:0.75rem; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">👤 Assigned</span>`;
         } else {
-          statusBadge = `<span class="badge" style="background:#fffbeb; color:#d97706; border:1px solid #fde68a; font-weight:700; font-size:0.75rem; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">🛠️ Maintenance</span>`;
+          statusBadge = `<span class="badge" style="background:#fef2f2; color:#991b1b; border:1px solid #fecaca; font-weight:700; font-size:0.75rem; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;"><span style="width:6px; height:6px; border-radius:50%; background:#dc2626; display:inline-block;"></span>🔴 Non-Assigned (Available in Stock)</span>`;
         }
 
         return `
@@ -8498,16 +8496,16 @@ Remarks: ${r.remark || 'None'}`);
         const st = item.status || 'Available';
 
         let statusBadge = '';
-        if (st === 'Available') {
-          statusBadge = `<span class="instock-badge instock-badge-available" title="Available in stock, ready for immediate assignment">🟢 Available</span>`;
-        } else if (st === 'Assigned') {
+        if (st === 'Assigned') {
           statusBadge = `
             <span class="instock-badge instock-badge-assigned" style="cursor:pointer;" onclick="window.ITApp.toggleAssetDrawer('${item.id}')" title="Click to view/collapse assignment details">
-              👤 Assigned ▾
+              <span style="width:6px; height:6px; border-radius:50%; background:#16a34a; display:inline-block;"></span>🟢 Assigned ▾
             </span>
           `;
+        } else if (st === 'Ready for Assignment' || st === 'Ready') {
+          statusBadge = `<span class="instock-badge" style="background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe;">⚡ Ready for Assignment</span>`;
         } else {
-          statusBadge = `<span class="instock-badge instock-badge-maintenance">🛠️ Maintenance</span>`;
+          statusBadge = `<span class="instock-badge instock-badge-available" title="Available in stock, ready for immediate assignment"><span style="width:6px; height:6px; border-radius:50%; background:#dc2626; display:inline-block;"></span>🔴 Non-Assigned (Available in Stock)</span>`;
         }
 
         let actionBtns = '';
@@ -8678,18 +8676,15 @@ Remarks: ${r.remark || 'None'}`);
       if (remarkEl) remarkEl.textContent = item.remark || 'None';
 
       if (statusBadgeEl) {
-        if (st === 'Available') {
-          statusBadgeEl.className = 'badge badge-success';
-          statusBadgeEl.textContent = '🟢 Available';
+        if (st === 'Assigned') {
+          statusBadgeEl.style.cssText = 'background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; font-weight:700; padding:4px 10px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;';
+          statusBadgeEl.innerHTML = '<span style="width:6px; height:6px; border-radius:50%; background:#16a34a; display:inline-block;"></span>🟢 Assigned';
         } else if (st === 'Ready for Assignment' || st === 'Ready') {
-          statusBadgeEl.className = 'badge badge-primary';
-          statusBadgeEl.textContent = '⚡ Ready for Assignment';
-        } else if (st === 'Assigned') {
-          statusBadgeEl.className = 'badge badge-primary';
-          statusBadgeEl.textContent = '👤 Assigned';
+          statusBadgeEl.style.cssText = 'background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe; font-weight:700; padding:4px 10px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;';
+          statusBadgeEl.innerHTML = '⚡ Ready for Assignment';
         } else {
-          statusBadgeEl.className = 'badge badge-warning';
-          statusBadgeEl.textContent = '🛠️ Under Maintenance';
+          statusBadgeEl.style.cssText = 'background:#fef2f2; color:#991b1b; border:1px solid #fecaca; font-weight:700; padding:4px 10px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;';
+          statusBadgeEl.innerHTML = '<span style="width:6px; height:6px; border-radius:50%; background:#dc2626; display:inline-block;"></span>🔴 Non-Assigned (Available in Stock)';
         }
       }
 
@@ -8711,22 +8706,27 @@ Remarks: ${r.remark || 'None'}`);
         app.currentViewAssetId = item.id;
         const metaContainer = document.getElementById('viewAssetModalMeta');
         if (metaContainer) {
-          const statusBg = (st === 'Available') ? '#ecfdf5' : ((st === 'Assigned') ? '#eff6ff' : '#fffbeb');
-          const statusColor = (st === 'Available') ? '#059669' : ((st === 'Assigned') ? '#2563eb' : '#d97706');
-          const statusBorder = (st === 'Available') ? '#a7f3d0' : ((st === 'Assigned') ? '#bfdbfe' : '#fde68a');
+          const isAssigned = (st === 'Assigned');
+          const isReady = (st === 'Ready for Assignment' || st === 'Ready');
+          const statusBg = isAssigned ? '#f0fdf4' : (isReady ? '#f5f3ff' : '#fef2f2');
+          const statusColor = isAssigned ? '#166534' : (isReady ? '#7c3aed' : '#991b1b');
+          const statusBorder = isAssigned ? '#bbf7d0' : (isReady ? '#ddd6fe' : '#fecaca');
+          const statusIndicator = isAssigned ? '#16a34a' : (isReady ? '#7c3aed' : '#dc2626');
+          const statusLabel = isAssigned ? 'Assigned' : (isReady ? '⚡ Ready for Assignment' : 'Non-Assigned (Available in Stock)');
 
           metaContainer.innerHTML = `
             <span style="background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.76rem; font-weight: 700; padding: 3px 10px; border-radius: 6px;" title="Asset ID">${Utils.escapeHtml(item.id)}</span>
             <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.76rem; font-weight: 600; padding: 3px 10px; border-radius: 6px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0;">${icon} ${Utils.escapeHtml(type)}</span>
             <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.76rem; font-weight: 700; padding: 3px 12px; border-radius: 9999px; background: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusBorder};">
-              <span style="width: 6px; height: 6px; border-radius: 50%; background: ${statusColor};"></span>
-              ${Utils.escapeHtml(st)}
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: ${statusIndicator};"></span>
+              ${Utils.escapeHtml(statusLabel)}
             </span>
           `;
         }
 
         const body = document.getElementById('viewAssetModalBody');
         if (body) {
+          const isAssigned = (st === 'Assigned');
           body.innerHTML = `
             <div style="display: grid; grid-template-columns: 1fr 1.05fr; gap: 14px; margin-bottom: 14px;">
               
@@ -8739,8 +8739,8 @@ Remarks: ${r.remark || 'None'}`);
                     </div>
                     <span style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">${isAssigned ? 'User Custody & Assignment' : 'Inventory Storage & Custody'}</span>
                   </div>
-                  <span style="background: ${isAssigned ? '#eff6ff' : '#ecfdf5'}; border: 1px solid ${isAssigned ? '#bfdbfe' : '#a7f3d0'}; color: ${isAssigned ? '#2563eb' : '#059669'}; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px;">
-                    ${isAssigned ? 'Assigned Asset' : 'In Stock (Available)'}
+                  <span style="background: ${isAssigned ? '#f0fdf4' : '#fef2f2'}; border: 1px solid ${isAssigned ? '#bbf7d0' : '#fecaca'}; color: ${isAssigned ? '#166534' : '#991b1b'}; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px;">
+                    ${isAssigned ? 'Assigned' : 'Non-Assigned (Available in Stock)'}
                   </span>
                 </div>
 
@@ -8750,9 +8750,9 @@ Remarks: ${r.remark || 'None'}`);
                     <span style="font-size: 0.68rem; font-weight: 800; color: #2563eb; letter-spacing: 0.5px; text-transform: uppercase;">
                       ${isAssigned ? 'CURRENT ALLOTTED USER' : 'INVENTORY CUSTODY'}
                     </span>
-                    <span style="background: ${isAssigned ? '#ecfdf5' : '#f0fdf4'}; color: ${isAssigned ? '#059669' : '#16a34a'}; border: 1px solid ${isAssigned ? '#a7f3d0' : '#bbf7d0'}; padding: 2px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
-                      <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
-                      ${isAssigned ? 'Active Custody' : 'Storage / Available'}
+                    <span style="background: ${isAssigned ? '#f0fdf4' : '#fef2f2'}; color: ${isAssigned ? '#166534' : '#991b1b'}; border: 1px solid ${isAssigned ? '#bbf7d0' : '#fecaca'}; padding: 2px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                      <span style="width: 6px; height: 6px; border-radius: 50%; background: ${isAssigned ? '#16a34a' : '#dc2626'};"></span>
+                      ${isAssigned ? 'Active Custody' : 'Non-Assigned (Available in Stock)'}
                     </span>
                   </div>
                   <div style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 8px 0 6px 0; letter-spacing: -0.2px;">
@@ -10189,39 +10189,25 @@ Remarks: ${r.remark || 'None'}`);
 
       if (section) section.style.display = isAssigned ? 'flex' : 'none';
       if (helpText) {
-        if (statusSelect && statusSelect.value === 'Under Maintenance') {
-          helpText.style.display = 'block';
-          helpText.innerHTML = '🛠️ Non-Assigned item marked under maintenance for diagnosis / repairs.';
-        } else if (isAssigned) {
+        if (isAssigned) {
           helpText.style.display = 'none';
         } else {
           helpText.style.display = 'block';
-          helpText.innerHTML = '💡 Non-Assigned item will be kept in available stock ready for future assignment.';
+          helpText.innerHTML = '💡 Non-Assigned item will be kept in available stock ready for assignment.';
         }
       }
 
-      if (isAssigned) {
-        if (userInput) userInput.required = true;
-        if (assignedDateInput) {
-          assignedDateInput.required = true;
-          if (!assignedDateInput.value) {
-            assignedDateInput.value = new Date().toISOString().substring(0, 10);
-          }
-        }
-        if (reasonInput) reasonInput.required = true;
-      } else {
-        if (userInput) {
-          userInput.required = false;
-          userInput.value = '';
-        }
-        if (assignedDateInput) {
-          assignedDateInput.required = false;
-          assignedDateInput.value = '';
-        }
-        if (reasonInput) {
-          reasonInput.required = false;
-          reasonInput.value = '';
-        }
+      if (userInput) {
+        userInput.required = false;
+        if (!isAssigned) userInput.value = '';
+      }
+      if (assignedDateInput) {
+        assignedDateInput.required = false;
+        if (!isAssigned) assignedDateInput.value = '';
+      }
+      if (reasonInput) {
+        reasonInput.required = false;
+        if (!isAssigned) reasonInput.value = '';
       }
     }
 
@@ -10241,12 +10227,15 @@ Remarks: ${r.remark || 'None'}`);
       const radioAssigned = document.getElementById('instockStatusAssigned');
       const status = statusSelect ? statusSelect.value : (radioAssigned && radioAssigned.checked ? 'Assigned' : 'Available');
       const isAssigned = (status === 'Assigned');
-      const assigned_user = isAssigned ? (document.getElementById('instockAssignedUser')?.value?.trim() || '') : '';
-      const assigned_date = isAssigned ? (document.getElementById('instockAssignedDate')?.value || '') : '';
-      const team = isAssigned ? (document.getElementById('instockAssignedTeam')?.value || '') : '';
-      const tl = isAssigned ? (document.getElementById('instockAssignedTl')?.value?.trim() || '') : '';
-      const reason = isAssigned ? (document.getElementById('instockReason')?.value?.trim() || '') : '';
-      const remark = document.getElementById('instockRemark')?.value?.trim() || '';
+      const existingItem = editId ? ((store.data.instockHardware || []).find(i => i.id === editId) || {}) : {};
+
+      const assigned_user = isAssigned ? (document.getElementById('instockAssignedUser')?.value?.trim() || existingItem.assigned_user || '') : '';
+      const assigned_date = isAssigned ? (document.getElementById('instockAssignedDate')?.value || existingItem.assigned_date || purchase_date) : '';
+      const team = isAssigned ? (document.getElementById('instockAssignedTeam')?.value || existingItem.team || '') : '';
+      const tl = isAssigned ? (document.getElementById('instockAssignedTl')?.value?.trim() || existingItem.tl || '') : '';
+      const reason = isAssigned ? (document.getElementById('instockReason')?.value?.trim() || existingItem.changing_reason || '') : '';
+      const remarkInput = document.getElementById('instockRemark');
+      const remark = remarkInput ? remarkInput.value.trim() : (existingItem.remark || '');
 
       const finalAssetId = customAssetId || this.getNextInstockAssetId(component_type);
 
@@ -10274,20 +10263,6 @@ Remarks: ${r.remark || 'None'}`);
       if (!status) {
         Utils.showToast('Validation Error', 'Current Status is required.', 'error');
         return;
-      }
-      if (isAssigned) {
-        if (!assigned_user) {
-          Utils.showToast('Validation Error', 'Assigned User Name is required when status is Assigned.', 'error');
-          return;
-        }
-        if (!assigned_date) {
-          Utils.showToast('Validation Error', 'Assigned Date is required when status is Assigned.', 'error');
-          return;
-        }
-        if (!reason) {
-          Utils.showToast('Validation Error', 'Hardware Item / Reason is required when status is Assigned.', 'error');
-          return;
-        }
       }
 
       const allItems = store.data.instockHardware || [];
@@ -10765,12 +10740,12 @@ Remarks: ${r.remark || 'None'}`);
         const st = item.status || 'Available';
 
         let statusBadge = '';
-        if (st === 'Available') {
-          statusBadge = `<span class="instock-badge instock-badge-available">🟢 Available</span>`;
-        } else if (st === 'Assigned') {
-          statusBadge = `<span class="instock-badge instock-badge-assigned">👤 Assigned (${Utils.escapeHtml(item.assigned_user || 'Allocated')})</span>`;
+        if (st === 'Assigned') {
+          statusBadge = `<span class="instock-badge instock-badge-assigned"><span style="width:6px; height:6px; border-radius:50%; background:#16a34a; display:inline-block;"></span>🟢 Assigned (${Utils.escapeHtml(item.assigned_user || 'Allocated')})</span>`;
+        } else if (st === 'Ready for Assignment' || st === 'Ready') {
+          statusBadge = `<span class="instock-badge" style="background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe;">⚡ Ready for Assignment</span>`;
         } else {
-          statusBadge = `<span class="instock-badge instock-badge-maintenance">🛠️ Maintenance</span>`;
+          statusBadge = `<span class="instock-badge instock-badge-available"><span style="width:6px; height:6px; border-radius:50%; background:#dc2626; display:inline-block;"></span>🔴 Non-Assigned (Available in Stock)</span>`;
         }
 
         return `

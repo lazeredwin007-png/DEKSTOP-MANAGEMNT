@@ -4313,9 +4313,9 @@ a[href="#non-it-assets"],
 }
 
 .instock-badge-assigned {
-  background: #eff6ff;
-  color: #1e40af;
-  border: 1px solid #bfdbfe;
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
 }
 
 .instock-badge-returned {
@@ -4325,9 +4325,9 @@ a[href="#non-it-assets"],
 }
 
 .instock-badge-available {
-  background: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
 }
 
 .instock-badge-maintenance {

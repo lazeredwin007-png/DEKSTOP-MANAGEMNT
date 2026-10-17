@@ -72,7 +72,7 @@ async function asyncTest(name, fn) {
     assert(html.includes('onclick="window.ITApp.openInstockEntryModal()"'), 'Must call openInstockEntryModal()');
   });
 
-  test('modalInstockEntry has all input fields: Asset ID, Category, Model, Spec, Serial, Purchase Date, Status, Assignment fields, Remark', () => {
+  test('modalInstockEntry has all required stock input fields: Asset ID, Category, Model, Spec, Serial, Purchase Date, Status', () => {
     assert(html.includes('id="instockAssetId"'), 'instockAssetId exists');
     assert(html.includes('id="instockComponentType"'), 'instockComponentType exists');
     assert(html.includes('id="instockModel"'), 'instockModel exists');
@@ -81,7 +81,6 @@ async function asyncTest(name, fn) {
     assert(html.includes('id="instockPurchaseDate"'), 'instockPurchaseDate exists');
     assert(html.includes('id="instockStatus"'), 'instockStatus exists');
     assert(html.includes('id="instockAssignedFieldsSection"'), 'instockAssignedFieldsSection exists');
-    assert(html.includes('id="instockRemark"'), 'instockRemark exists');
     assert(html.includes('id="btnSaveInstockEntry"'), 'btnSaveInstockEntry exists');
   });
 
