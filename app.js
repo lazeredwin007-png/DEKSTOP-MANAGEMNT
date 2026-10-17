@@ -1065,7 +1065,9 @@
       const user = AuthService.getCurrentUser() || { displayName: 'Sundar Pichai', role: 'Admin', avatar: 'SP' };
       this.applyRole(user.role, user);
 
-      this.renderCurrentView();
+      const targetHash = (typeof window !== 'undefined' && window.location.hash) ? window.location.hash.substring(1) : '';
+      const initialView = targetHash || this.currentView || 'dashboard';
+      this.navigateTo(initialView, false);
       this.updateDashboardMetrics();
     }
 
@@ -1369,7 +1371,7 @@
 
       // Initialize starting history state on load
       const initialView = window.location.hash ? window.location.hash.substring(1) : 'dashboard';
-      if (!history.state) {
+      if (typeof history !== 'undefined' && !history.state) {
         history.replaceState({ view: initialView || 'dashboard' }, '', '#' + (initialView || 'dashboard'));
       }
 
@@ -1467,8 +1469,8 @@
         'purchase-required': 'Purchase & Procurement',
         'assigned-hardware': 'Assigned Hardware Items',
         'hardware-stock': 'Hardware Stock & Accessories',
-        'instock': 'Instock Dashboard',
-        'instock-dashboard': 'Instock Dashboard',
+        'instock': 'Instock',
+        'instock-dashboard': 'Instock',
         'instock-entry': 'Instock Entry',
         'instock-asset-details': 'Asset Details',
         'instock-requests': 'Hardware Requests',
@@ -1505,6 +1507,8 @@
         targetPanelId = 'view-all-assets';
       } else if (viewId === 'instock-inventory') {
         targetPanelId = 'view-instock-asset-details';
+      } else if (viewId === 'instock' || viewId === 'instock-dashboard') {
+        targetPanelId = document.getElementById('view-instock') ? 'view-instock' : 'view-instock-dashboard';
       }
       const targetPanel = document.getElementById(targetPanelId) || document.getElementById(`view-${viewId}`);
       if (targetPanel) {
@@ -4274,6 +4278,10 @@
               if (oldAssetInput) {
                 oldAssetInput.value = matchedId;
               }
+              const newAssetInput = document.getElementById('swapNewAssetId');
+              if (newAssetInput) {
+                newAssetInput.value = matchedId; // RED LA yELLOW LA SAME ID ERKANUM!
+              }
               const displayType = asset ? (asset.type || self.resolveAssetType(asset, matchedId)) : self.resolveAssetType(null, matchedId);
               document.getElementById('swapOldDetails').value = asset ? `${displayType} • ${asset.cpu || ''} • ${asset.ram || ''} • ${asset.ssd || asset.hdd || ''}` : `${matchedId} (Selected System)`;
               document.getElementById('swapOldUsername').value = asset ? (asset.user || '') : '';
@@ -4382,8 +4390,7 @@
               document.getElementById('swapOldDetails').value = '';
               document.getElementById('swapOldUsername').value = '';
 
-              const assetTypeSelect = document.getElementById('swapAssetTypeSelect');
-              if (assetTypeSelect) assetTypeSelect.value = '';
+              self.syncSwapOldAssetToReplacement('');
 
               const autoBanner = document.getElementById('swapAutoFillBanner');
               if (autoBanner) autoBanner.style.display = 'none';
@@ -4397,8 +4404,7 @@
           const handleOldAssetIdChange = () => {
             const enteredId = (oldAssetIdInput.value || '').trim();
             if (!enteredId) {
-              const assetTypeSelect = document.getElementById('swapAssetTypeSelect');
-              if (assetTypeSelect) assetTypeSelect.value = '';
+              self.syncSwapOldAssetToReplacement('');
               const autoBanner = document.getElementById('swapAutoFillBanner');
               if (autoBanner) autoBanner.style.display = 'none';
               return;
@@ -4842,10 +4848,6 @@
         return;
       }
 
-      if (newAssetId && oldAssetId && newAssetId.trim().toUpperCase() === oldAssetId.trim().toUpperCase()) {
-        Utils.showToast('Validation Error', 'The replacement system cannot be the same asset as the old system being swapped.', 'error');
-        return;
-      }
 
       if (editingSwapId) {
         // UPDATE EXISTING SWAP RECORD IN SYSTEM SWAP FACILITY
@@ -4903,39 +4905,63 @@
         return;
       }
 
-      // 1. Update Old Asset to "Swap" pool and unassign from user
-      const oldAsset = store.data.assets.find(a => a.id === oldAssetId);
-      if (oldAsset) {
-        oldAsset.status = 'Swap';
-        oldAsset.user = '';
-        oldAsset.remark = `De-commissioned via system swap. Reason: ${reason}`;
+      const isSameAssetReallocation = newAssetId && oldAssetId && (newAssetId.trim().toUpperCase() === oldAssetId.trim().toUpperCase());
+      let newAsset;
+
+      if (isSameAssetReallocation) {
+        // Reallocate existing asset to new user with new team & specs (RED & YELLOW SAME ID)
+        const asset = store.data.assets.find(a => a.id.toUpperCase() === newAssetId.toUpperCase());
+        if (asset) {
+          asset.user = newUserName;
+          asset.team = newTeam;
+          asset.type = assetType;
+          asset.cpu = cpu;
+          asset.ram = ram;
+          asset.hdd = hdd;
+          asset.ssd = ssd;
+          asset.monitor = monitor;
+          asset.assignedDate = assignedDate;
+          asset.status = 'Assigned';
+          asset.workStatus = 'Currently Working';
+          asset.oldUsername = oldUser || asset.oldUsername || '';
+          asset.remark = remark || `Reallocated via System Swap Facility. Reason: ${reason}`;
+          newAsset = asset;
+        }
+      } else {
+        // 1. Update Old Asset to "Swap" pool and unassign from user
+        const oldAsset = store.data.assets.find(a => a.id === oldAssetId);
+        if (oldAsset) {
+          oldAsset.status = 'Swap';
+          oldAsset.user = '';
+          oldAsset.remark = `De-commissioned via system swap. Reason: ${reason}`;
+        }
+
+        // 2. Create / Assign New Replacement Asset
+        newAsset = {
+          id: newAssetId,
+          type: assetType,
+          user: newUserName,
+          team: newTeam,
+          cpu,
+          ram,
+          hdd,
+          ssd,
+          monitor,
+          serialNumber: `SN-SWP-${Math.floor(10000 + Math.random() * 90000)}`,
+          hostname: `${newTeam.substring(0, 3).toUpperCase()}-SWP-${Math.floor(10 + Math.random() * 90)}`,
+          ipAddress: `192.168.10.${Math.floor(20 + Math.random() * 200)}`,
+          os: oldAsset?.os || 'Windows 11 Pro',
+          location: oldAsset?.location || 'Floor 3 - Workstation Area',
+          oldUsername: oldUser,
+          assignedDate,
+          status: 'Assigned',
+          condition: 'Brand New',
+          warrantyEnd: new Date(new Date().setFullYear(new Date().getFullYear() + 3)).toISOString().substring(0, 10),
+          remark
+        };
+
+        store.data.assets.unshift(newAsset);
       }
-
-      // 2. Create / Assign New Replacement Asset
-      const newAsset = {
-        id: newAssetId,
-        type: assetType,
-        user: newUserName,
-        team: newTeam,
-        cpu,
-        ram,
-        hdd,
-        ssd,
-        monitor,
-        serialNumber: `SN-SWP-${Math.floor(10000 + Math.random() * 90000)}`,
-        hostname: `${newTeam.substring(0, 3).toUpperCase()}-SWP-${Math.floor(10 + Math.random() * 90)}`,
-        ipAddress: `192.168.10.${Math.floor(20 + Math.random() * 200)}`,
-        os: oldAsset?.os || 'Windows 11 Pro',
-        location: oldAsset?.location || 'Floor 3 - Workstation Area',
-        oldUsername: oldUser,
-        assignedDate,
-        status: 'Assigned',
-        condition: 'Brand New',
-        warrantyEnd: new Date(new Date().setFullYear(new Date().getFullYear() + 3)).toISOString().substring(0, 10),
-        remark
-      };
-
-      store.data.assets.unshift(newAsset);
 
       // Sync user assignment
       const userObj = store.data.users.find(u => u.name.toLowerCase() === newUserName.toLowerCase());
@@ -6451,6 +6477,15 @@ Remarks: ${r.remark || 'None'}`);
           }
         });
       });
+
+      // Bind Add Stock button explicitly
+      const addStockBtn = document.getElementById('btnAddStockPrimary');
+      if (addStockBtn) {
+        addStockBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.openInstockEntryModal();
+        });
+      }
     }
 
     openModal(modalId) {
@@ -8160,17 +8195,20 @@ Remarks: ${r.remark || 'None'}`);
       const items = this.getInstockItems();
       const total = items.length;
       const availableCount = items.filter(i => (i.status || 'Available') === 'Available').length;
+      const readyCount = items.filter(i => (i.status === 'Ready for Assignment' || i.status === 'Ready')).length;
       const assignedCount = items.filter(i => i.status === 'Assigned').length;
       const maintenanceCount = items.filter(i => i.status === 'Under Maintenance').length;
 
-      // Update the 4 top summary cards with live database counts
+      // Update summary cards with live database counts
       const totalEl = document.getElementById('instockTotalCount');
       const availEl = document.getElementById('instockAvailableCount');
+      const readyEl = document.getElementById('instockReadyCount');
       const assignedEl = document.getElementById('instockAssignedCount');
       const maintEl = document.getElementById('instockMaintenanceCount');
 
       if (totalEl) totalEl.textContent = total;
       if (availEl) availEl.textContent = availableCount;
+      if (readyEl) readyEl.textContent = readyCount;
       if (assignedEl) assignedEl.textContent = assignedCount;
       if (maintEl) maintEl.textContent = maintenanceCount;
 
@@ -8190,15 +8228,57 @@ Remarks: ${r.remark || 'None'}`);
       const reqCount = (store.data.requirements || []).filter(r => r.status !== 'Completed').length;
       const reqEl = document.getElementById('instockRequestsCount');
       if (reqEl) reqEl.textContent = reqCount;
+
+      this.populateInstockCategoryFilter();
+    }
+
+    populateInstockCategoryFilter() {
+      const catSelect = document.getElementById('instockInventoryCategoryFilter');
+      if (!catSelect) return;
+      const currentVal = catSelect.value || 'all';
+      const items = this.getInstockItems();
+
+      // Start with standard category definitions and add any distinct categories from actual inventory data
+      const categorySet = new Set(['CPU', 'SSD', 'RAM', 'SMPS', 'MONITOR', 'OTHER']);
+      items.forEach(i => {
+        if (i.component_type && i.component_type.trim()) {
+          categorySet.add(i.component_type.trim().toUpperCase());
+        }
+      });
+
+      const categories = Array.from(categorySet).sort();
+      let optionsHtml = '<option value="all">All Categories</option>';
+      categories.forEach(cat => {
+        optionsHtml += `<option value="${Utils.escapeHtml(cat)}">${Utils.escapeHtml(cat)}</option>`;
+      });
+
+      if (catSelect.innerHTML !== optionsHtml) {
+        catSelect.innerHTML = optionsHtml;
+      }
+      const matched = Array.from(catSelect.options).find(o => o.value.toUpperCase() === currentVal.toUpperCase());
+      catSelect.value = matched ? matched.value : 'all';
+
+      // Also sync full inventory category filter dropdown if present
+      const fullCatSelect = document.getElementById('instockInventoryFullCategoryFilter');
+      if (fullCatSelect) {
+        const fullCurrentVal = fullCatSelect.value || 'all';
+        if (fullCatSelect.innerHTML !== optionsHtml) {
+          fullCatSelect.innerHTML = optionsHtml;
+        }
+        const fullMatched = Array.from(fullCatSelect.options).find(o => o.value.toUpperCase() === fullCurrentVal.toUpperCase());
+        fullCatSelect.value = fullMatched ? fullMatched.value : 'all';
+      }
     }
 
     filterInventoryByCategory(cat) {
+      const catVal = (cat || 'all').trim();
       const catSelect = document.getElementById('instockInventoryCategoryFilter');
       if (catSelect) {
-        if (catSelect.value === cat) {
+        if (catSelect.value.toUpperCase() === catVal.toUpperCase()) {
           catSelect.value = 'all';
         } else {
-          catSelect.value = cat;
+          const matched = Array.from(catSelect.options).find(o => o.value.toUpperCase() === catVal.toUpperCase());
+          catSelect.value = matched ? matched.value : 'all';
         }
       }
 
@@ -8207,7 +8287,7 @@ Remarks: ${r.remark || 'None'}`);
       categories.forEach(c => {
         const card = document.getElementById(`catCard${c}`);
         if (card) {
-          if (catSelect && catSelect.value === c) {
+          if (catSelect && catSelect.value.toUpperCase() === c.toUpperCase()) {
             card.classList.add('active-cat');
           } else {
             card.classList.remove('active-cat');
@@ -8216,9 +8296,16 @@ Remarks: ${r.remark || 'None'}`);
       });
 
       this.renderInstockInventoryTable();
+
+      const fullCatSelect = document.getElementById('instockInventoryFullCategoryFilter');
+      if (fullCatSelect) {
+        fullCatSelect.value = catSelect ? catSelect.value : 'all';
+        this.renderInstockInventoryView();
+      }
     }
 
     renderInstockInventoryTable() {
+      this.populateInstockCategoryFilter();
       const items = this.getInstockItems();
       const searchInput = document.getElementById('instockInventorySearch');
       const catSelect = document.getElementById('instockInventoryCategoryFilter');
@@ -8229,19 +8316,24 @@ Remarks: ${r.remark || 'None'}`);
       const statVal = statSelect?.value || 'all';
 
       const filtered = items.filter(item => {
-        if (catVal !== 'all' && (item.component_type || '').toUpperCase() !== catVal) {
+        if (catVal !== 'all' && (item.component_type || '').toUpperCase() !== catVal.toUpperCase()) {
           return false;
         }
-        if (statVal !== 'all' && (item.status || 'Available') !== statVal) {
-          return false;
+        if (statVal !== 'all') {
+          const itemStatus = item.status || 'Available';
+          if (statVal === 'Ready for Assignment') {
+            if (itemStatus !== 'Ready for Assignment' && itemStatus !== 'Ready') return false;
+          } else if (itemStatus !== statVal) {
+            return false;
+          }
         }
         if (searchVal) {
           const match =
             (item.id || '').toLowerCase().includes(searchVal) ||
             (item.component_type || '').toLowerCase().includes(searchVal) ||
+            (item.model || '').toLowerCase().includes(searchVal) ||
             (item.spec || '').toLowerCase().includes(searchVal) ||
-            (item.serial_number || '').toLowerCase().includes(searchVal) ||
-            (item.remark || '').toLowerCase().includes(searchVal);
+            (item.serial_number || '').toLowerCase().includes(searchVal);
           if (!match) return false;
         }
         return true;
@@ -8249,7 +8341,7 @@ Remarks: ${r.remark || 'None'}`);
 
       const badge = document.getElementById('instockInventoryCountBadge');
       if (badge) {
-        badge.textContent = `Showing ${filtered.length} of ${items.length} Items`;
+        badge.textContent = `Showing ${filtered.length} record${filtered.length === 1 ? '' : 's'}`;
       }
 
       const tbody = document.getElementById('instockInventoryTableBody');
@@ -8284,35 +8376,13 @@ Remarks: ${r.remark || 'None'}`);
 
         let statusBadge = '';
         if (st === 'Available') {
-          statusBadge = `<span class="instock-badge instock-badge-available">🟢 Available</span>`;
+          statusBadge = `<span class="badge" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; font-weight:700; font-size:0.75rem; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">🟢 Available</span>`;
+        } else if (st === 'Ready for Assignment' || st === 'Ready') {
+          statusBadge = `<span class="badge" style="background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe; font-weight:700; font-size:0.75rem; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">⚡ Ready for Assignment</span>`;
         } else if (st === 'Assigned') {
-          statusBadge = `<span class="instock-badge instock-badge-assigned">👤 Assigned</span>`;
+          statusBadge = `<span class="badge" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-weight:700; font-size:0.75rem; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">👤 Assigned</span>`;
         } else {
-          statusBadge = `<span class="instock-badge instock-badge-maintenance">🛠️ Maintenance</span>`;
-        }
-
-        let actionBtns = '';
-        if (st === 'Available') {
-          actionBtns = `
-            <button type="button" class="btn btn-sm btn-primary" onclick="window.ITApp.openAssignAssetModal('${item.id}')" title="Assign this asset to a user" style="padding:4px 9px; border-radius:6px; font-size:0.75rem; font-weight:700;">
-              👤 Assign
-            </button>
-            <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.setHardwareMaintenance('${item.id}')" title="Mark Under Maintenance" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
-              🛠️
-            </button>
-          `;
-        } else if (st === 'Assigned') {
-          actionBtns = `
-            <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.handleQuickReturn('${item.id}')" title="Return asset back to stock" style="padding:4px 9px; border-radius:6px; font-size:0.75rem; font-weight:700; color:#ea580c;">
-              ↩️ Return
-            </button>
-          `;
-        } else {
-          actionBtns = `
-            <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.markHardwareAvailable('${item.id}')" title="Repair completed, mark Available" style="padding:4px 9px; border-radius:6px; font-size:0.75rem; font-weight:700; color:#16a34a;">
-              🟢 Restore
-            </button>
-          `;
+          statusBadge = `<span class="badge" style="background:#fffbeb; color:#d97706; border:1px solid #fde68a; font-weight:700; font-size:0.75rem; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">🛠️ Maintenance</span>`;
         }
 
         return `
@@ -8326,7 +8396,8 @@ Remarks: ${r.remark || 'None'}`);
               </span>
             </td>
             <td>
-              <strong style="color:#0f172a; font-size:0.86rem;">${Utils.escapeHtml(item.spec || '—')}</strong>
+              ${item.model ? `<div style="font-weight:700; color:#0f172a; font-size:0.86rem; margin-bottom:2px;">${Utils.escapeHtml(item.model)}</div>` : ''}
+              <div style="font-size:0.84rem; color:${item.model ? '#475569' : '#0f172a'}; font-weight:${item.model ? '500' : '700'};">${Utils.escapeHtml(item.spec || '—')}</div>
               ${item.remark ? `<div style="font-size:0.73rem; color:#64748b; margin-top:2px;">${Utils.escapeHtml(item.remark)}</div>` : ''}
             </td>
             <td>
@@ -8340,14 +8411,16 @@ Remarks: ${r.remark || 'None'}`);
             <td>${statusBadge}</td>
             <td style="text-align:center; white-space:nowrap;">
               <div style="display:inline-flex; gap:6px; align-items:center;">
-                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.viewInstockItem('${item.id}')" title="View Hardware Details" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
+                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.viewInstockItem('${item.id}')" title="View Details" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
                   👁️
                 </button>
-                ${actionBtns}
-                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.openInstockEntryModal(null, '${item.id}')" title="Edit Hardware Record" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
+                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.openInstockEntryModal(null, '${item.id}')" title="Edit Asset" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
                   ✏️
                 </button>
-                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.deleteInstockEntry('${item.id}')" title="Delete Hardware Record" style="padding:4px 8px; border-radius:6px; font-size:0.75rem; color:#ef4444;">
+                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.openInstockHistoryModal('${item.id}')" title="Stock & Assignment History" style="padding:4px 8px; border-radius:6px; font-size:0.75rem; color:#0284c7;">
+                  📜
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.deleteInstockEntry('${item.id}')" title="Delete Asset" style="padding:4px 8px; border-radius:6px; font-size:0.75rem; color:#ef4444;">
                   🗑️
                 </button>
               </div>
@@ -8569,10 +8642,21 @@ Remarks: ${r.remark || 'None'}`);
     // VIEW HARDWARE ITEM MODAL
     // ========================================================================
     viewInstockItem(id) {
-      const item = (store.data.instockHardware || []).find(i => i.id === id);
+      const item = (store.data.instockHardware || []).find(i => (i.id || '').toLowerCase() === (id || '').toLowerCase());
       if (!item) return;
 
-      this.currentViewingHwId = id;
+      this.currentViewingHwId = item.id;
+      const type = (item.component_type || 'OTHER').toUpperCase();
+      const iconMap = { 'CPU': '💻', 'SSD': '⚡', 'RAM': '🧠', 'SMPS': '🔌', 'MONITOR': '🖥️', 'OTHER': '🧰' };
+      const icon = iconMap[type] || '📦';
+      const st = item.status || 'Available';
+      const isAssigned = (st === 'Assigned');
+      const itemModel = item.model || item.spec || 'Standard Hardware';
+      const itemSpec = item.spec || item.model || '—';
+      const formattedPurchaseDate = Utils.formatDate ? Utils.formatDate(item.purchase_date || '') : (item.purchase_date || '—');
+      const formattedAssignedDate = Utils.formatDate ? Utils.formatDate(item.assigned_date || '') : (item.assigned_date || '—');
+
+      // Populate fallback modal (modalViewInstockItem)
       const assetIdEl = document.getElementById('viewHwAssetId');
       const statusBadgeEl = document.getElementById('viewHwStatusBadge');
       const catEl = document.getElementById('viewHwCategory');
@@ -8587,17 +8671,19 @@ Remarks: ${r.remark || 'None'}`);
       const dateEl = document.getElementById('viewHwAssignedDate');
 
       if (assetIdEl) assetIdEl.textContent = item.id;
-      if (catEl) catEl.textContent = item.component_type || 'Hardware';
+      if (catEl) catEl.textContent = type;
       if (purchaseDateEl) purchaseDateEl.textContent = item.purchase_date || '—';
-      if (specEl) specEl.textContent = item.spec || '—';
+      if (specEl) specEl.textContent = (item.model ? `${item.model} - ` : '') + (item.spec || '—');
       if (serialEl) serialEl.textContent = item.serial_number || '—';
       if (remarkEl) remarkEl.textContent = item.remark || 'None';
 
-      const st = item.status || 'Available';
       if (statusBadgeEl) {
         if (st === 'Available') {
           statusBadgeEl.className = 'badge badge-success';
           statusBadgeEl.textContent = '🟢 Available';
+        } else if (st === 'Ready for Assignment' || st === 'Ready') {
+          statusBadgeEl.className = 'badge badge-primary';
+          statusBadgeEl.textContent = '⚡ Ready for Assignment';
         } else if (st === 'Assigned') {
           statusBadgeEl.className = 'badge badge-primary';
           statusBadgeEl.textContent = '👤 Assigned';
@@ -8619,12 +8705,266 @@ Remarks: ${r.remark || 'None'}`);
         }
       }
 
+      // Check if existing Hardware Asset Specification modal (modalViewAsset) is available
+      const specModal = document.getElementById('modalViewAsset');
+      if (specModal) {
+        app.currentViewAssetId = item.id;
+        const metaContainer = document.getElementById('viewAssetModalMeta');
+        if (metaContainer) {
+          const statusBg = (st === 'Available') ? '#ecfdf5' : ((st === 'Assigned') ? '#eff6ff' : '#fffbeb');
+          const statusColor = (st === 'Available') ? '#059669' : ((st === 'Assigned') ? '#2563eb' : '#d97706');
+          const statusBorder = (st === 'Available') ? '#a7f3d0' : ((st === 'Assigned') ? '#bfdbfe' : '#fde68a');
+
+          metaContainer.innerHTML = `
+            <span style="background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.76rem; font-weight: 700; padding: 3px 10px; border-radius: 6px;" title="Asset ID">${Utils.escapeHtml(item.id)}</span>
+            <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.76rem; font-weight: 600; padding: 3px 10px; border-radius: 6px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0;">${icon} ${Utils.escapeHtml(type)}</span>
+            <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.76rem; font-weight: 700; padding: 3px 12px; border-radius: 9999px; background: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusBorder};">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: ${statusColor};"></span>
+              ${Utils.escapeHtml(st)}
+            </span>
+          `;
+        }
+
+        const body = document.getElementById('viewAssetModalBody');
+        if (body) {
+          body.innerHTML = `
+            <div style="display: grid; grid-template-columns: 1fr 1.05fr; gap: 14px; margin-bottom: 14px;">
+              
+              <!-- Left Column: Custody & Asset Identification -->
+              <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 28px; height: 28px; border-radius: 6px; background: #eff6ff; display: inline-flex; align-items: center; justify-content: center; color: #2563eb;">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+                    <span style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">${isAssigned ? 'User Custody & Assignment' : 'Inventory Storage & Custody'}</span>
+                  </div>
+                  <span style="background: ${isAssigned ? '#eff6ff' : '#ecfdf5'}; border: 1px solid ${isAssigned ? '#bfdbfe' : '#a7f3d0'}; color: ${isAssigned ? '#2563eb' : '#059669'}; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px;">
+                    ${isAssigned ? 'Assigned Asset' : 'In Stock (Available)'}
+                  </span>
+                </div>
+
+                <!-- Subcard 1: Custody Status -->
+                <div style="background: #fbfdff; border: 1px solid #dbeafe; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.68rem; font-weight: 800; color: #2563eb; letter-spacing: 0.5px; text-transform: uppercase;">
+                      ${isAssigned ? 'CURRENT ALLOTTED USER' : 'INVENTORY CUSTODY'}
+                    </span>
+                    <span style="background: ${isAssigned ? '#ecfdf5' : '#f0fdf4'}; color: ${isAssigned ? '#059669' : '#16a34a'}; border: 1px solid ${isAssigned ? '#a7f3d0' : '#bbf7d0'}; padding: 2px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                      <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
+                      ${isAssigned ? 'Active Custody' : 'Storage / Available'}
+                    </span>
+                  </div>
+                  <div style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 8px 0 6px 0; letter-spacing: -0.2px;">
+                    ${Utils.escapeHtml(isAssigned ? (item.assigned_user || 'Assigned User') : 'IT Asset Warehouse / Storage')}
+                  </div>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+                    <div>
+                      <span style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">DEPARTMENT / TEAM</span>
+                      <div style="font-size: 0.85rem; font-weight: 600; color: #1e293b; margin-top: 2px;">${Utils.escapeHtml(item.team || (isAssigned ? '—' : 'System Admin / IT Stock'))}</div>
+                    </div>
+                    <div>
+                      <span style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">${isAssigned ? 'ALLOTTED DATE' : 'PURCHASE DATE'}</span>
+                      <div style="font-size: 0.85rem; font-weight: 600; color: #1e293b; margin-top: 2px;">${isAssigned ? formattedAssignedDate : formattedPurchaseDate}</div>
+                    </div>
+                  </div>
+                  ${isAssigned && item.tl ? `
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.76rem; color: #64748b; padding-top: 6px; border-top: 1px solid #edf2f7;">
+                      <span>👔</span> Team Leader: <strong style="color: #0f172a; font-weight: 700;">${Utils.escapeHtml(item.tl)}</strong>
+                    </div>
+                  ` : ''}
+                </div>
+
+                <!-- Subcard 2: Asset Identification -->
+                <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-top: auto;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <span style="font-size: 0.95rem;">🏷️</span>
+                      <span style="font-size: 0.68rem; font-weight: 800; color: #475569; letter-spacing: 0.5px; text-transform: uppercase;">SERIAL & IDENTIFIER</span>
+                    </div>
+                    <span style="background: #f1f5f9; border: 1px solid #e2e8f0; color: #64748b; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 9999px;">Verified Hardware</span>
+                  </div>
+                  <div style="font-size: 0.98rem; font-weight: 700; color: #0f172a; margin: 6px 0 6px 0;">
+                    <code style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 4px; font-size: 0.88rem; color: #1e40af;">${Utils.escapeHtml(item.serial_number || '—')}</code>
+                  </div>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 6px;">
+                    <div>
+                      <span style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">ASSET ID</span>
+                      <div style="font-size: 0.84rem; font-weight: 700; color: #2563eb; margin-top: 2px;">${Utils.escapeHtml(item.id)}</div>
+                    </div>
+                    <div>
+                      <span style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">HARDWARE CATEGORY</span>
+                      <div style="font-size: 0.82rem; font-weight: 600; color: #1e293b; margin-top: 2px;">${Utils.escapeHtml(type)}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: System & Hardware Specification -->
+              <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 28px; height: 28px; border-radius: 6px; background: #eff6ff; display: inline-flex; align-items: center; justify-content: center; color: #2563eb; font-size: 0.95rem;">
+                      ⚙️
+                    </div>
+                    <span style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">Hardware Specification</span>
+                  </div>
+                  <span style="background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 6px;">${Utils.escapeHtml(type)} Component</span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
+                  <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 10px 14px;">
+                    <div style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px;">
+                      HARDWARE ITEM / MODEL
+                    </div>
+                    <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">
+                      ${Utils.escapeHtml(itemModel)}
+                    </div>
+                  </div>
+
+                  <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 10px 14px;">
+                    <div style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px;">
+                      TECHNICAL SPECIFICATIONS
+                    </div>
+                    <div style="font-size: 0.88rem; font-weight: 600; color: #334155;">
+                      ${Utils.escapeHtml(itemSpec)}
+                    </div>
+                  </div>
+
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 8px 12px;">
+                      <div style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                        PURCHASE DATE
+                      </div>
+                      <div style="font-size: 0.84rem; font-weight: 600; color: #0f172a; margin-top: 2px;">
+                        ${formattedPurchaseDate}
+                      </div>
+                    </div>
+                    <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 8px 12px;">
+                      <div style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                        INVENTORY STATUS
+                      </div>
+                      <div style="font-size: 0.84rem; font-weight: 700; color: #059669; margin-top: 2px;">
+                        ${Utils.escapeHtml(st)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 3: Warranty & Hardware Lifecycle -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="width: 28px; height: 28px; border-radius: 6px; background: #ecfdf5; display: inline-flex; align-items: center; justify-content: center; color: #059669; font-size: 0.95rem;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+                  </div>
+                  <div>
+                    <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: #0f172a;">Warranty &amp; Hardware Lifecycle</h4>
+                    <div style="font-size: 0.72rem; color: #64748b; margin-top: 1px;">
+                      Component Lifecycle Tracking • Installed components actively covered under warranty
+                    </div>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 5px;">
+                    <span>🛡️</span> 1 Active Warranty Item
+                  </span>
+                </div>
+              </div>
+
+              <!-- Table Container -->
+              <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #ffffff;">
+                <div style="overflow-x: auto;">
+                  <table class="itam-table">
+                    <thead>
+                      <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <th style="padding: 10px 14px;">COMPONENT</th>
+                        <th style="padding: 10px 14px;">BRAND / MODEL</th>
+                        <th style="padding: 10px 14px;">SERIAL NUMBER</th>
+                        <th style="padding: 10px 14px;">PURCHASE DATE</th>
+                        <th style="padding: 10px 14px;">WARRANTY STATUS</th>
+                        <th style="padding: 10px 14px;">INVENTORY STATUS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 11px 14px; font-weight: 700; color: #0f172a;">
+                          <span style="display: inline-flex; align-items: center; gap: 6px;">
+                            <span style="color: #10b981; font-size: 0.85rem;">●</span>
+                            ${Utils.escapeHtml(type)}
+                          </span>
+                        </td>
+                        <td style="padding: 11px 14px; color: #1e293b; font-weight: 600;">
+                          ${Utils.escapeHtml(itemModel)}
+                        </td>
+                        <td style="padding: 11px 14px;">
+                          <span style="background: #eff6ff; border: 1px solid #dbeafe; color: #1e40af; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 6px;">
+                            ${Utils.escapeHtml(item.serial_number || '—')}
+                          </span>
+                        </td>
+                        <td style="padding: 11px 14px; color: #334155; font-size: 0.8rem; font-weight: 500;">
+                          ${formattedPurchaseDate}
+                        </td>
+                        <td style="padding: 11px 14px;">
+                          <span style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #059669; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 4px;">
+                            <span style="width: 5px; height: 5px; border-radius: 50%; background: #10b981;"></span>
+                            Under Warranty
+                          </span>
+                        </td>
+                        <td style="padding: 11px 14px; color: #059669; font-weight: 700; font-size: 0.82rem;">
+                          ${Utils.escapeHtml(st)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 4: Remarks / Allocation Notes -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px;">
+              <div style="display: flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: 0.5px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                HARDWARE NOTES & REMARKS
+              </div>
+              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #2563eb; border-radius: 6px; padding: 11px 14px; margin-top: 8px; font-size: 0.86rem; color: #1e293b; font-weight: 500; line-height: 1.45;">
+                ${Utils.escapeHtml(item.remark || 'Hardware item active, verified and ready in enterprise stock inventory.')}
+              </div>
+            </div>
+          `;
+        }
+
+        // Configure Edit button on view modal to edit this instock item
+        const editBtn = document.getElementById('viewAssetEditModalBtn');
+        if (editBtn) {
+          editBtn.onclick = () => {
+            this.closeModal('modalViewAsset');
+            this.openInstockEntryModal(null, item.id);
+          };
+        }
+
+        // Configure History button on view modal to view this item's history
+        const histBtn = document.getElementById('viewAssetHistoryModalBtn');
+        if (histBtn) {
+          histBtn.onclick = () => {
+            this.closeModal('modalViewAsset');
+            this.openInstockHistoryModal(item.id);
+          };
+        }
+
+        this.openModal('modalViewAsset');
+        return;
+      }
+
       this.openModal('modalViewInstockItem');
     }
 
     openInstockEntryModalFromView() {
       const id = this.currentViewingHwId;
       this.closeModal('modalViewInstockItem');
+      this.closeModal('modalViewAsset');
       if (id) {
         this.openInstockEntryModal(null, id);
       }
@@ -9629,9 +9969,45 @@ Remarks: ${r.remark || 'None'}`);
       this.renderInstockDashboard();
     }
 
+    async markReadyForAssignment(id) {
+      const item = (store.data.instockHardware || []).find(i => i.id === id);
+      if (!item) return;
+
+      const confirmed = await this.confirmSave({
+        title: 'Confirm Save',
+        message: `Are you sure you want to mark stock entry <strong>${Utils.escapeHtml(id)}</strong> as Ready for Assignment?`,
+        yesText: 'YES, SAVE',
+        noText: 'NO, CANCEL'
+      });
+      if (!confirmed) return;
+
+      item.status = 'Ready for Assignment';
+      try {
+        await fetch(`/api/instock/${encodeURIComponent(id)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'Ready for Assignment' })
+        });
+      } catch (e) {
+        console.warn('Backend PUT note:', e);
+      }
+      store.save();
+      Utils.showToast('Status Updated', `${item.id} is now Ready for Assignment.`, 'success');
+      this.renderInstockDashboard();
+      this.renderInstockInventoryTable();
+    }
+
     async markHardwareAvailable(id) {
       const item = (store.data.instockHardware || []).find(i => i.id === id);
       if (!item) return;
+
+      const confirmed = await this.confirmSave({
+        title: 'Confirm Save',
+        message: `Are you sure you want to restore stock entry <strong>${Utils.escapeHtml(id)}</strong> to Available stock?`,
+        yesText: 'YES, SAVE',
+        noText: 'NO, CANCEL'
+      });
+      if (!confirmed) return;
 
       item.status = 'Available';
       try {
@@ -9644,6 +10020,7 @@ Remarks: ${r.remark || 'None'}`);
       store.save();
       Utils.showToast('Restored', `${item.id} restored to Available stock.`, 'success');
       this.renderInstockDashboard();
+      this.renderInstockInventoryTable();
     }
 
     // ========================================================================
@@ -9660,7 +10037,7 @@ Remarks: ${r.remark || 'None'}`);
         'OTHER': 'OTH'
       };
       const code = codeMap[type] || (type.length >= 3 ? type.substring(0, 3) : type);
-      const items = store.data.instockHardware || [];
+      const items = (store && store.data && store.data.instockHardware) || [];
       const prefix = `STK-${code}-`;
       const nums = items
         .map(i => i.id || '')
@@ -9696,6 +10073,7 @@ Remarks: ${r.remark || 'None'}`);
       const assetIdInput = document.getElementById('instockAssetId');
       const titleEl = document.getElementById('instockModalTitle');
       const typeSelect = document.getElementById('instockComponentType');
+      const modelInput = document.getElementById('instockModel');
       const specInput = document.getElementById('instockSpec');
       const serialInput = document.getElementById('instockSerial');
       const purchaseDateInput = document.getElementById('instockPurchaseDate');
@@ -9706,22 +10084,23 @@ Remarks: ${r.remark || 'None'}`);
       const assignedDateInput = document.getElementById('instockAssignedDate');
       const teamSelect = document.getElementById('instockAssignedTeam');
       const tlInput = document.getElementById('instockAssignedTl');
+      const reasonInput = document.getElementById('instockReason');
       const remarkInput = document.getElementById('instockRemark');
       const saveBtn = document.getElementById('btnSaveInstockEntry');
 
       if (saveBtn) {
         saveBtn.disabled = false;
-        saveBtn.innerHTML = '💾 Save Hardware Entry';
+        saveBtn.innerHTML = '💾 Save Stock Entry';
       }
 
       // Populate User Datalist
       const userDatalist = document.getElementById('instockAllUsersDatalist');
       if (userDatalist) {
-        userDatalist.innerHTML = (store.data.users || []).map(u => `<option value="${Utils.escapeHtml(u.name)}">${Utils.escapeHtml(u.name)} (${Utils.escapeHtml(u.team || 'Staff')})</option>`).join('');
+        userDatalist.innerHTML = ((store && store.data && store.data.users) || []).map(u => `<option value="${Utils.escapeHtml(u.name)}">${Utils.escapeHtml(u.name)} (${Utils.escapeHtml(u.team || 'Staff')})</option>`).join('');
       }
 
       if (editId) {
-        const item = (store.data.instockHardware || []).find(i => i.id === editId);
+        const item = ((store && store.data && store.data.instockHardware) || []).find(i => i.id === editId);
         if (item) {
           if (editIdInput) editIdInput.value = item.id;
           if (assetIdInput) {
@@ -9729,23 +10108,35 @@ Remarks: ${r.remark || 'None'}`);
             assetIdInput.disabled = true;
             assetIdInput.dataset.autoGenerated = 'false';
           }
-          if (titleEl) titleEl.textContent = `Edit Hardware Entry (${item.id})`;
+          if (titleEl) titleEl.textContent = `Edit Stock Entry (${item.id})`;
           if (typeSelect) typeSelect.value = item.component_type || 'CPU';
-          if (specInput) specInput.value = item.spec || '';
+          if (modelInput) modelInput.value = item.model || item.spec || '';
+          if (specInput) specInput.value = item.spec || item.model || '';
           if (serialInput) serialInput.value = item.serial_number || '';
           if (purchaseDateInput) purchaseDateInput.value = item.purchase_date || '';
+
+          const isAssigned = (item.status === 'Assigned');
           if (statusSelect) {
-            statusSelect.value = item.status || 'Available';
+            statusSelect.value = isAssigned ? 'Assigned' : (item.status || 'Available');
           }
-          if (item.status === 'Assigned') {
-            if (radioAssigned) radioAssigned.checked = true;
+          if (radioAssigned) radioAssigned.checked = isAssigned;
+          if (radioPending) radioPending.checked = !isAssigned;
+
+          if (isAssigned) {
+            if (userInput) userInput.value = item.assigned_user || '';
+            if (assignedDateInput) assignedDateInput.value = item.assigned_date || '';
+            if (teamSelect && item.team) teamSelect.value = item.team;
+            if (tlInput) tlInput.value = item.tl || '';
+            if (reasonInput) reasonInput.value = item.changing_reason || item.remark || '';
           } else {
-            if (radioPending) radioPending.checked = true;
+            // When Non-Assigned, ensure stale assignment details are NEVER displayed as current values
+            if (userInput) userInput.value = '';
+            if (assignedDateInput) assignedDateInput.value = '';
+            if (teamSelect) teamSelect.value = 'SYSTEM ADMIN';
+            if (tlInput) tlInput.value = '';
+            if (reasonInput) reasonInput.value = '';
           }
-          if (userInput) userInput.value = item.assigned_user || '';
-          if (assignedDateInput) assignedDateInput.value = item.assigned_date || '';
-          if (teamSelect && item.team) teamSelect.value = item.team;
-          if (tlInput) tlInput.value = item.tl || '';
+
           if (remarkInput) remarkInput.value = item.remark || '';
         }
       } else {
@@ -9758,8 +10149,9 @@ Remarks: ${r.remark || 'None'}`);
           assetIdInput.dataset.autoGenerated = 'true';
         }
         if (titleEl) {
-          titleEl.textContent = defaultType ? `Add New ${cat} Stock Entry` : 'Add Hardware Stock Item';
+          titleEl.textContent = '+ Add Stock';
         }
+        if (modelInput) modelInput.value = '';
         if (specInput) specInput.value = '';
         if (serialInput) serialInput.value = `SN-${cat}-${Math.floor(10000 + Math.random() * 90000)}`;
         if (purchaseDateInput) purchaseDateInput.value = new Date().toISOString().substring(0, 10);
@@ -9769,6 +10161,7 @@ Remarks: ${r.remark || 'None'}`);
         if (assignedDateInput) assignedDateInput.value = new Date().toISOString().substring(0, 10);
         if (teamSelect) teamSelect.value = 'SYSTEM ADMIN';
         if (tlInput) tlInput.value = '';
+        if (reasonInput) reasonInput.value = '';
         if (remarkInput) remarkInput.value = '';
       }
 
@@ -9784,6 +10177,7 @@ Remarks: ${r.remark || 'None'}`);
       const helpText = document.getElementById('instockPendingHelpText');
       const userInput = document.getElementById('instockAssignedUser');
       const assignedDateInput = document.getElementById('instockAssignedDate');
+      const reasonInput = document.getElementById('instockReason');
 
       const isAssigned = (statusSelect && statusSelect.value === 'Assigned') || (radioAssigned && radioAssigned.checked);
 
@@ -9797,12 +10191,12 @@ Remarks: ${r.remark || 'None'}`);
       if (helpText) {
         if (statusSelect && statusSelect.value === 'Under Maintenance') {
           helpText.style.display = 'block';
-          helpText.innerHTML = '🛠️ Item will be marked under maintenance for diagnosis / repairs.';
+          helpText.innerHTML = '🛠️ Non-Assigned item marked under maintenance for diagnosis / repairs.';
         } else if (isAssigned) {
           helpText.style.display = 'none';
         } else {
           helpText.style.display = 'block';
-          helpText.innerHTML = '💡 Item will be kept in available in-stock inventory ready for future allocation.';
+          helpText.innerHTML = '💡 Non-Assigned item will be kept in available stock ready for future assignment.';
         }
       }
 
@@ -9814,9 +10208,20 @@ Remarks: ${r.remark || 'None'}`);
             assignedDateInput.value = new Date().toISOString().substring(0, 10);
           }
         }
+        if (reasonInput) reasonInput.required = true;
       } else {
-        if (userInput) userInput.required = false;
-        if (assignedDateInput) assignedDateInput.required = false;
+        if (userInput) {
+          userInput.required = false;
+          userInput.value = '';
+        }
+        if (assignedDateInput) {
+          assignedDateInput.required = false;
+          assignedDateInput.value = '';
+        }
+        if (reasonInput) {
+          reasonInput.required = false;
+          reasonInput.value = '';
+        }
       }
     }
 
@@ -9826,7 +10231,10 @@ Remarks: ${r.remark || 'None'}`);
       const editId = document.getElementById('instockEditId')?.value;
       const customAssetId = document.getElementById('instockAssetId')?.value?.trim();
       const component_type = document.getElementById('instockComponentType')?.value || 'OTHER';
-      const spec = document.getElementById('instockSpec')?.value?.trim() || '';
+      let model = document.getElementById('instockModel')?.value?.trim() || '';
+      let spec = document.getElementById('instockSpec')?.value?.trim() || '';
+      if (!model && spec) model = spec;
+      if (!spec && model) spec = model;
       const serial_number = document.getElementById('instockSerial')?.value?.trim() || '';
       const purchase_date = document.getElementById('instockPurchaseDate')?.value || '';
       const statusSelect = document.getElementById('instockStatus');
@@ -9837,6 +10245,7 @@ Remarks: ${r.remark || 'None'}`);
       const assigned_date = isAssigned ? (document.getElementById('instockAssignedDate')?.value || '') : '';
       const team = isAssigned ? (document.getElementById('instockAssignedTeam')?.value || '') : '';
       const tl = isAssigned ? (document.getElementById('instockAssignedTl')?.value?.trim() || '') : '';
+      const reason = isAssigned ? (document.getElementById('instockReason')?.value?.trim() || '') : '';
       const remark = document.getElementById('instockRemark')?.value?.trim() || '';
 
       const finalAssetId = customAssetId || this.getNextInstockAssetId(component_type);
@@ -9850,8 +10259,8 @@ Remarks: ${r.remark || 'None'}`);
         Utils.showToast('Validation Error', 'Hardware Category is required.', 'error');
         return;
       }
-      if (!spec) {
-        Utils.showToast('Validation Error', 'Hardware Specification / Model is required.', 'error');
+      if (!spec && !model) {
+        Utils.showToast('Validation Error', 'Specification / Model is required.', 'error');
         return;
       }
       if (!serial_number) {
@@ -9859,16 +10268,26 @@ Remarks: ${r.remark || 'None'}`);
         return;
       }
       if (!purchase_date) {
-        Utils.showToast('Validation Error', 'Purchasing Date is required.', 'error');
+        Utils.showToast('Validation Error', 'Purchase Date is required.', 'error');
         return;
       }
       if (!status) {
         Utils.showToast('Validation Error', 'Current Status is required.', 'error');
         return;
       }
-      if (isAssigned && !assigned_user) {
-        Utils.showToast('Validation Error', 'Assigned User Name is required when status is Assigned.', 'error');
-        return;
+      if (isAssigned) {
+        if (!assigned_user) {
+          Utils.showToast('Validation Error', 'Assigned User Name is required when status is Assigned.', 'error');
+          return;
+        }
+        if (!assigned_date) {
+          Utils.showToast('Validation Error', 'Assigned Date is required when status is Assigned.', 'error');
+          return;
+        }
+        if (!reason) {
+          Utils.showToast('Validation Error', 'Hardware Item / Reason is required when status is Assigned.', 'error');
+          return;
+        }
       }
 
       const allItems = store.data.instockHardware || [];
@@ -9886,32 +10305,35 @@ Remarks: ${r.remark || 'None'}`);
       const dupSerial = allItems.find(i =>
         i.serial_number &&
         (i.serial_number || '').toLowerCase() === serial_number.toLowerCase() &&
-        i.id !== (editId || finalAssetId)
+        (i.id || '').toLowerCase() !== (editId || finalAssetId).toLowerCase()
       );
       if (dupSerial) {
         Utils.showToast('Duplicate Serial Number', `Serial Number "${serial_number}" is already registered on asset ${dupSerial.id}. Serial numbers must be unique.`, 'error');
         return;
       }
 
+      // Save Confirmation — YES / NO
       const confirmed = await this.confirmSave({
-        title: 'Confirm In-Stock Entry',
-        message: `Are you sure you want to save hardware <strong>${Utils.escapeHtml(finalAssetId)}</strong> into stock inventory?`,
-        yesText: '💾 YES, Save',
-        noText: '❌ NO, Cancel'
+        title: editId ? 'Confirm Update' : 'Confirm Save',
+        message: editId ? `Are you sure you want to save changes to hardware record "${editId}"?` : 'Are you sure you want to save this stock entry to the database?',
+        yesText: 'YES, SAVE',
+        noText: 'NO, CANCEL'
       });
       if (!confirmed) return;
 
       const payload = {
         id: finalAssetId,
         component_type,
-        spec,
+        model: model || spec,
+        spec: spec || model,
         serial_number,
         purchase_date,
         status,
-        assigned_user,
+        assigned_user: isAssigned ? assigned_user : '',
         assigned_date: isAssigned ? (assigned_date || purchase_date) : '',
-        team,
-        tl,
+        team: isAssigned ? team : '',
+        tl: isAssigned ? tl : '',
+        changing_reason: isAssigned ? reason : '',
         remark
       };
 
@@ -9937,6 +10359,16 @@ Remarks: ${r.remark || 'None'}`);
           if (idx !== -1) {
             store.data.instockHardware[idx] = updated;
           }
+
+          // If changed from Assigned to Non-Assigned, update client allocation store to preserve past history
+          if (!isAssigned && store.data.instockAllocations) {
+            const activeAlloc = store.data.instockAllocations.find(a => (a.asset_id || '').toLowerCase() === editId.toLowerCase() && a.status === 'Assigned');
+            if (activeAlloc) {
+              activeAlloc.status = 'Returned';
+              activeAlloc.return_date = new Date().toISOString().substring(0, 10);
+            }
+          }
+
           store.save();
           Utils.showToast('Record Updated', `Hardware item ${editId} updated successfully.`, 'success');
         } else {
@@ -9968,7 +10400,7 @@ Remarks: ${r.remark || 'None'}`);
                   spec,
                   serial_number,
                   assigned_date: assigned_date || purchase_date,
-                  purpose: 'Initial In-Stock Assignment',
+                  purpose: reason || 'Initial In-Stock Assignment',
                   status: 'Assigned',
                   assigned_by: 'Sundar Pichai (SysAdmin)',
                   remark: remark || ''
@@ -10001,7 +10433,184 @@ Remarks: ${r.remark || 'None'}`);
       } finally {
         if (saveBtn) {
           saveBtn.disabled = false;
-          saveBtn.innerHTML = '💾 Save Hardware Entry';
+          saveBtn.innerHTML = '💾 Save Stock Entry';
+        }
+      }
+    }
+
+    async openInstockHistoryModal(assetId) {
+      if (!assetId) return;
+      const modal = document.getElementById('modalInstockHistory');
+      if (!modal) return;
+
+      const badge = document.getElementById('instockHistoryAssetIdBadge');
+      const subtitle = document.getElementById('instockHistoryAssetSubtitle');
+      const container = document.getElementById('instockHistoryContainer');
+      const countEl = document.getElementById('instockHistoryEventCount');
+
+      const item = (store.data.instockHardware || []).find(i => (i.id || '').toLowerCase() === assetId.toLowerCase()) || { id: assetId };
+      if (badge) badge.textContent = item.id;
+      if (subtitle) {
+        subtitle.textContent = `${item.component_type || 'Hardware'} • ${item.model || item.spec || 'Hardware Component'} • SN: ${item.serial_number || '—'}`;
+      }
+
+      if (container) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:32px; color:#64748b;">
+            <div style="font-size:1.8rem; margin-bottom:8px;">⏳</div>
+            <div>Loading asset stock and assignment history...</div>
+          </div>
+        `;
+      }
+
+      this.openModal('modalInstockHistory');
+
+      try {
+        let events = [];
+        try {
+          const res = await fetch(`/api/instock/${encodeURIComponent(item.id)}/history`);
+          if (res.ok) {
+            events = await res.json();
+          }
+        } catch (e) {
+          console.warn('History fetch error, checking local store:', e);
+        }
+
+        if (!events || events.length === 0) {
+          const localHist = (store.data.instockHistory || []).filter(h => (h.asset_id || '').toLowerCase() === item.id.toLowerCase());
+          if (localHist.length > 0) {
+            events = localHist;
+          } else {
+            const allocs = (store.data.instockAllocations || []).filter(a => (a.asset_id || '').toLowerCase() === item.id.toLowerCase());
+            events = allocs.map(a => ({
+              id: a.id,
+              asset_id: a.asset_id,
+              action_type: a.status === 'Returned' ? 'Unassignment' : 'Assignment',
+              prev_status: a.status === 'Returned' ? 'Assigned' : 'Available',
+              new_status: a.status === 'Returned' ? 'Available' : 'Assigned',
+              employee_name: a.user_name,
+              team: a.team,
+              tl: a.tl_name,
+              event_date: a.return_date || a.assigned_date,
+              reason: a.changing_reason || a.purpose || a.remark,
+              performed_by: a.assigned_by || 'System Admin',
+              created_at: a.created_at
+            }));
+
+            if (item.purchase_date) {
+              events.push({
+                id: `HIST-IN-${item.id}`,
+                asset_id: item.id,
+                action_type: 'Purchase / Stock In',
+                prev_status: '—',
+                new_status: 'Available',
+                employee_name: '',
+                team: '',
+                tl: '',
+                event_date: item.purchase_date,
+                reason: item.remark || 'Hardware stock-in / initial receipt',
+                performed_by: 'System Admin',
+                created_at: item.created_at || item.purchase_date
+              });
+            }
+          }
+        }
+
+        // Sort events chronologically descending
+        events.sort((a, b) => new Date(b.event_date || b.created_at || 0) - new Date(a.event_date || a.created_at || 0));
+
+        if (countEl) countEl.textContent = `Total Events: ${events.length}`;
+
+        if (!container) return;
+
+        if (events.length === 0) {
+          container.innerHTML = `
+            <div style="text-align:center; padding:36px; color:#64748b;">
+              <div style="font-size:2rem; margin-bottom:8px;">📜</div>
+              <strong style="font-size:1rem; color:#1e293b;">No historical events recorded for this asset yet.</strong>
+              <div style="font-size:0.82rem; margin-top:4px;">Future assignments, unassignments, status updates, and edits will appear here.</div>
+            </div>
+          `;
+          return;
+        }
+
+        const actionIconMap = {
+          'Purchase / Stock In': { icon: '📦', color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
+          'Assignment': { icon: '👤', color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
+          'Unassignment': { icon: '↩️', color: '#d97706', bg: '#fffbeb', border: '#fde68a' },
+          'Status Change': { icon: '🔄', color: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
+          'Edit': { icon: '✏️', color: '#475569', bg: '#f8fafc', border: '#e2e8f0' }
+        };
+
+        container.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            ${events.map(ev => {
+              const actInfo = actionIconMap[ev.action_type] || { icon: '📋', color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' };
+              const formattedDate = Utils.formatDate ? Utils.formatDate(ev.event_date) : (ev.event_date || '—');
+              const hasEmployee = Boolean(ev.employee_name && ev.employee_name !== '—');
+
+              return `
+                <div style="border:1px solid #e2e8f0; border-radius:10px; background:#ffffff; padding:14px 18px; box-shadow:0 1px 3px rgba(0,0,0,0.04); position:relative;">
+                  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <span style="background:${actInfo.bg}; color:${actInfo.color}; border:1px solid ${actInfo.border}; font-weight:700; font-size:0.78rem; padding:4px 10px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;">
+                        <span>${actInfo.icon}</span> ${Utils.escapeHtml(ev.action_type)}
+                      </span>
+                      ${ev.prev_status || ev.new_status ? `
+                        <span style="font-size:0.75rem; color:#64748b; font-weight:600; display:inline-flex; align-items:center; gap:4px;">
+                          ${ev.prev_status && ev.prev_status !== '—' ? `<span style="text-decoration:line-through; opacity:0.7;">${Utils.escapeHtml(ev.prev_status)}</span> ➔` : ''}
+                          <span style="color:#0f172a; font-weight:700;">${Utils.escapeHtml(ev.new_status || 'Current')}</span>
+                        </span>
+                      ` : ''}
+                    </div>
+                    <div style="font-size:0.78rem; color:#64748b; font-weight:600; display:flex; align-items:center; gap:6px;">
+                      <span>📅</span> ${formattedDate}
+                    </div>
+                  </div>
+
+                  ${hasEmployee ? `
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px; background:#f8fafc; border:1px solid #f1f5f9; border-radius:8px; padding:10px 14px; margin:8px 0;">
+                      <div>
+                        <span style="font-size:0.65rem; color:#64748b; text-transform:uppercase; font-weight:700; display:block;">Employee</span>
+                        <span style="font-size:0.86rem; font-weight:700; color:#0f172a;">${Utils.escapeHtml(ev.employee_name)}</span>
+                      </div>
+                      ${ev.team ? `
+                        <div>
+                          <span style="font-size:0.65rem; color:#64748b; text-transform:uppercase; font-weight:700; display:block;">Team / Dept</span>
+                          <span style="font-size:0.82rem; font-weight:600; color:#334155;">${Utils.escapeHtml(ev.team)}</span>
+                        </div>
+                      ` : ''}
+                      ${ev.tl ? `
+                        <div>
+                          <span style="font-size:0.65rem; color:#64748b; text-transform:uppercase; font-weight:700; display:block;">Team Leader</span>
+                          <span style="font-size:0.82rem; font-weight:600; color:#334155;">${Utils.escapeHtml(ev.tl)}</span>
+                        </div>
+                      ` : ''}
+                    </div>
+                  ` : ''}
+
+                  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:6px; font-size:0.82rem;">
+                    <div style="color:#334155;">
+                      <strong style="color:#64748b; font-size:0.75rem; text-transform:uppercase;">Reason / Notes:</strong>
+                      <span style="margin-left:4px;">${Utils.escapeHtml(ev.reason || 'None provided')}</span>
+                    </div>
+                    <div style="font-size:0.74rem; color:#94a3b8;">
+                      Logged by: <strong style="color:#64748b;">${Utils.escapeHtml(ev.performed_by || 'System Admin')}</strong>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      } catch (err) {
+        console.error('Failed to load history:', err);
+        if (container) {
+          container.innerHTML = `
+            <div style="text-align:center; padding:24px; color:#ef4444;">
+              Failed to load history: ${Utils.escapeHtml(err.message)}
+            </div>
+          `;
         }
       }
     }
@@ -10018,17 +10627,63 @@ Remarks: ${r.remark || 'None'}`);
     }
 
     async deleteInstockEntry(id) {
-      if (confirm(`Permanently delete hardware stock entry ${id}?`)) {
-        try {
-          await fetch(`/api/instock/${encodeURIComponent(id)}`, { method: 'DELETE' });
-        } catch (e) {}
-        store.data.instockHardware = (store.data.instockHardware || []).filter(i => i.id !== id);
+      const item = (store.data.instockHardware || []).find(i => (i.id || '').toLowerCase() === (id || '').toLowerCase());
+      if (!item) {
+        Utils.showToast('Not Found', `Asset ${id} was not found in inventory.`, 'error');
+        return;
+      }
+
+      // Business Rule: Prevent deletion of assigned assets or assets with active allocations
+      if (item.status === 'Assigned') {
+        Utils.showToast('Deletion Blocked', `Cannot delete asset "${item.id}" because it is currently assigned to ${item.assigned_user || 'a user'}. Please return or unassign it first.`, 'error');
+        return;
+      }
+
+      const activeAlloc = (store.data.instockAllocations || []).find(a => (a.asset_id || '').toLowerCase() === (item.id || '').toLowerCase() && a.status === 'Assigned');
+      if (activeAlloc) {
+        Utils.showToast('Deletion Blocked', `Cannot delete asset "${item.id}" because it has an active assignment record for user ${activeAlloc.user_name || 'an employee'}.`, 'error');
+        return;
+      }
+
+      // Confirmation dialog with YES, DELETE and NO, CANCEL
+      const confirmed = await this.confirmSave({
+        title: 'Delete Hardware Asset',
+        message: `
+          <div style="text-align:center; padding:6px 0;">
+            <p style="margin-bottom:8px; color:#334155; font-size:0.92rem;">Are you sure you want to permanently delete hardware asset:</p>
+            <div style="font-size:1.15rem; font-weight:800; color:#ef4444; font-family:var(--font-mono, monospace); margin:8px 0; background:#fef2f2; padding:8px 12px; border-radius:8px; border:1px solid #fecaca; display:inline-block;">
+              ${Utils.escapeHtml(item.id)}
+            </div>
+            <p style="font-size:0.8rem; color:#64748b; margin:6px 0 0 0;">Specification: ${Utils.escapeHtml(item.model || item.spec || 'Hardware')}</p>
+            <p style="font-size:0.75rem; color:#dc2626; margin-top:8px; font-weight:600;">⚠️ This action cannot be undone.</p>
+          </div>
+        `,
+        yesText: 'YES, DELETE',
+        noText: 'NO, CANCEL'
+      });
+
+      if (!confirmed) {
+        // NO cancels deletion without changing any data
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/instock/${encodeURIComponent(item.id)}`, { method: 'DELETE' });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Server responded with status ${res.status}`);
+        }
+        store.data.instockHardware = (store.data.instockHardware || []).filter(i => (i.id || '').toLowerCase() !== (item.id || '').toLowerCase());
         store.save();
-        Utils.showToast('Deleted', `Hardware record ${id} removed.`, 'warning');
+        Utils.showToast('Asset Deleted', `Hardware asset "${item.id}" was successfully deleted from inventory.`, 'success');
         this.renderInstockDashboard();
+        this.renderInstockInventoryTable();
         this.renderAssignedItemsTable();
         this.renderPageInstockEntryTable();
         this.renderInstockInventoryView();
+      } catch (err) {
+        console.error('Failed to delete asset:', err);
+        Utils.showToast('Delete Failed', err.message || 'Failed to delete hardware asset from database.', 'error');
       }
     }
 
@@ -10235,10 +10890,10 @@ Remarks: ${r.remark || 'None'}`);
       }
 
       const confirmed = await this.confirmSave({
-        title: 'Confirm In-Stock Entry',
-        message: `Are you sure you want to save hardware <strong>${Utils.escapeHtml(assetId)}</strong> into stock inventory?`,
-        yesText: '💾 YES, Save',
-        noText: '❌ NO, Cancel'
+        title: 'Confirm Save',
+        message: 'Are you sure you want to save this stock entry?',
+        yesText: 'YES, SAVE',
+        noText: 'NO, CANCEL'
       });
       if (!confirmed) return;
 
@@ -11648,7 +12303,7 @@ Remarks: ${r.remark || 'None'}`);
     }
 
     /* ==========================================================================
-       SWAP SYSTEM OLD POOL FILTERING
+       SWAP SYSTEM OLD POOL FILTERING & COMPATIBILITY ENGINE
        ========================================================================== */
     populateSwapOldUserSelect(filterType = 'all') {
       const select = document.getElementById('swapOldUserSelect');
@@ -11656,43 +12311,41 @@ Remarks: ${r.remark || 'None'}`);
 
       const assets = store.data.assets || [];
 
-      // Check if an asset or user is "Currently Working"
+      // Categorize assets properly across all organizational states
+      const isUserExit = (a) => {
+        const ws = (a.workStatus || '').trim().toLowerCase();
+        const st = (a.status || '').trim().toLowerCase();
+        return ws.includes('exit') || ws.includes('resigned') || st === 'user exit';
+      };
+
+      const isInStock = (a) => {
+        const ws = (a.workStatus || '').trim().toLowerCase();
+        const st = (a.status || '').trim().toLowerCase();
+        return (st === 'non-assigned' || st === 'available' || st === 'spare' || ws.includes('stock')) && st !== 'assigned' && !isUserExit(a);
+      };
+
       const isCurrentlyWorking = (a) => {
         const ws = (a.workStatus || '').trim().toLowerCase();
         const st = (a.status || '').trim().toLowerCase();
-        if (a.workStatus === 'Currently Working' || a.status === 'Currently Working' || ws === 'currently working' || ws === 'working' || ws === 'active' || st === 'currently working') return true;
-        // Also check against users table if linked
-        if (a.user) {
-          const u = (store.data.users || []).find(user => (user.name || '').toLowerCase() === a.user.toLowerCase());
-          if (u) {
-            const uws = (u.workStatus || u.status || '').trim().toLowerCase();
-            if (uws === 'currently working' || uws === 'working' || uws === 'active') return true;
-          }
-        }
-        return false;
+        return ws === 'currently working' || a.workStatus === 'Currently Working' || st === 'currently working' || a.status === 'Currently Working' || st === 'assigned' || st === 'wfh';
       };
 
-      // Strict exclusion of all "Currently Working" users from dropdown
-      const eligibleAssets = assets.filter(a => !isCurrentlyWorking(a));
+      // EXCLUDE ALL ASSIGNED / CURRENTLY WORKING SYSTEMS FROM SWAP OLD DROPDOWN (ASSIGED SYSTEM SHOW PANNA VENDAM)
+      const swappableAssets = assets.filter(a => a.id && !isCurrentlyWorking(a));
+      const inStockAssets = swappableAssets.filter(a => isInStock(a));
+      const userExitAssets = swappableAssets.filter(a => isUserExit(a));
 
-      const inStockAssets = eligibleAssets.filter(a => 
-        ((a.status === 'Non-Assigned' || a.status === 'Available' || a.status === 'Spare' || (a.workStatus && a.workStatus.toLowerCase().includes('stock'))) && a.status !== 'Assigned' && a.id)
-      );
-
-      const userExitAssets = eligibleAssets.filter(a => 
-        ((a.workStatus && (a.workStatus.toLowerCase().includes('exit') || a.workStatus.toLowerCase().includes('resigned'))) || a.status === 'User Exit') && a.id
-      );
-
-      const formatOption = (a, defaultLabel) => {
-        const empName = a.user || a.oldUsername || defaultLabel;
-        const assetId = a.id;
+      // Option formatting: FULL ASSET ID ALWAYS FIRST, FOLLOWED BY USER & DETAILS
+      const formatOption = (a, tag) => {
+        const assetId = a.id || a.assetId || '';
+        const empName = a.user || a.oldUsername || (tag || 'Available (No User)');
         const devType = a.type || 'System';
-        const team = a.team ? ` - ${a.team}` : '';
-        const status = a.workStatus || a.status || 'Available';
-        return `<option value="${Utils.escapeHtml(assetId)}" data-asset-id="${Utils.escapeHtml(assetId)}">${Utils.escapeHtml(empName)} — ${Utils.escapeHtml(assetId)} (${Utils.escapeHtml(devType)}${Utils.escapeHtml(team)}) [${Utils.escapeHtml(status)}]</option>`;
+        const team = a.team ? ` • ${a.team}` : '';
+        const statusLabel = a.status ? ` [${a.status}]` : '';
+        return `<option value="${Utils.escapeHtml(assetId)}" data-asset-id="${Utils.escapeHtml(assetId)}" data-asset-type="${Utils.escapeHtml(devType)}">${Utils.escapeHtml(assetId)} — ${Utils.escapeHtml(empName)} (${Utils.escapeHtml(devType)}${Utils.escapeHtml(team)})${Utils.escapeHtml(statusLabel)}</option>`;
       };
 
-      let html = '<option value="">-- Select Active User System --</option>';
+      let html = '<option value="">-- Select In-Stock Asset or User Exit System --</option>';
 
       if (filterType === 'instock') {
         if (inStockAssets.length === 0) {
@@ -11711,6 +12364,7 @@ Remarks: ${r.remark || 'None'}`);
             '</optgroup>';
         }
       } else {
+        // 'all' pool: In-Stock and User Exit systems ONLY (NO ASSIGNED SYSTEMS)
         if (inStockAssets.length > 0) {
           html += `<optgroup label="📦 In-Stock / Available Pool (${inStockAssets.length})">` +
             inStockAssets.map(a => formatOption(a, 'In Stock Item')).join('') +
@@ -11725,11 +12379,11 @@ Remarks: ${r.remark || 'None'}`);
 
       select.innerHTML = html;
 
-      // Also populate swapOldAssetDatalist with all system assets for direct autocomplete
+      // Also populate swapOldAssetDatalist with swappable assets (full Asset ID first)
       const dl = document.getElementById('swapOldAssetDatalist');
       if (dl) {
-        dl.innerHTML = assets.map(a => 
-          `<option value="${Utils.escapeHtml(a.id)}">${Utils.escapeHtml(a.id)} (${Utils.escapeHtml(a.type || 'System')} - ${Utils.escapeHtml(a.user || 'Available')})</option>`
+        dl.innerHTML = swappableAssets.map(a => 
+          `<option value="${Utils.escapeHtml(a.id)}">${Utils.escapeHtml(a.id)} — ${Utils.escapeHtml(a.user || a.oldUsername || 'Available')} (${Utils.escapeHtml(a.type || 'System')})</option>`
         ).join('');
       }
     }
@@ -11779,13 +12433,70 @@ Remarks: ${r.remark || 'None'}`);
       return 'Desktop';
     }
 
+    getCompatibleAssetTypes(baseType) {
+      const type = (baseType || 'Desktop').toLowerCase().trim();
+      if (type === 'desktop' || type.includes('desktop') || type.includes('pc') || type.includes('cpu')) {
+        return [
+          { value: 'Desktop', label: 'Desktop (Matched to Old Asset)', isDefault: true },
+          { value: 'Workstation', label: 'Workstation (Compatible Desktop Tier)', isDefault: false },
+          { value: 'Mini PC', label: 'Mini PC (Compatible Desktop Tier)', isDefault: false },
+          { value: 'All-in-One', label: 'All-in-One (Compatible Desktop Tier)', isDefault: false }
+        ];
+      }
+      if (type === 'laptop' || type.includes('laptop') || type.includes('notebook')) {
+        return [
+          { value: 'Laptop', label: 'Laptop (Matched to Old Asset)', isDefault: true },
+          { value: 'MacBook', label: 'MacBook (Compatible Mobile Tier)', isDefault: false }
+        ];
+      }
+      if (type === 'macbook' || type.includes('macbook') || type.includes('apple') || type.includes('mac')) {
+        return [
+          { value: 'MacBook', label: 'MacBook (Matched to Old Asset)', isDefault: true },
+          { value: 'Laptop', label: 'Laptop (Compatible Mobile Tier)', isDefault: false }
+        ];
+      }
+      return [
+        { value: baseType, label: `${baseType} (Matched to Old Asset)`, isDefault: true },
+        { value: 'Desktop', label: 'Desktop', isDefault: false },
+        { value: 'Laptop', label: 'Laptop', isDefault: false }
+      ];
+    }
+
     syncSwapOldAssetToReplacement(oldAssetId, assetObj) {
       const targetInput = document.getElementById('swapAssetTypeSelect');
       const rawId = String(oldAssetId || '').trim();
       if (!targetInput) return '';
 
+      const autoBanner = document.getElementById('swapAutoFillBanner');
+      const autoBannerTypeBadge = document.getElementById('swapAutoFillTypeBadge');
+      const typePill = document.getElementById('swapOldAssetTypePill');
+      const ruleBadge = document.getElementById('swapCompatibleRuleBadge');
+      const helpEl = document.getElementById('swapCompatibleTypesHelp');
+      const listEl = document.getElementById('swapCompatibleTypesList');
+      const datalist = document.getElementById('assetTypeList');
+
       if (!rawId) {
         targetInput.value = '';
+        const newAssetIdInput = document.getElementById('swapNewAssetId');
+        if (newAssetIdInput) {
+          newAssetIdInput.value = '';
+          newAssetIdInput.placeholder = 'Same as Old Asset ID (or enter new ID)';
+        }
+        if (typePill) typePill.style.display = 'none';
+        if (ruleBadge) ruleBadge.style.display = 'none';
+        if (helpEl) helpEl.style.display = 'none';
+        if (autoBanner) autoBanner.style.display = 'none';
+        if (datalist) {
+          datalist.innerHTML = `
+            <option value="Desktop">
+            <option value="Laptop">
+            <option value="MacBook">
+            <option value="Workstation">
+            <option value="All-in-One">
+            <option value="Mini PC">
+            <option value="Server">
+          `;
+        }
         return '';
       }
 
@@ -11797,17 +12508,42 @@ Remarks: ${r.remark || 'None'}`);
         );
       }
 
+      // 1. Guaranteed exact match to Old Asset Type
       const matchedType = this.resolveAssetType(asset, rawId);
       targetInput.value = matchedType;
 
-      // Update new asset ID auto-generation placeholder
-      const newAssetIdInput = document.getElementById('swapNewAssetId');
-      if (newAssetIdInput) {
-        const prefix = matchedType === 'Laptop' ? 'LPT' : (matchedType === 'MacBook' ? 'MAC' : 'DSK');
-        newAssetIdInput.placeholder = `e.g. AST-${prefix}-${Math.floor(1000 + Math.random() * 9000)} (or leave empty)`;
+      // 2. Filter available options to only compatible swap rules
+      const compatibleList = this.getCompatibleAssetTypes(matchedType);
+      if (datalist) {
+        datalist.innerHTML = compatibleList.map(item => 
+          `<option value="${item.value}">${item.label}</option>`
+        ).join('');
       }
 
-      const autoBannerTypeBadge = document.getElementById('swapAutoFillTypeBadge');
+      // 3. Visual type pill next to Old Asset ID
+      if (typePill) {
+        typePill.textContent = `${matchedType} Detected`;
+        typePill.style.display = 'inline-block';
+      }
+
+      // 4. Compatible rule indicator badges
+      if (ruleBadge) {
+        ruleBadge.textContent = `${matchedType} Swap Rule Enforced`;
+        ruleBadge.style.display = 'inline-block';
+      }
+
+      if (helpEl && listEl) {
+        listEl.textContent = compatibleList.map(item => item.value).join(', ');
+        helpEl.style.display = 'block';
+      }
+
+      // 5. RED LA yELLOW LA SAME ID ERKANUM: Auto-populate New Asset ID with exact SAME ID as Old Asset ID
+      const newAssetIdInput = document.getElementById('swapNewAssetId');
+      if (newAssetIdInput) {
+        newAssetIdInput.value = rawId; // Exactly same ID!
+        newAssetIdInput.placeholder = rawId;
+      }
+
       if (autoBannerTypeBadge) {
         autoBannerTypeBadge.textContent = matchedType;
       }
@@ -11829,15 +12565,6 @@ Remarks: ${r.remark || 'None'}`);
       const catSelect = document.getElementById('instockFilterCategory');
       if (catSelect) catSelect.value = (cat || 'all').toUpperCase();
       this.filterAssignedItems();
-    }
-
-    filterInventoryByCategory(cat) {
-      this.navigateTo('instock-inventory');
-      const catSelect = document.getElementById('instockInventoryFullCategoryFilter');
-      if (catSelect) catSelect.value = (cat || 'all').toUpperCase();
-      const statSelect = document.getElementById('instockInventoryFullStatusFilter');
-      if (statSelect) statSelect.value = 'all';
-      this.filterFullInventoryView();
     }
 
     navToRequirementsFromInstock() {
@@ -11882,6 +12609,17 @@ Remarks: ${r.remark || 'None'}`);
   const app = new AppController();
   window.Utils = Utils;
   window.ITAppControllerInstance = app;
+
+  // Global direct fallback for opening Add Stock modal
+  window.openInstockEntryModal = function(defaultType = null, editId = null) {
+    if (window.ITApp && typeof window.ITApp.openInstockEntryModal === 'function') {
+      return window.ITApp.openInstockEntryModal(defaultType, editId);
+    } else if (window.ITAppControllerInstance && typeof window.ITAppControllerInstance.openInstockEntryModal === 'function') {
+      return window.ITAppControllerInstance.openInstockEntryModal(defaultType, editId);
+    } else if (app && typeof app.openInstockEntryModal === 'function') {
+      return app.openInstockEntryModal(defaultType, editId);
+    }
+  };
 
   // Expose global methods for inline HTML onclick handlers
   window.ITApp = {
@@ -12687,8 +13425,8 @@ async viewAsset(assetId) {
                   </div>
                 </div>
 
-                <!-- Tile 7: MAC Address / Serial No (Full Width) -->
-                <div style="grid-column: 1 / -1; background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
+                <!-- Tile 7: MAC Address / Serial No -->
+                <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
                   <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
                     <span>#</span> MAC ADDRESS / SERIAL NO
                   </div>
@@ -12704,16 +13442,6 @@ async viewAsset(assetId) {
                   </div>
                   <div style="font-size: 0.84rem; font-weight: 600; color: #0f172a; margin-top: 1px;">
                     ${Utils.escapeHtml((asset.monitor && asset.monitor !== '-' && asset.monitor.toLowerCase() !== 'none') ? asset.monitor : 'DELL 22 inch')}
-                  </div>
-                </div>
-
-                <!-- Tile 9: Peripherals -->
-                <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
-                  <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
-                    <span>⌨️</span> PERIPHERALS
-                  </div>
-                  <div style="font-size: 0.82rem; font-weight: 600; color: #0f172a; margin-top: 1px; line-height: 1.25;">
-                    Standard Enterprise Keyboard &amp; Optical Mouse
                   </div>
                 </div>
               </div>
@@ -13300,6 +14028,9 @@ async viewAsset(assetId) {
     setHardwareMaintenance(id) {
       app.setHardwareMaintenance(id);
     },
+    markReadyForAssignment(id) {
+      app.markReadyForAssignment(id);
+    },
     markHardwareAvailable(id) {
       app.markHardwareAvailable(id);
     },
@@ -13365,6 +14096,9 @@ async viewAsset(assetId) {
     },
     viewInstockItem(id) {
       app.viewInstockItem(id);
+    },
+    openInstockHistoryModal(assetId) {
+      app.openInstockHistoryModal(assetId);
     },
     openInstockEntryModalFromView() {
       app.openInstockEntryModalFromView();
@@ -13458,6 +14192,9 @@ async viewAsset(assetId) {
     navToRequirementsFromInstock() {
       app.navToRequirementsFromInstock();
     },
+    populateSwapOldUserSelect(filterType) {
+      app.populateSwapOldUserSelect(filterType);
+    },
     filterSwapOldSystems(filterType) {
       app.filterSwapOldSystems(filterType);
     },
@@ -13466,6 +14203,9 @@ async viewAsset(assetId) {
     },
     syncSwapOldAssetToReplacement(oldAssetId, assetObj) {
       return app.syncSwapOldAssetToReplacement(oldAssetId, assetObj);
+    },
+    getCompatibleAssetTypes(baseType) {
+      return app.getCompatibleAssetTypes(baseType);
     },
     filterCategoryStock(cat) {
       app.filterCategoryStock(cat);

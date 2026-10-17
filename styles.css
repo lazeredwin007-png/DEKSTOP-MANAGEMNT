@@ -1535,7 +1535,17 @@ select.filter-input {
   color: #ef4444;
 }
 
+.form-group {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
 .form-control {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   height: 38px;
   padding: 0 12px;
   border: 1px solid var(--border-color);
@@ -1545,6 +1555,46 @@ select.filter-input {
   color: var(--text-main);
   outline: none;
   transition: all var(--transition-fast);
+}
+
+/* System Swap Facility Dedicated Input & Dropdown Layout */
+#swapOldUserSelect {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  cursor: pointer;
+}
+
+#swapOldAssetId,
+#swapNewAssetId {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  letter-spacing: 0.5px !important;
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  padding: 0 12px !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+}
+
+#swapAssetTypeSelect {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  font-weight: 700 !important;
+  font-size: 0.90rem !important;
+  color: #1e40af !important;
+  background-color: #f8fafc !important;
+  border: 1.5px solid #93c5fd !important;
 }
 
 .form-control:focus {
@@ -4127,6 +4177,29 @@ a[href="#non-it-assets"],
 }
 .instock-summary-card.assigned .summary-click-hint {
   color: #2563eb;
+}
+
+/* Card: Ready for Assignment */
+.instock-summary-card.ready {
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  color: #4c1d95;
+}
+.instock-summary-card.ready .summary-label {
+  color: #6d28d9;
+}
+.instock-summary-card.ready .summary-count {
+  color: #7c3aed;
+}
+.instock-summary-card.ready .summary-subtext {
+  color: #5b21b6;
+}
+.instock-summary-card.ready .summary-icon-box {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+.instock-summary-card.ready .summary-click-hint {
+  color: #6d28d9;
 }
 
 /* Card 4: Under Maintenance & Request Hardware Items */

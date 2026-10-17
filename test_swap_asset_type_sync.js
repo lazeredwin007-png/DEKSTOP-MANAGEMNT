@@ -118,11 +118,11 @@ test('swapOldAssetId defines a property setter hook for direct assignments', () 
   assert(chunk.includes('self.syncSwapOldAssetToReplacement(v)'), 'Setter hook must call self.syncSwapOldAssetToReplacement');
 });
 
-test('populateSwapOldUserSelect populates swapOldAssetDatalist with all system assets', () => {
+test('populateSwapOldUserSelect populates swapOldAssetDatalist with swappable system assets', () => {
   const dlPopIdx = appJs.indexOf("document.getElementById('swapOldAssetDatalist')");
   assert(dlPopIdx !== -1, 'populateSwapOldUserSelect must reference swapOldAssetDatalist');
   const chunk = appJs.substring(dlPopIdx, dlPopIdx + 300);
-  assert(chunk.includes('dl.innerHTML = assets.map'), 'swapOldAssetDatalist must be populated with assets options');
+  assert(chunk.includes('dl.innerHTML = swappableAssets.map') || chunk.includes('dl.innerHTML = assets.map'), 'swapOldAssetDatalist must be populated with swappable options');
 });
 
 test('window.ITApp exposes resolveAssetType and syncSwapOldAssetToReplacement', () => {
@@ -140,12 +140,49 @@ test('handleConfirmSwap generates prefix LPT, MAC, or DSK based on assetType', (
   assert(chunk.includes('typePrefix = (assetType.toLowerCase() === \'laptop\') ? \'LPT\' : (assetType.toLowerCase() === \'macbook\') ? \'MAC\' : \'DSK\''), 'handleConfirmSwap must support LPT, MAC, DSK prefixes');
 });
 
+test('app.js defines getCompatibleAssetTypes and enforces swap rules', () => {
+  assert(appJs.includes('getCompatibleAssetTypes(baseType)'), 'getCompatibleAssetTypes must be defined in AppController');
+  assert(appJs.includes('window.ITApp = {') && appJs.includes('getCompatibleAssetTypes(baseType)'), 'ITApp must expose getCompatibleAssetTypes');
+});
+
+test('populateSwapOldUserSelect formats options with complete Asset ID first and excludes assigned systems', () => {
+  const popIdx = appJs.indexOf('populateSwapOldUserSelect(filterType');
+  assert(popIdx !== -1, 'populateSwapOldUserSelect must exist');
+  const chunk = appJs.substring(popIdx, popIdx + 6000);
+  assert(chunk.includes('${Utils.escapeHtml(assetId)} — ${Utils.escapeHtml(empName)}'), 'Option format must start with full Asset ID first');
+  assert(chunk.includes('In-Stock / Available Pool'), 'Swap pool must include In-Stock / Available Pool');
+  assert(chunk.includes('User Exit Systems'), 'Swap pool must include User Exit Systems');
+  assert(chunk.includes('EXCLUDE ALL ASSIGNED / CURRENTLY WORKING SYSTEMS FROM SWAP OLD DROPDOWN'), 'Assigned systems must be excluded from swap dropdown');
+});
+
+test('syncSwapOldAssetToReplacement populates swapNewAssetId with exact same ID as swapOldAssetId (Red and Yellow same ID)', () => {
+  const syncIdx = appJs.indexOf('syncSwapOldAssetToReplacement(oldAssetId, assetObj)');
+  assert(syncIdx !== -1, 'syncSwapOldAssetToReplacement must exist');
+  const chunk = appJs.substring(syncIdx, syncIdx + 5000);
+  assert(chunk.includes('newAssetIdInput.value = rawId'), 'New Asset ID must match Old Asset ID');
+});
+
+test('index.html contains swapOldAssetTypePill, swapCompatibleRuleBadge, and swapCompatibleTypesHelp', () => {
+  assert(html.includes('id="swapOldAssetTypePill"'), 'swapOldAssetTypePill element must exist');
+  assert(html.includes('id="swapCompatibleRuleBadge"'), 'swapCompatibleRuleBadge element must exist');
+  assert(html.includes('id="swapCompatibleTypesHelp"'), 'swapCompatibleTypesHelp element must exist');
+});
+
+test('styles.css enforces 100% width, non-truncating text-overflow, and monospace font for swapOldAssetId and swapNewAssetId', () => {
+  const css = fs.readFileSync('styles.css', 'utf8');
+  assert(css.includes('#swapOldAssetId'), 'styles.css must have dedicated #swapOldAssetId rules');
+  assert(css.includes('#swapNewAssetId'), 'styles.css must have dedicated #swapNewAssetId rules');
+  assert(css.includes('#swapOldUserSelect'), 'styles.css must have dedicated #swapOldUserSelect rules');
+  assert(css.includes('#swapAssetTypeSelect'), 'styles.css must have dedicated #swapAssetTypeSelect rules');
+  assert(css.includes('width: 100% !important;'), 'Swap fields must be styled with 100% width');
+});
+
 console.log('\n================================================================');
 console.log(`Results: ${passedTests} / ${totalTests} tests passed`);
 console.log('================================================================\n');
 
 if (passedTests === totalTests) {
-  console.log('🎉 ALL SYSTEM SWAP ASSET TYPE SYNC TESTS PASSED SUCCESSFULLY!');
+  console.log('🎉 ALL SYSTEM SWAP ASSET TYPE SYNC & OLD ASSET ID TESTS PASSED SUCCESSFULLY!');
 } else {
   process.exit(1);
 }

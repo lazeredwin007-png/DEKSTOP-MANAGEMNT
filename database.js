@@ -759,6 +759,9 @@ class DatabaseService {
       this.db.exec("ALTER TABLE instock_hardware ADD COLUMN changing_reason TEXT DEFAULT ''");
     } catch (e) {}
     try {
+      this.db.exec("ALTER TABLE instock_hardware ADD COLUMN model TEXT DEFAULT ''");
+    } catch (e) {}
+    try {
       this.db.exec("ALTER TABLE requirements ADD COLUMN asset_assignment_status TEXT DEFAULT 'Non-Assigned / Awaiting Allocation'");
     } catch (e) {}
     try {
@@ -1924,23 +1927,91 @@ class DatabaseService {
     return (this.memoryData.instockHardware || []).find(i => i.id === id);
   }
 
+  getInstockHistory(assetId = null) {
+    if (this.db) {
+      try {
+        if (assetId && assetId !== 'all') {
+          return this.db.prepare('SELECT * FROM instock_history WHERE asset_id = ? COLLATE NOCASE ORDER BY datetime(event_date) DESC, created_at DESC, id DESC').all(assetId.trim());
+        }
+        return this.db.prepare('SELECT * FROM instock_history ORDER BY datetime(event_date) DESC, created_at DESC, id DESC').all();
+      } catch (e) {
+        return [];
+      }
+    }
+    if (!this.memoryData.instockHistory) this.memoryData.instockHistory = [];
+    if (assetId && assetId !== 'all') {
+      const aLower = assetId.trim().toLowerCase();
+      return this.memoryData.instockHistory.filter(h => (h.asset_id || '').toLowerCase() === aLower);
+    }
+    return this.memoryData.instockHistory;
+  }
+
+  insertInstockHistory(entry) {
+    const id = entry.id || `HIST-${Math.floor(100000 + Math.random() * 900000)}`;
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const eventDate = entry.event_date || now.substring(0, 10);
+    const record = {
+      id,
+      asset_id: entry.asset_id || '',
+      action_type: entry.action_type || 'Status Change',
+      prev_status: entry.prev_status || '',
+      new_status: entry.new_status || '',
+      employee_name: entry.employee_name || '',
+      team: entry.team || '',
+      tl: entry.tl || '',
+      event_date: eventDate,
+      reason: entry.reason || '',
+      performed_by: entry.performed_by || 'System Admin',
+      created_at: entry.created_at || now
+    };
+
+    if (this.db) {
+      try {
+        this.db.prepare(`
+          INSERT INTO instock_history (id, asset_id, action_type, prev_status, new_status, employee_name, team, tl, event_date, reason, performed_by, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          record.id, record.asset_id, record.action_type, record.prev_status, record.new_status,
+          record.employee_name, record.team, record.tl, record.event_date, record.reason, record.performed_by, record.created_at
+        );
+        return this.db.prepare('SELECT * FROM instock_history WHERE id = ?').get(id);
+      } catch (e) {
+        console.warn('Could not insert instock_history:', e.message);
+      }
+    }
+
+    if (!this.memoryData.instockHistory) this.memoryData.instockHistory = [];
+    this.memoryData.instockHistory.unshift(record);
+    this.saveFileStore();
+    return record;
+  }
+
   insertInstockHardware(item) {
     const type = (item.component_type || 'OTHER').toUpperCase();
     const id = item.id ? item.id.trim() : `STK-${type}-${Math.floor(100 + Math.random() * 900)}`;
     const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
-    const status = (item.status === 'Assigned' && item.assigned_user) ? 'Assigned' : (item.status || 'Available');
+    const isAssigned = (item.status === 'Assigned' && item.assigned_user);
+    const status = isAssigned ? 'Assigned' : (item.status || 'Available');
+    const model = (item.model || '').trim();
+    const spec = (item.spec || '').trim();
+    const purchaseDate = item.purchase_date || now.substring(0, 10);
 
     if (this.db) {
+      try {
+        this.db.exec("ALTER TABLE instock_hardware ADD COLUMN model TEXT DEFAULT ''");
+      } catch (e) {}
+
       const stmt = this.db.prepare(`
-        INSERT INTO instock_hardware (id, component_type, spec, serial_number, purchase_date, status, assigned_user, assigned_date, team, tl, remark, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO instock_hardware (id, component_type, model, spec, serial_number, purchase_date, status, assigned_user, assigned_date, team, tl, remark, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       stmt.run(
         id,
         type,
-        item.spec || '',
+        model,
+        spec,
         item.serial_number || '',
-        item.purchase_date || '',
+        purchaseDate,
         status,
         item.assigned_user || '',
         item.assigned_date || '',
@@ -1949,16 +2020,67 @@ class DatabaseService {
         item.remark || '',
         item.created_at || now
       );
-      this.addActivity('Added In-Stock Hardware', `${type} - ${item.spec || id}`, item.assigned_user || 'Admin', 'Success');
+
+      // Record Purchase / Stock In event in instock_history
+      this.insertInstockHistory({
+        asset_id: id,
+        action_type: 'Purchase / Stock In',
+        prev_status: '—',
+        new_status: status,
+        employee_name: isAssigned ? (item.assigned_user || '') : '',
+        team: isAssigned ? (item.team || '') : '',
+        tl: isAssigned ? (item.tl || '') : '',
+        event_date: purchaseDate,
+        reason: item.remark || 'Hardware stock-in / initial receipt',
+        performed_by: 'System Admin',
+        created_at: now
+      });
+
+      // If initially assigned, also record Assignment event in history and allocations
+      if (isAssigned) {
+        this.insertInstockHistory({
+          asset_id: id,
+          action_type: 'Assignment',
+          prev_status: 'Available',
+          new_status: 'Assigned',
+          employee_name: item.assigned_user || '',
+          team: item.team || '',
+          tl: item.tl || '',
+          event_date: item.assigned_date || purchaseDate,
+          reason: item.changing_reason || item.remark || 'Initial assignment on stock entry',
+          performed_by: 'System Admin',
+          created_at: now
+        });
+
+        try {
+          this.insertInstockAllocation({
+            asset_id: id,
+            user_name: item.assigned_user || '',
+            team: item.team || '',
+            tl_name: item.tl || '',
+            component_type: type,
+            spec: spec || model,
+            serial_number: item.serial_number || '',
+            assigned_date: item.assigned_date || purchaseDate,
+            purpose: 'Initial In-Stock Assignment',
+            status: 'Assigned',
+            assigned_by: 'System Admin',
+            remark: item.remark || ''
+          });
+        } catch (ae) {}
+      }
+
+      this.addActivity('Added In-Stock Hardware', `${type} - ${model || spec || id}`, item.assigned_user || 'Admin', 'Success');
       return this.db.prepare('SELECT * FROM instock_hardware WHERE id = ?').get(id);
     }
 
     const newRecord = {
       id,
       component_type: type,
-      spec: item.spec || '',
+      model,
+      spec,
       serial_number: item.serial_number || '',
-      purchase_date: item.purchase_date || '',
+      purchase_date: purchaseDate,
       status,
       assigned_user: item.assigned_user || '',
       assigned_date: item.assigned_date || '',
@@ -1974,8 +2096,17 @@ class DatabaseService {
   }
 
   updateInstockHardware(id, updates) {
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const nowDate = now.substring(0, 10);
+
     if (this.db) {
-      const fields = ['component_type', 'spec', 'serial_number', 'purchase_date', 'status', 'assigned_user', 'assigned_date', 'team', 'tl', 'remark'];
+      try {
+        this.db.exec("ALTER TABLE instock_hardware ADD COLUMN model TEXT DEFAULT ''");
+      } catch (e) {}
+
+      const oldItem = this.db.prepare('SELECT * FROM instock_hardware WHERE id = ?').get(id);
+
+      const fields = ['component_type', 'model', 'spec', 'serial_number', 'purchase_date', 'status', 'assigned_user', 'assigned_date', 'team', 'tl', 'remark'];
       const setClauses = [];
       const values = [];
       for (const f of fields) {
@@ -1988,8 +2119,109 @@ class DatabaseService {
         values.push(id);
         this.db.prepare(`UPDATE instock_hardware SET ${setClauses.join(', ')} WHERE id = ?`).run(...values);
       }
+
+      // Track history for state changes
+      if (oldItem) {
+        const oldStatus = oldItem.status || 'Available';
+        const newStatus = updates.status !== undefined ? updates.status : oldStatus;
+        const wasAssigned = (oldStatus === 'Assigned');
+        const isNowAssigned = (newStatus === 'Assigned');
+
+        if (wasAssigned && !isNowAssigned) {
+          // Unassignment event
+          this.insertInstockHistory({
+            asset_id: id,
+            action_type: 'Unassignment',
+            prev_status: 'Assigned',
+            new_status: newStatus,
+            employee_name: oldItem.assigned_user || '',
+            team: oldItem.team || '',
+            tl: oldItem.tl || '',
+            event_date: nowDate,
+            reason: updates.remark || updates.changing_reason || 'Unassigned / returned to stock via Edit Form',
+            performed_by: 'System Admin',
+            created_at: now
+          });
+
+          // Mark active allocations as returned so history is preserved
+          try {
+            this.db.prepare(`
+              UPDATE instock_allocations 
+              SET status = 'Returned', return_date = ?, remark = coalesce(remark || ' | ', '') || 'Unassigned via Edit Stock Form'
+              WHERE asset_id = ? AND status = 'Assigned'
+            `).run(nowDate, id);
+          } catch (ue) {}
+
+        } else if (!wasAssigned && isNowAssigned) {
+          // Assignment event
+          this.insertInstockHistory({
+            asset_id: id,
+            action_type: 'Assignment',
+            prev_status: oldStatus,
+            new_status: 'Assigned',
+            employee_name: updates.assigned_user || '',
+            team: updates.team || '',
+            tl: updates.tl || '',
+            event_date: updates.assigned_date || nowDate,
+            reason: updates.changing_reason || updates.remark || 'Device assigned to employee via Edit Form',
+            performed_by: 'System Admin',
+            created_at: now
+          });
+
+          // Record in instock_allocations
+          try {
+            this.insertInstockAllocation({
+              asset_id: id,
+              user_name: updates.assigned_user || '',
+              team: updates.team || '',
+              tl_name: updates.tl || '',
+              component_type: updates.component_type || oldItem.component_type || '',
+              spec: updates.spec || oldItem.spec || '',
+              serial_number: updates.serial_number || oldItem.serial_number || '',
+              assigned_date: updates.assigned_date || nowDate,
+              purpose: updates.changing_reason || 'Assignment via Edit Stock Form',
+              status: 'Assigned',
+              assigned_by: 'System Admin',
+              remark: updates.remark || ''
+            });
+          } catch (ae) {}
+
+        } else if (oldStatus !== newStatus) {
+          // Status change event
+          this.insertInstockHistory({
+            asset_id: id,
+            action_type: 'Status Change',
+            prev_status: oldStatus,
+            new_status: newStatus,
+            employee_name: updates.assigned_user || oldItem.assigned_user || '',
+            team: updates.team || oldItem.team || '',
+            tl: updates.tl || oldItem.tl || '',
+            event_date: nowDate,
+            reason: updates.remark || `Status changed from ${oldStatus} to ${newStatus}`,
+            performed_by: 'System Admin',
+            created_at: now
+          });
+        } else {
+          // General Edit event
+          this.insertInstockHistory({
+            asset_id: id,
+            action_type: 'Edit',
+            prev_status: oldStatus,
+            new_status: newStatus,
+            employee_name: updates.assigned_user || oldItem.assigned_user || '',
+            team: updates.team || oldItem.team || '',
+            tl: updates.tl || oldItem.tl || '',
+            event_date: nowDate,
+            reason: updates.remark || 'Hardware specifications / details updated',
+            performed_by: 'System Admin',
+            created_at: now
+          });
+        }
+      }
+
       return this.db.prepare('SELECT * FROM instock_hardware WHERE id = ?').get(id);
     }
+
     if (!this.memoryData.instockHardware) return null;
     const item = this.memoryData.instockHardware.find(i => i.id === id);
     if (item) Object.assign(item, updates);
@@ -2178,12 +2410,87 @@ class DatabaseService {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `).run('ALC-1007', 'STK-SSD-202', 'Jarwan Derson', 'Team 1', 'Sundar Pichai', 'SSD', 'Crucial MX500 500GB 2.5" SATA', 'SN-SSD-44822', '2026-10-10', null, '', 'New Onboarding Setup', 'New employee onboarding', 'Pending In-Stock', 'SysAdmin', 'Awaiting employee desk arrival', '2026-10-10 11:00:00');
         }
-        const hasPending2 = this.db.prepare("SELECT id FROM instock_allocations WHERE id = 'ALC-1008'").get();
-        if (!hasPending2) {
-          this.db.prepare(`
-            INSERT INTO instock_allocations (id, asset_id, user_name, team, tl_name, component_type, spec, serial_number, assigned_date, return_date, user_exit_date, changing_reason, purpose, status, assigned_by, remark, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          `).run('ALC-1008', 'STK-RAM-302', 'Alex Naiat', 'Team 3', 'Kavitha R', 'RAM', 'Kingston Fury 32GB DDR5 5600MHz', 'SN-RAM-33102', '2026-10-11', null, '', 'System Upgrade Pending', 'Development work', 'Pending In-Stock', 'SysAdmin', 'Scheduled maintenance window', '2026-10-11 15:30:00');
+        // Ensure instock_history table exists and is populated
+        this.db.exec(`
+          CREATE TABLE IF NOT EXISTS instock_history (
+            id TEXT PRIMARY KEY,
+            asset_id TEXT NOT NULL,
+            action_type TEXT NOT NULL,
+            prev_status TEXT DEFAULT '',
+            new_status TEXT DEFAULT '',
+            employee_name TEXT DEFAULT '',
+            team TEXT DEFAULT '',
+            tl TEXT DEFAULT '',
+            event_date TEXT NOT NULL,
+            reason TEXT DEFAULT '',
+            performed_by TEXT DEFAULT 'System Admin',
+            created_at TEXT NOT NULL
+          );
+        `);
+
+        const histCount = this.db.prepare('SELECT count(*) as total FROM instock_history').get();
+        if (!histCount || histCount.total === 0) {
+          const insertHist = this.db.prepare(`
+            INSERT INTO instock_history (id, asset_id, action_type, prev_status, new_status, employee_name, team, tl, event_date, reason, performed_by, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `);
+
+          // 1. Backfill Purchase / Stock In from instock_hardware
+          const allHw = this.db.prepare('SELECT * FROM instock_hardware').all();
+          for (const hw of allHw) {
+            insertHist.run(
+              `HIST-IN-${hw.id}`,
+              hw.id,
+              'Purchase / Stock In',
+              '—',
+              'Available',
+              '',
+              '',
+              '',
+              hw.purchase_date || '2025-01-01',
+              hw.remark || 'Hardware stock-in / initial receipt',
+              'System Admin',
+              hw.created_at || '2025-01-01 10:00:00'
+            );
+          }
+
+          // 2. Backfill Assignment & Unassignment from instock_allocations
+          const allAllocs = this.db.prepare('SELECT * FROM instock_allocations').all();
+          for (const alc of allAllocs) {
+            if (alc.asset_id && alc.user_name) {
+              insertHist.run(
+                `HIST-ALC-${alc.id}`,
+                alc.asset_id,
+                'Assignment',
+                'Available',
+                'Assigned',
+                alc.user_name,
+                alc.team || '',
+                alc.tl_name || '',
+                alc.assigned_date || '2026-10-01',
+                alc.changing_reason || alc.purpose || alc.remark || 'Hardware assigned to employee',
+                alc.assigned_by || 'System Admin',
+                alc.created_at || '2026-10-01 10:00:00'
+              );
+
+              if (alc.status === 'Returned' || alc.return_date) {
+                insertHist.run(
+                  `HIST-RET-${alc.id}`,
+                  alc.asset_id,
+                  'Unassignment',
+                  'Assigned',
+                  'Available',
+                  alc.user_name,
+                  alc.team || '',
+                  alc.tl_name || '',
+                  alc.return_date || alc.assigned_date || '2026-10-15',
+                  alc.remark || 'Device returned and checked back into stock',
+                  alc.assigned_by || 'System Admin',
+                  alc.created_at || '2026-10-15 17:00:00'
+                );
+              }
+            }
+          }
         }
       } catch (err) {}
     } catch (e) {
@@ -2743,6 +3050,7 @@ class DatabaseService {
       assignedHardware: this.getAssignedHardware(),
       instockHardware: this.getInstockHardware(),
       instockAllocations: this.getInstockAllocations(),
+      instockHistory: this.getInstockHistory(),
       networkSwitches: this.getNetworkSwitches(),
       bypassIps: this.getBypassIps(),
       antivirus: this.getAntivirus(),

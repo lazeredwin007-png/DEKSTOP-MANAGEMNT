@@ -70,7 +70,7 @@ testStore.data.swapLogs = db.getSwapLogs();
   console.log('23. Has IP 192.168.6.99:', bodyHtml.includes('192.168.6.99'));
   console.log('24. Has MAC 00:E0:4C:D4:7F:01:', bodyHtml.includes('00:E0:4C:D4:7F:01'));
   console.log('25. Has DELL 22 inch:', bodyHtml.includes('DELL 22 inch'));
-  console.log('26. Has Peripherals:', bodyHtml.includes('Standard Enterprise Keyboard &amp; Optical Mouse'));
+  console.log('26. Peripherals option removed:', !bodyHtml.includes('Standard Enterprise Keyboard &amp; Optical Mouse'));
 
   console.log('27. Has Warranty & Hardware Lifecycle:', bodyHtml.includes('Warranty &amp; Hardware Lifecycle'));
   console.log('28. Has Component Lifecycle Tracking:', bodyHtml.includes('Component Lifecycle Tracking'));

@@ -432,9 +432,10 @@ const server = http.createServer(async (req, res) => {
         if (method === 'POST') {
           const body = await parseJsonBody(req);
           // Required fields validation
-          if (!body.component_type || !body.spec || !body.serial_number || !body.purchase_date) {
+          if (!body.component_type || (!body.spec && !body.model) || !body.serial_number || !body.purchase_date) {
             return sendJson(res, 400, { error: 'Category, Specification / Model, Serial Number, and Purchase Date are required.' });
           }
+          if (!body.spec && body.model) body.spec = body.model;
 
           const targetId = body.id ? body.id.trim() : null;
           const allItems = db.getInstockHardware() || [];
@@ -460,8 +461,32 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
+      // Instock History endpoints
+      if (pathname === '/api/instock/history') {
+        if (method === 'GET') {
+          return sendJson(res, 200, db.getInstockHistory());
+        }
+        if (method === 'POST') {
+          const body = await parseJsonBody(req);
+          const saved = db.insertInstockHistory(body);
+          return sendJson(res, 201, saved);
+        }
+      }
+
+      if (pathname.startsWith('/api/instock/') && pathname.endsWith('/history')) {
+        const id = decodeURIComponent(pathname.replace('/api/instock/', '').replace(/\/history$/, ''));
+        if (method === 'GET') {
+          return sendJson(res, 200, db.getInstockHistory(id));
+        }
+      }
+
       if (pathname.startsWith('/api/instock/')) {
         const id = decodeURIComponent(pathname.replace('/api/instock/', ''));
+        if (method === 'GET') {
+          const item = db.getInstockHardwareById(id);
+          if (item) return sendJson(res, 200, item);
+          return sendJson(res, 404, { error: `Asset "${id}" not found in stock.` });
+        }
         if (method === 'PUT') {
           const body = await parseJsonBody(req);
           if (body.serial_number) {
@@ -475,6 +500,11 @@ const server = http.createServer(async (req, res) => {
           return sendJson(res, 200, updated);
         }
         if (method === 'DELETE') {
+          const allItems = db.getInstockHardware() || [];
+          const target = allItems.find(i => (i.id || '').toLowerCase() === id.toLowerCase());
+          if (target && target.status === 'Assigned') {
+            return sendJson(res, 400, { error: `Cannot delete asset "${id}" because it is currently assigned to ${target.assigned_user || 'a user'}. Please return or unassign it first.` });
+          }
           db.deleteInstockHardware(id);
           return sendJson(res, 200, { success: true });
         }
