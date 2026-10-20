@@ -2232,10 +2232,20 @@ class DatabaseService {
   deleteInstockHardware(id) {
     if (this.db) {
       this.db.prepare('DELETE FROM instock_hardware WHERE id = ?').run(id);
+      try {
+        this.db.prepare('DELETE FROM instock_history WHERE asset_id = ?').run(id);
+        this.db.prepare('DELETE FROM instock_allocations WHERE asset_id = ?').run(id);
+      } catch (e) {}
       return true;
     }
     if (this.memoryData.instockHardware) {
       this.memoryData.instockHardware = this.memoryData.instockHardware.filter(i => i.id !== id);
+      if (this.memoryData.instockHistory) {
+        this.memoryData.instockHistory = this.memoryData.instockHistory.filter(h => h.asset_id !== id);
+      }
+      if (this.memoryData.instockAllocations) {
+        this.memoryData.instockAllocations = this.memoryData.instockAllocations.filter(a => a.asset_id !== id);
+      }
       this.saveFileStore();
     }
     return true;
@@ -2252,7 +2262,12 @@ class DatabaseService {
       }
 
       // 2. Ensure instock_hardware has clean statuses ('Available', 'Assigned', 'Under Maintenance')
-      this.db.prepare("UPDATE instock_hardware SET status = 'Available' WHERE status = 'Pending'").run();
+      this.db.prepare("UPDATE instock_hardware SET status = 'Available' WHERE status = 'Pending' OR status = 'Ready for Assignment' OR status = 'Ready'").run();
+      try {
+        this.db.prepare("DELETE FROM instock_hardware WHERE id = 'STK-SMPS-404'").run();
+        this.db.prepare("DELETE FROM instock_history WHERE asset_id = 'STK-SMPS-404'").run();
+        this.db.prepare("DELETE FROM instock_allocations WHERE asset_id = 'STK-SMPS-404'").run();
+      } catch (err) {}
 
       // Ensure VIMAL's hardware records in instock_hardware
       const hasCpu = this.db.prepare("SELECT id FROM instock_hardware WHERE id = 'STK-CPU-101'").get();

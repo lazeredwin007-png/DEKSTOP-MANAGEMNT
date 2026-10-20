@@ -677,8 +677,12 @@
                 this.data.nonItAssets = remoteData.nonItAssets;
                 this.data.hardwareStock = remoteData.hardwareStock;
                 this.data.assignedHardware = remoteData.assignedHardware;
-                this.data.instockHardware = remoteData.instockHardware || [];
-                this.data.instockAllocations = remoteData.instockAllocations || [];
+                this.data.instockHardware = (remoteData.instockHardware || []).filter(i => (i.id || '').toUpperCase() !== 'STK-SMPS-404').map(i => {
+                  if (i.status === 'Ready for Assignment' || i.status === 'Ready') i.status = 'Available';
+                  return i;
+                });
+                this.data.instockAllocations = (remoteData.instockAllocations || []).filter(a => (a.asset_id || '').toUpperCase() !== 'STK-SMPS-404');
+                this.data.instockHistory = (remoteData.instockHistory || []).filter(h => (h.asset_id || '').toUpperCase() !== 'STK-SMPS-404');
                 this.data.networkSwitches = remoteData.networkSwitches;
                 this.data.bypassIps = remoteData.bypassIps;
                 this.data.antivirus = remoteData.antivirus;
@@ -745,6 +749,18 @@
               });
             }
             this.save(parsed);
+          }
+          if (parsed && parsed.instockHardware && Array.isArray(parsed.instockHardware)) {
+            parsed.instockHardware = parsed.instockHardware.filter(i => (i.id || '').toUpperCase() !== 'STK-SMPS-404').map(i => {
+              if (i.status === 'Ready for Assignment' || i.status === 'Ready') i.status = 'Available';
+              return i;
+            });
+          }
+          if (parsed && parsed.instockHistory && Array.isArray(parsed.instockHistory)) {
+            parsed.instockHistory = parsed.instockHistory.filter(h => (h.asset_id || '').toUpperCase() !== 'STK-SMPS-404');
+          }
+          if (parsed && parsed.instockAllocations && Array.isArray(parsed.instockAllocations)) {
+            parsed.instockAllocations = parsed.instockAllocations.filter(a => (a.asset_id || '').toUpperCase() !== 'STK-SMPS-404');
           }
           return parsed;
         }
@@ -2973,7 +2989,7 @@
       if (!confirmed) return;
 
       // Record Previous User before assignment (must NEVER be deleted)
-      const prevUser = (asset.user && asset.user.trim() !== '' && asset.user !== 'None' && asset.user !== '—' && asset.user !== 'Unassigned') ? asset.user : (asset.oldUsername || 'Stock / Initial');
+      const prevUser = (asset.user && asset.user.trim() !== '' && asset.user !== 'None' && asset.user !== '—' && asset.user !== 'Unassigned') ? asset.user.trim() : '';
 
       // 1. Update Asset to Assigned
       asset.status = 'Assigned';
@@ -2984,9 +3000,13 @@
       asset.assignedDate = assignedDate;
       asset.workStatus = workStatus;
       if (remarks) asset.remark = remarks;
-      // Guarantee previous user is maintained
-      if (!asset.oldUsername || asset.oldUsername === 'None') {
+      // Guarantee previous user is maintained without duplicating current employee
+      if (prevUser && prevUser.toLowerCase() !== userName.toLowerCase()) {
         asset.oldUsername = prevUser;
+      } else if (asset.oldUsername && asset.oldUsername.trim().toLowerCase() === userName.toLowerCase()) {
+        asset.oldUsername = this.getPreviousUserForAsset ? this.getPreviousUserForAsset(asset, userName) : '—';
+      } else if (!asset.oldUsername || asset.oldUsername === 'None') {
+        asset.oldUsername = '—';
       }
 
       // 2. Append to Assignment History (Unlimited records per asset)
@@ -4373,10 +4393,10 @@
                 swapDateInput.value = assignedDateInput ? assignedDateInput.value : new Date().toISOString().substring(0, 10);
               }
 
-              // Display visual auto-applied banner
+              // Keep auto-applied banner hidden as requested
               const autoBanner = document.getElementById('swapAutoFillBanner');
               if (autoBanner) {
-                autoBanner.style.display = 'flex';
+                autoBanner.style.display = 'none';
               }
 
               const autoBadge = document.getElementById('swapAutoFillTypeBadge');
@@ -4454,7 +4474,7 @@
               }
 
               const autoBanner = document.getElementById('swapAutoFillBanner');
-              if (autoBanner) autoBanner.style.display = 'flex';
+              if (autoBanner) autoBanner.style.display = 'none';
               const autoBadge = document.getElementById('swapAutoFillTypeBadge');
               if (autoBadge) autoBadge.textContent = matchedType;
             }
@@ -6578,6 +6598,66 @@ Remarks: ${r.remark || 'None'}`);
       });
     }
 
+    getPreviousUserForAsset(asset, currentAssignedUser) {
+      if (!asset) return '—';
+      const currentUser = (currentAssignedUser !== undefined && currentAssignedUser !== null)
+        ? String(currentAssignedUser).trim()
+        : (asset.user ? String(asset.user).trim() : '');
+      const currentLower = currentUser.toLowerCase();
+
+      const isValidPreviousName = (name) => {
+        if (!name || typeof name !== 'string') return false;
+        const clean = name.trim();
+        if (!clean) return false;
+        const lower = clean.toLowerCase();
+        if (['none', 'n/a', '—', '-', 'stock', 'unassigned', 'stock (unassigned)', 'stock / initial', 'null', 'undefined', 'new system'].includes(lower)) {
+          return false;
+        }
+        if (currentLower && lower === currentLower) {
+          return false; // Do not show the current employee as previous user
+        }
+        return true;
+      };
+
+      // 1. Check actual assignment history (store.data.assignmentHistory)
+      const historyList = store && store.data && Array.isArray(store.data.assignmentHistory)
+        ? store.data.assignmentHistory.filter(h => h && h.assetId === asset.id)
+        : [];
+
+      for (const h of historyList) {
+        if (h.newUser && currentLower && h.newUser.trim().toLowerCase() === currentLower) {
+          if (isValidPreviousName(h.previousUser)) {
+            return h.previousUser.trim();
+          }
+        }
+        if (isValidPreviousName(h.previousUser)) {
+          return h.previousUser.trim();
+        }
+        if (isValidPreviousName(h.newUser)) {
+          return h.newUser.trim();
+        }
+      }
+
+      // 2. Check actual swap logs (store.data.swapLogs)
+      const swapList = store && store.data && Array.isArray(store.data.swapLogs)
+        ? store.data.swapLogs.filter(s => s && (s.newAssetId === asset.id || s.oldAssetId === asset.id))
+        : [];
+
+      for (const s of swapList) {
+        if (isValidPreviousName(s.oldUserId)) {
+          return s.oldUserId.trim();
+        }
+      }
+
+      // 3. Check asset's recorded oldUsername if reliable, valid, and NOT matching current employee
+      if (isValidPreviousName(asset.oldUsername)) {
+        return asset.oldUsername.trim();
+      }
+
+      // 4. Default to '—' when reliable previous assignment history is unavailable
+      return '—';
+    }
+
     populateEditAssetModal(asset) {
       // 1. Hidden original ID for lookup
       const originalIdInput = document.getElementById('editAssetOriginalId');
@@ -6619,9 +6699,10 @@ Remarks: ${r.remark || 'None'}`);
       const typeSelect = document.getElementById('editAssetType');
       if (typeSelect) typeSelect.value = asset.type || 'Desktop';
 
-      // 4. User Assignment & Team
+      // 4. User Assignment & Team (Assigned Employee Name)
+      const currentAssignedUser = (asset.user && asset.user !== 'None' && asset.user !== '—' && asset.user !== 'Unassigned') ? asset.user.trim() : '';
       const userInput = document.getElementById('editAssetUser');
-      if (userInput) userInput.value = asset.user || (asset.status !== 'Non-Assigned' && asset.oldUsername && asset.oldUsername !== 'None' ? asset.oldUsername : '');
+      if (userInput) userInput.value = currentAssignedUser;
 
       const tlInput = document.getElementById('editAssetTl');
       if (tlInput) tlInput.value = asset.tl || '-';
@@ -6691,8 +6772,43 @@ Remarks: ${r.remark || 'None'}`);
       const conditionSelect = document.getElementById('editAssetCondition');
       if (conditionSelect) conditionSelect.value = asset.condition || 'Good';
 
+      // Previous User (If Reassigned) - Never duplicate current employee
       const oldUserInput = document.getElementById('editAssetOldUsername');
-      if (oldUserInput) oldUserInput.value = asset.oldUsername || '';
+      const prevUserDisplay = this.getPreviousUserForAsset(asset, currentAssignedUser);
+      if (oldUserInput) oldUserInput.value = prevUserDisplay;
+
+      // Track modal state and attach dynamic listeners to prevent duplicate employee names
+      asset._modalOriginalUser = currentAssignedUser;
+      asset._modalInitialPrevUser = prevUserDisplay;
+
+      if (userInput) {
+        userInput.oninput = () => {
+          const typedVal = userInput.value.trim();
+          const origUser = (asset._modalOriginalUser || '').trim();
+          if (oldUserInput) {
+            if (typedVal && origUser && typedVal.toLowerCase() !== origUser.toLowerCase() && !['none', '—', '-', 'unassigned', 'stock'].includes(origUser.toLowerCase())) {
+              // Reassignment in progress: Former employee is origUser
+              oldUserInput.value = origUser;
+            } else if (typedVal.toLowerCase() === origUser.toLowerCase()) {
+              // Reverted back to initial user
+              oldUserInput.value = asset._modalInitialPrevUser || this.getPreviousUserForAsset(asset, origUser);
+            }
+            // Safeguard: Never display the same employee name in both fields
+            if (oldUserInput.value && typedVal && oldUserInput.value.trim().toLowerCase() === typedVal.toLowerCase()) {
+              oldUserInput.value = '—';
+            }
+          }
+        };
+      }
+
+      if (oldUserInput) {
+        oldUserInput.oninput = () => {
+          const typedUser = userInput ? userInput.value.trim().toLowerCase() : '';
+          if (typedUser && oldUserInput.value.trim().toLowerCase() === typedUser) {
+            oldUserInput.value = '—';
+          }
+        };
+      }
 
       const exitDateInput = document.getElementById('editAssetExitDate');
       if (exitDateInput) {
@@ -7065,22 +7181,59 @@ Remarks: ${r.remark || 'None'}`);
           const exitDate = userExitDate || rawExitDate || asset.userExitDate || asset.availableDate || asset.assignedDate || new Date().toISOString().substring(0, 10);
           asset.userExitDate = exitDate;
           asset.availableDate = exitDate;
-          const departingUser = prevUser || user;
-          if (departingUser && departingUser !== 'None' && departingUser !== 'NEW SYSTEM' && departingUser !== 'Unassigned') {
+          const departingUser = (prevUser && prevUser !== 'None' && prevUser !== 'NEW SYSTEM' && prevUser !== 'Unassigned' && prevUser !== '—')
+            ? prevUser
+            : (user && user !== 'None' && user !== 'NEW SYSTEM' && user !== 'Unassigned' && user !== '—' ? user : '');
+          if (departingUser) {
             asset.oldUsername = departingUser;
-          } else if (oldUsername && oldUsername !== 'None') {
+          } else if (oldUsername && oldUsername !== 'None' && oldUsername !== '—') {
             asset.oldUsername = oldUsername;
           }
           if (workStatus === 'User Exit' || workStatus === 'In Stock') {
             asset.user = ''; // System is in stock / exited
           } else {
-            asset.user = user || prevUser || (oldUsername && oldUsername !== 'None' ? oldUsername : '');
+            asset.user = user || '';
           }
         } else {
           asset.status = status || 'Assigned';
           asset.workStatus = workStatus || 'Currently Working';
-          asset.user = user || prevUser || (oldUsername && oldUsername !== 'None' ? oldUsername : '');
-          asset.oldUsername = oldUsername;
+
+          // Reassignment check: employee changed from former employee to new employee
+          const isReassignment = prevUser && user && prevUser.trim().toLowerCase() !== user.trim().toLowerCase() && !['none', '—', '-', 'unassigned', 'stock'].includes(prevUser.trim().toLowerCase());
+
+          if (isReassignment) {
+            // Former employee under Previous User, new employee under Assigned Employee Name
+            asset.user = user;
+            asset.oldUsername = prevUser;
+
+            // Append to assignment history
+            if (!store.data.assignmentHistory) store.data.assignmentHistory = [];
+            store.data.assignmentHistory.unshift({
+              id: 'HIST_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+              assetId: newId,
+              assetType: type,
+              previousUser: prevUser,
+              newUser: user,
+              team: team,
+              assignedDate: assignedDate,
+              returnedDate: '—',
+              workStatus: workStatus || 'Currently Working',
+              remarks: `Reassigned from ${prevUser} to ${user}`,
+              timestamp: new Date().toISOString()
+            });
+          } else {
+            asset.user = user;
+            // First assignment or no reassignment:
+            // Do not copy current employee name into Previous User!
+            if (oldUsername && oldUsername !== 'None' && oldUsername !== '—' && (!user || oldUsername.trim().toLowerCase() !== user.trim().toLowerCase())) {
+              asset.oldUsername = oldUsername;
+            } else if (asset.oldUsername && user && asset.oldUsername.trim().toLowerCase() === user.trim().toLowerCase()) {
+              // Clean up duplicate from asset record
+              asset.oldUsername = this.getPreviousUserForAsset(asset, user);
+            } else if (!asset.oldUsername || asset.oldUsername === 'None') {
+              asset.oldUsername = '—';
+            }
+          }
         }
         asset.serialNumber = serialNumber;
         asset.hostname = hostname;
@@ -10649,6 +10802,7 @@ Remarks: ${r.remark || 'None'}`);
           throw new Error(errData.error || `Server responded with status ${res.status}`);
         }
         store.data.instockHardware = (store.data.instockHardware || []).filter(i => (i.id || '').toLowerCase() !== (item.id || '').toLowerCase());
+        store.data.instockHistory = (store.data.instockHistory || []).filter(h => (h.asset_id || '').toLowerCase() !== (item.id || '').toLowerCase());
         store.save();
         Utils.showToast('Asset Deleted', `Hardware asset "${item.id}" was successfully deleted from inventory.`, 'success');
         this.renderInstockDashboard();
@@ -12669,6 +12823,7 @@ Remarks: ${r.remark || 'None'}`);
 
     handleWorkStatusChange: (v) => app.handleWorkStatusChange(v),
     handleSystemStatusChange: (v) => app.handleSystemStatusChange(v),
+    getPreviousUserForAsset: (asset, currentAssignedUser) => app.getPreviousUserForAsset(asset, currentAssignedUser),
     renderAllAssetsTable() {
       app.renderAllAssetsTable();
     },
@@ -13097,9 +13252,10 @@ async viewAsset(assetId) {
       }
 
       // History records lookup
+      const reliablePrevUser = this.getPreviousUserForAsset ? this.getPreviousUserForAsset(asset) : (app && app.getPreviousUserForAsset ? app.getPreviousUserForAsset(asset) : '—');
       const swapRecord = (store.data.swapLogs || []).find(s => s.newAssetId === asset.id || s.oldAssetId === asset.id);
-      const hasPreviousUser = !!(asset.oldUsername && asset.oldUsername !== 'None' && asset.oldUsername !== 'NEW SYSTEM' && asset.oldUsername.trim() !== '');
-      const previousUserName = hasPreviousUser ? asset.oldUsername : (swapRecord?.oldUserId || '');
+      const hasPreviousUser = !!(reliablePrevUser && reliablePrevUser !== '—' && reliablePrevUser !== 'None' && reliablePrevUser !== 'NEW SYSTEM');
+      const previousUserName = hasPreviousUser ? reliablePrevUser : (swapRecord?.oldUserId && swapRecord.oldUserId.toLowerCase() !== (asset.user || '').trim().toLowerCase() ? swapRecord.oldUserId : '');
       const prevUserObj = (previousUserName && previousUserName !== 'None') ? (store.data.users || []).find(u => u.name && (u.name.toLowerCase() === previousUserName.toLowerCase() || previousUserName.toLowerCase().includes(u.name.toLowerCase()) || u.name.toLowerCase().includes(previousUserName.toLowerCase()))) : null;
       const prevTeam = prevUserObj?.team || swapRecord?.oldTeam || (asset.id === 'PIX_DSK_01' ? 'System Admin' : (asset.team || 'Admin'));
       const handoverDateFormatted = Utils.formatDate(asset.userExitDate || asset.availableDate || swapRecord?.timestamp || '2026-10-09');

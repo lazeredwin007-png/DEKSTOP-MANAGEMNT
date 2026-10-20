@@ -1166,8 +1166,8 @@
                     </h3>
                   </div>
 
-                  <!-- Auto-fill indicator banner -->
-                  <div id="swapAutoFillBanner" style="display:none; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:var(--radius-sm); padding:8px 12px; margin-bottom:14px; font-size:0.78rem; color:#065f46; align-items:center; justify-content:space-between;">
+                  <!-- Auto-fill indicator banner (Hidden) -->
+                  <div id="swapAutoFillBanner" style="display:none !important; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:var(--radius-sm); padding:8px 12px; margin-bottom:14px; font-size:0.78rem; color:#065f46; align-items:center; justify-content:space-between;">
                     <span>✨ <strong>Old Specs & Asset Type Auto-Applied:</strong> Replacement Type (<strong id="swapAutoFillTypeBadge">Same as Old Asset</strong>), CPU, RAM, Storage copied from Old Asset.</span>
                     <span style="font-size:0.72rem; color:#047857; font-weight:600;">You can modify if upgrading</span>
                   </div>
@@ -1839,7 +1839,7 @@
               </div>
             </div>
 
-            <!-- 4. Inventory Summary Cards (3 Cards: Total Stock, Available, Ready for Assignment) -->
+            <!-- 4. Inventory Summary Cards (3 Cards: Total Stock, Available, Assigned) -->
             <div class="instock-summary-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:20px; margin-bottom: 26px;">
               <!-- Total Stock Card -->
               <div class="instock-summary-card total" onclick="window.ITApp.filterDashboardByStatus('all')" title="Click to view all stock items" style="cursor:pointer;">
@@ -1863,15 +1863,15 @@
                 <div class="summary-click-hint">Click to filter available stock →</div>
               </div>
 
-              <!-- Ready for Assignment Card -->
-              <div class="instock-summary-card ready" onclick="window.ITApp.filterDashboardByStatus('Ready for Assignment')" title="Click to filter systems prepared and ready for assignment" style="cursor:pointer;">
+              <!-- Assigned Card -->
+              <div class="instock-summary-card assigned" onclick="window.ITApp.filterDashboardByStatus('Assigned')" title="Click to filter assigned items" style="cursor:pointer;">
                 <div class="summary-card-header">
-                  <span class="summary-label">Ready for Assignment</span>
-                  <div class="summary-icon-box" style="background:#ede9fe; color:#7c3aed;">⚡</div>
+                  <span class="summary-label">Assigned</span>
+                  <div class="summary-icon-box assigned">👤</div>
                 </div>
-                <div class="summary-count" id="instockReadyCount" style="color:#7c3aed;">0</div>
-                <div class="summary-subtext">Systems configured &amp; ready to assign</div>
-                <div class="summary-click-hint" style="color:#6d28d9;">Click to filter ready systems →</div>
+                <div class="summary-count" id="instockAssignedCount">0</div>
+                <div class="summary-subtext">Hardware items allocated &amp; currently in use</div>
+                <div class="summary-click-hint">Click to filter assigned items →</div>
               </div>
             </div>
 
@@ -1909,7 +1909,6 @@
                   <option value="all">All Statuses</option>
                   <option value="Available">🔴 Non-Assigned (Available in Stock)</option>
                   <option value="Assigned">🟢 Assigned</option>
-                  <option value="Ready for Assignment">⚡ Ready for Assignment</option>
                 </select>
                 <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.resetInstockDashboardFilters()" title="Reset Filters" style="border-radius:8px; font-weight:600;">
                   ↺ Reset
@@ -3061,10 +3060,99 @@
             </div>
           </div>
 
-          <!-- Section 1: Core Hardware Specifications -->
+          <!-- Section 1: User Assignment & Allocation -->
+          <div class="modal-section-box">
+            <div class="modal-section-title">
+              <span>👤 User Assignment &amp; Allocation</span>
+              <span class="badge-tag">Employee • Team • Status</span>
+            </div>
+            <div class="form-grid-3">
+              <!-- Employee User Name -->
+              <div class="form-group">
+                <label class="form-label">Assigned Employee Name</label>
+                <input type="text" class="form-control" name="editUser" id="editAssetUser" placeholder="Leave blank for Non-Assigned pool">
+              </div>
+
+              <!-- Department / Team -->
+              <div class="form-group">
+                <label class="form-label" for="editAssetTeam">Department / Team <span class="req">*</span></label>
+                <input type="text" class="form-control" name="editTeam" id="editAssetTeam" placeholder="Enter department / team name..." required list="teamsDatalist" autocomplete="off">
+              </div>
+              <!-- Team Leader (TL) -->
+              <div class="form-group">
+                <label class="form-label" for="editAssetTl">Team Leader (TL)</label>
+                <input type="text" class="form-control" name="editTl" id="editAssetTl" placeholder="e.g. Sundar Sir, Ram Kumar R, Management">
+              </div>
+
+
+              <!-- Status -->
+              <div class="form-group">
+                <label class="form-label" for="editAssetLocation">System Status <span class="req">*</span></label>
+                <select class="form-control" name="editStatus" id="editAssetStatus" required onchange="window.ITApp && window.ITApp.handleSystemStatusChange ? window.ITApp.handleSystemStatusChange(this.value) : null">
+                  <option value="">-- Select System Status --</option>
+                  <option value="Assigned">Assigned</option>
+                  <option value="Non-Assigned">Non-Assigned (Available Pool)</option>
+                  <option value="WFH">WFH (Remote)</option>
+                  <option value="Spare">Spare</option>
+                  <option value="Maintenance">Maintenance</option>
+                  <option value="Repair">Repair</option>
+                  <option value="Warranty">Warranty</option>
+                  <option value="Swap">Swap</option>
+                </select>
+              </div>
+
+              <!-- Employee Work Status -->
+              <div class="form-group">
+                <label class="form-label">Employee Work Status <span class="req">*</span></label>
+                <select class="form-control" name="editWorkStatus" id="editAssetWorkStatus" required onchange="window.ITApp && window.ITApp.handleWorkStatusChange ? window.ITApp.handleWorkStatusChange(this.value) : null">
+                  <option value="">-- Select Employee Work Status --</option>
+                  <option value="Currently Working">🟢 Currently Working</option>
+                  <option value="Work From Home">🔵 Work From Home</option>
+                  <option value="In Stock">📦 In Stock (Available Pool)</option>
+                  <option value="User Exit">🔴 User Exit</option>
+                </select>
+              </div>
+
+              <!-- Office Location -->
+              <div class="form-group">
+                <label class="form-label">Office Location (Floor)</label>
+                <input type="text" class="form-control" name="editLocation" id="editAssetLocation" placeholder="Select or type floor..." list="floorOptionsList" autocomplete="off">
+              </div>
+
+              <!-- Condition -->
+              <div class="form-group">
+                <label class="form-label" for="editAssetOldUsername">Hardware Condition</label>
+                <select class="form-control" name="editCondition" id="editAssetCondition">
+                  <option value="Brand New">Brand New</option>
+                  <option value="Excellent">Excellent</option>
+                  <option value="Good">Good</option>
+                  <option value="Fair">Fair</option>
+                  <option value="Needs Repair">Needs Repair</option>
+                  <option value="Scrap">Scrap / Retired</option>
+                </select>
+              </div>
+
+              <!-- Old Username -->
+              <div class="form-group">
+                <label class="form-label">Previous User (If Reassigned)</label>
+                <input type="text" class="form-control" name="editOldUsername" id="editAssetOldUsername" placeholder="—">
+              </div>
+
+              <!-- User Exit Date -->
+              <div class="form-group" id="groupEditAssetExitDate">
+                <label class="form-label" for="editAssetExitDate" style="display:flex; align-items:center; gap:6px;">
+                  <span>User Exit Date</span>
+                  <span style="font-size:0.7rem; color:#e11d48; font-weight:600; background:#fff1f2; padding:1px 6px; border-radius:4px; border:1px solid #fecdd3;">Exit Record</span>
+                </label>
+                <input type="date" class="form-control" name="editExitDate" id="editAssetExitDate" title="Employee exit date for returned/available system">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Core Hardware Specifications -->
           <div class="modal-section-box hardware-accent">
             <div class="modal-section-title">
-              <span>⚙️ Hardware Specifications</span>
+              <span>Hardware Specifications</span>
               <span class="badge-tag">CPU • RAM • Storage • Display • Network &amp; OS</span>
             </div>
             <div class="form-grid-3">
@@ -3140,95 +3228,6 @@
                   <option value="Windows">Windows</option>
                   <option value="Other">Other</option>
                 </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- Section 2: User Assignment & Department -->
-          <div class="modal-section-box">
-            <div class="modal-section-title">
-              <span>👤 User Assignment &amp; Allocation</span>
-              <span class="badge-tag">Employee • Team • Status</span>
-            </div>
-            <div class="form-grid-3">
-              <!-- Employee User Name -->
-              <div class="form-group">
-                <label class="form-label">Assigned Employee Name</label>
-                <input type="text" class="form-control" name="editUser" id="editAssetUser" placeholder="Leave blank for Non-Assigned pool">
-              </div>
-
-              <!-- Department / Team -->
-              <div class="form-group">
-                <label class="form-label" for="editAssetTeam">Department / Team <span class="req">*</span></label>
-                <input type="text" class="form-control" name="editTeam" id="editAssetTeam" placeholder="Enter department / team name..." required list="teamsDatalist" autocomplete="off">
-              </div>
-              <!-- Team Leader (TL) -->
-              <div class="form-group">
-                <label class="form-label" for="editAssetTl">Team Leader (TL)</label>
-                <input type="text" class="form-control" name="editTl" id="editAssetTl" placeholder="e.g. Sundar Sir, Ram Kumar R, Management">
-              </div>
-
-
-              <!-- Status -->
-              <div class="form-group">
-                <label class="form-label" for="editAssetLocation">System Status <span class="req">*</span></label>
-                <select class="form-control" name="editStatus" id="editAssetStatus" required onchange="window.ITApp && window.ITApp.handleSystemStatusChange ? window.ITApp.handleSystemStatusChange(this.value) : null">
-                  <option value="">-- Select System Status --</option>
-                  <option value="Assigned">Assigned</option>
-                  <option value="Non-Assigned">Non-Assigned (Available Pool)</option>
-                  <option value="WFH">WFH (Remote)</option>
-                  <option value="Spare">Spare</option>
-                  <option value="Maintenance">Maintenance</option>
-                  <option value="Repair">Repair</option>
-                  <option value="Warranty">Warranty</option>
-                  <option value="Swap">Swap</option>
-                </select>
-              </div>
-
-              <!-- Employee Work Status -->
-              <div class="form-group">
-                <label class="form-label">Employee Work Status <span class="req">*</span></label>
-                <select class="form-control" name="editWorkStatus" id="editAssetWorkStatus" required onchange="window.ITApp && window.ITApp.handleWorkStatusChange ? window.ITApp.handleWorkStatusChange(this.value) : null">
-                  <option value="">-- Select Employee Work Status --</option>
-                  <option value="Currently Working">🟢 Currently Working</option>
-                  <option value="Work From Home">🔵 Work From Home</option>
-                  <option value="In Stock">📦 In Stock (Available Pool)</option>
-                  <option value="User Exit">🔴 User Exit</option>
-                </select>
-              </div>
-
-              <!-- Office Location -->
-              <div class="form-group">
-                <label class="form-label">Office Location (Floor)</label>
-                <input type="text" class="form-control" name="editLocation" id="editAssetLocation" placeholder="Select or type floor..." list="floorOptionsList" autocomplete="off">
-              </div>
-
-              <!-- Condition -->
-              <div class="form-group">
-                <label class="form-label" for="editAssetOldUsername">Hardware Condition</label>
-                <select class="form-control" name="editCondition" id="editAssetCondition">
-                  <option value="Brand New">Brand New</option>
-                  <option value="Excellent">Excellent</option>
-                  <option value="Good">Good</option>
-                  <option value="Fair">Fair</option>
-                  <option value="Needs Repair">Needs Repair</option>
-                  <option value="Scrap">Scrap / Retired</option>
-                </select>
-              </div>
-
-              <!-- Old Username -->
-              <div class="form-group">
-                <label class="form-label">Previous User (If Reassigned)</label>
-                <input type="text" class="form-control" name="editOldUsername" id="editAssetOldUsername" placeholder="e.g. Ramesh Babu (or None)">
-              </div>
-
-              <!-- User Exit Date -->
-              <div class="form-group" id="groupEditAssetExitDate">
-                <label class="form-label" for="editAssetExitDate" style="display:flex; align-items:center; gap:6px;">
-                  <span>User Exit Date</span>
-                  <span style="font-size:0.7rem; color:#e11d48; font-weight:600; background:#fff1f2; padding:1px 6px; border-radius:4px; border:1px solid #fecdd3;">Exit Record</span>
-                </label>
-                <input type="date" class="form-control" name="editExitDate" id="editAssetExitDate" title="Employee exit date for returned/available system">
               </div>
             </div>
           </div>
@@ -5306,7 +5305,6 @@
             <select id="instockStatus" class="form-select" onchange="window.ITApp.toggleInstockAssignmentFields()" required style="width:100%; border-radius:8px; padding:9px 12px; font-weight:600; font-size:0.9rem;">
               <option value="Available">🔴 Non-Assigned (Available in Stock)</option>
               <option value="Assigned">🟢 Assigned</option>
-              <option value="Ready for Assignment">⚡ Ready for Assignment (Non-Assigned)</option>
             </select>
             <!-- Hidden radio elements maintained for backward compatibility with existing tests/scripts -->
             <input type="radio" name="instockStatusRadio" id="instockStatusPending" value="Pending" style="display:none;">
