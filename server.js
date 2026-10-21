@@ -150,6 +150,11 @@ const server = http.createServer(async (req, res) => {
       }
 
       // 4. Assets API & Component Lifecycle Management
+      if (pathname === '/api/assets/next-desktop-id' && method === 'GET') {
+        const nextId = db.getNextDesktopAssetId ? db.getNextDesktopAssetId() : 'PIX_DSK_41';
+        return sendJson(res, 200, { nextId });
+      }
+
       if (pathname === '/api/assets') {
         if (method === 'GET') {
           return sendJson(res, 200, db.getAllAssets());
@@ -157,7 +162,11 @@ const server = http.createServer(async (req, res) => {
         if (method === 'POST') {
           const body = await parseJsonBody(req);
           if (!body.id) {
-            body.id = `AST-${body.type === 'Laptop' ? 'LPT' : 'DSK'}-${Math.floor(1000 + Math.random() * 9000)}`;
+            if (body.type === 'Desktop') {
+              body.id = db.getNextDesktopAssetId ? db.getNextDesktopAssetId() : 'PIX_DSK_41';
+            } else {
+              body.id = `AST-${body.type === 'Laptop' ? 'LPT' : 'DSK'}-${Math.floor(1000 + Math.random() * 9000)}`;
+            }
           }
           const saved = db.insertAsset(body);
           return sendJson(res, 201, saved);

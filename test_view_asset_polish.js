@@ -85,4 +85,5 @@ testStore.data.swapLogs = db.getSwapLogs();
   console.log('36. Has exact remark text:', bodyHtml.includes('Re-allocated to YOWAAN V via System Swap. Reason: USER EXIT'));
 
   console.log('\n🌟 ALL 36 CHECKS PASSED PERFECTLY!');
+  process.exit(0);
 })();

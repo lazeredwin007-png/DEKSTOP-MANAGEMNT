@@ -545,7 +545,8 @@ class DatabaseService {
         warrantyEnd TEXT,
         remark TEXT,
         workStatus TEXT DEFAULT 'Currently Working',
-        warrantyType TEXT DEFAULT 'Full System'
+        warrantyType TEXT DEFAULT 'Full System',
+        smps TEXT DEFAULT 'None'
       );
 
       CREATE TABLE IF NOT EXISTS users (
@@ -742,6 +743,9 @@ class DatabaseService {
     } catch (e) {}
     try {
       this.db.exec("ALTER TABLE assets ADD COLUMN warrantyComponents TEXT DEFAULT ''");
+    } catch (e) {}
+    try {
+      this.db.exec("ALTER TABLE assets ADD COLUMN smps TEXT DEFAULT 'None'");
     } catch (e) {}
     try {
       this.db.exec("ALTER TABLE instock_allocations ADD COLUMN team TEXT DEFAULT ''");
@@ -1587,6 +1591,33 @@ class DatabaseService {
     }));
   }
 
+  getNextDesktopAssetId() {
+    const assets = this.getAllAssets();
+    const dskMatches = [];
+    assets.forEach(a => {
+      if (a.id) {
+        const m = a.id.match(/^PIX_DSK_(\d+)$/i);
+        if (m) {
+          dskMatches.push({
+            id: a.id,
+            num: parseInt(m[1], 10),
+            digits: m[1].length
+          });
+        }
+      }
+    });
+
+    if (dskMatches.length === 0) {
+      return 'PIX_DSK_01';
+    }
+
+    dskMatches.sort((a, b) => a.num - b.num);
+    const latest = dskMatches[dskMatches.length - 1];
+    const nextNum = latest.num + 1;
+    const padLength = Math.max(latest.digits, 2);
+    return `PIX_DSK_${String(nextNum).padStart(padLength, '0')}`;
+  }
+
   insertAsset(asset) {
     if (asset && asset.cpu) {
       asset.cpu = this.normalizeCpu(asset.cpu);
@@ -1594,8 +1625,8 @@ class DatabaseService {
     if (this.db) {
       const componentsStr = typeof asset.warrantyComponents === 'object' ? JSON.stringify(asset.warrantyComponents || []) : (asset.warrantyComponents || '');
       const stmt = this.db.prepare(`
-        INSERT INTO assets (id, type, user, team, cpu, ram, hdd, ssd, monitor, serialNumber, hostname, ipAddress, os, location, oldUsername, assignedDate, status, condition, warrantyEnd, remark, workStatus, warrantyType, tl, doa, warrantyComponents)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO assets (id, type, user, team, cpu, ram, hdd, ssd, monitor, serialNumber, hostname, ipAddress, os, location, oldUsername, assignedDate, status, condition, warrantyEnd, remark, workStatus, warrantyType, tl, doa, smps, warrantyComponents)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       stmt.run(
         asset.id, asset.type, asset.user || '', asset.team || '', asset.cpu || '', asset.ram || '',
@@ -1603,6 +1634,7 @@ class DatabaseService {
         asset.ipAddress || '', asset.os || '', asset.location || '', asset.oldUsername || '',
         asset.assignedDate || '', asset.status || 'Assigned', asset.condition || 'Brand New',
         asset.warrantyEnd || '', asset.remark || '', asset.workStatus || 'Currently Working', asset.warrantyType || 'Full System', asset.tl || '-', asset.doa || '-',
+        asset.smps || 'None',
         componentsStr
       );
       this.addActivity('Assigned System', asset.id, asset.user || 'SysAdmin', 'Success');
@@ -1618,7 +1650,7 @@ class DatabaseService {
   updateAsset(id, updates) {
     if (this.db) {
       const VALID_ASSET_COLUMNS = [
-        'id', 'type', 'user', 'team', 'cpu', 'ram', 'hdd', 'ssd', 'monitor',
+        'id', 'type', 'user', 'team', 'cpu', 'ram', 'hdd', 'ssd', 'monitor', 'smps',
         'serialNumber', 'hostname', 'ipAddress', 'os', 'location', 'oldUsername',
         'assignedDate', 'status', 'condition', 'warrantyEnd', 'remark', 'workStatus', 'warrantyType', 'tl', 'doa',
         'userExitDate', 'availableDate', 'warrantyComponents'

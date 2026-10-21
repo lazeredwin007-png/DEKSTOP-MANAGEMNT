@@ -290,4 +290,5 @@ testStore.data.assets.push(testAssetMixed);
   console.log('\n====================================================');
   console.log('🏁 ALL TESTS PASSED SUCCESSFULLY! (8 / 8 SUITES)');
   console.log('====================================================');
+  process.exit(0);
 })();

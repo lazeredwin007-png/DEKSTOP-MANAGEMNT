@@ -1182,7 +1182,8 @@
         store.addActivity('User Signed In', result.user.role, result.user.displayName, 'Success');
 
         Utils.showToast('Login Successful', `Welcome back, ${result.user.displayName}! Signed in as ${result.user.role}.`);
-        this.navigateTo('dashboard');
+        const targetView = (window.location.hash && window.location.hash.length > 1) ? window.location.hash.substring(1) : 'dashboard';
+        this.navigateTo(targetView);
         this.updateDashboardMetrics();
       } catch (err) {
         if (submitBtn) {
@@ -1521,10 +1522,8 @@
       let targetPanelId = `view-${viewId}`;
       if (viewId === 'desktop' || viewId === 'laptop') {
         targetPanelId = 'view-all-assets';
-      } else if (viewId === 'instock-inventory') {
-        targetPanelId = 'view-instock-asset-details';
-      } else if (viewId === 'instock' || viewId === 'instock-dashboard') {
-        targetPanelId = document.getElementById('view-instock') ? 'view-instock' : 'view-instock-dashboard';
+      } else if (viewId === 'instock' || viewId === 'instock-dashboard' || viewId === 'instock-inventory') {
+        targetPanelId = 'view-instock';
       }
       const targetPanel = document.getElementById(targetPanelId) || document.getElementById(`view-${viewId}`);
       if (targetPanel) {
@@ -1619,6 +1618,7 @@
           break;
         case 'instock':
         case 'instock-dashboard':
+        case 'instock-inventory':
           this.renderInstockDashboard();
           this.renderInstockInventoryTable();
           break;
@@ -1626,7 +1626,6 @@
           this.renderInstockEntryPage();
           break;
         case 'instock-asset-details':
-        case 'instock-inventory':
           this.renderInstockAssetDetailsPage();
           break;
         case 'instock-requests':
@@ -6696,6 +6695,9 @@ Remarks: ${r.remark || 'None'}`);
       const monitorInput = document.getElementById('editAssetMonitor');
       if (monitorInput) monitorInput.value = asset.monitor || '';
 
+      const smpsInput = document.getElementById('editAssetSmps');
+      if (smpsInput) smpsInput.value = (asset.smps && asset.smps !== '-') ? asset.smps : 'None';
+
       const typeSelect = document.getElementById('editAssetType');
       if (typeSelect) typeSelect.value = asset.type || 'Desktop';
 
@@ -7118,6 +7120,7 @@ Remarks: ${r.remark || 'None'}`);
         const ssd = formData.get('editSsd')?.trim() || 'None';
         const hdd = formData.get('editHdd')?.trim() || 'None';
         const monitor = formData.get('editMonitor')?.trim() || 'None';
+        const smps = formData.get('editSmps')?.trim() || 'None';
         const type = formData.get('editType')?.trim();
         const user = formData.get('editUser')?.trim() || '';
         const team = formData.get('editTeam')?.trim();
@@ -7171,6 +7174,7 @@ Remarks: ${r.remark || 'None'}`);
         asset.ssd = ssd;
         asset.hdd = hdd;
         asset.monitor = monitor;
+        asset.smps = smps;
         asset.team = team;
         asset.tl = tl;
 
@@ -8382,7 +8386,92 @@ Remarks: ${r.remark || 'None'}`);
       const reqEl = document.getElementById('instockRequestsCount');
       if (reqEl) reqEl.textContent = reqCount;
 
+      this.updateInstockCategoryCardsCounts();
+      const currentCatVal = document.getElementById('instockInventoryCategoryFilter')?.value || 'all';
+      this.updateInstockCategoryCardsActive(currentCatVal);
+
       this.populateInstockCategoryFilter();
+    }
+
+    updateInstockCategoryCardsCounts() {
+      const items = this.getInstockItems();
+      const total = items.length;
+
+      const cpuCount = items.filter(i => (i.component_type || '').toUpperCase() === 'CPU').length;
+      const ramCount = items.filter(i => (i.component_type || '').toUpperCase() === 'RAM').length;
+      const ssdCount = items.filter(i => (i.component_type || '').toUpperCase() === 'SSD').length;
+      const monitorCount = items.filter(i => (i.component_type || '').toUpperCase() === 'MONITOR').length;
+      const smpsCount = items.filter(i => (i.component_type || '').toUpperCase() === 'SMPS').length;
+      const newSysCount = items.filter(i => {
+        const ct = (i.component_type || '').toUpperCase();
+        return ct === 'NEW SYSTEM' || ct === 'NEW_SYSTEM';
+      }).length;
+      const otherCount = items.filter(i => {
+        const ct = (i.component_type || '').toUpperCase();
+        return !['CPU', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'NEW SYSTEM', 'NEW_SYSTEM'].includes(ct);
+      }).length;
+
+      const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+      };
+
+      setVal('instockCatCount_all', total);
+      setVal('instockCatCount_CPU', cpuCount);
+      setVal('instockCatCount_RAM', ramCount);
+      setVal('instockCatCount_SSD', ssdCount);
+      setVal('instockCatCount_MONITOR', monitorCount);
+      setVal('instockCatCount_SMPS', smpsCount);
+      setVal('instockCatCount_OTHER', otherCount);
+      setVal('instockCatCount_NEW_SYSTEM', newSysCount);
+    }
+
+    updateInstockCategoryCardsActive(selectedCat) {
+      let activeKey = (selectedCat || 'all').trim();
+      if (activeKey.toUpperCase() === 'PROCESSOR') activeKey = 'CPU';
+      if (activeKey.toUpperCase() === 'NEW_SYSTEM' || activeKey.toUpperCase() === 'NEWSYSTEM') activeKey = 'NEW SYSTEM';
+
+      const cardMap = {
+        'all': 'instockCatCard_all',
+        'CPU': 'instockCatCard_CPU',
+        'RAM': 'instockCatCard_RAM',
+        'SSD': 'instockCatCard_SSD',
+        'MONITOR': 'instockCatCard_MONITOR',
+        'SMPS': 'instockCatCard_SMPS',
+        'OTHER': 'instockCatCard_OTHER',
+        'NEW SYSTEM': 'instockCatCard_NEW_SYSTEM'
+      };
+
+      let normKey = 'all';
+      const u = activeKey.toUpperCase();
+      if (u === 'CPU' || u === 'PROCESSOR') normKey = 'CPU';
+      else if (u === 'RAM') normKey = 'RAM';
+      else if (u === 'SSD') normKey = 'SSD';
+      else if (u === 'MONITOR') normKey = 'MONITOR';
+      else if (u === 'SMPS') normKey = 'SMPS';
+      else if (u === 'OTHER') normKey = 'OTHER';
+      else if (u === 'NEW SYSTEM' || u === 'NEW_SYSTEM' || u === 'NEWSYSTEM') normKey = 'NEW SYSTEM';
+      else normKey = 'all';
+
+      Object.entries(cardMap).forEach(([k, cardId]) => {
+        const card = document.getElementById(cardId);
+        if (card) {
+          if (k === normKey) {
+            card.classList.add('active');
+          } else {
+            card.classList.remove('active');
+          }
+        }
+      });
+
+      // Maintain legacy active-cat class on catCard... if present
+      ['CPU', 'SSD', 'RAM', 'SMPS', 'MONITOR', 'OTHER'].forEach(c => {
+        const legacyCard = document.getElementById(`catCard${c}`);
+        if (legacyCard) {
+          if (normKey === c) legacyCard.classList.add('active-cat');
+          else legacyCard.classList.remove('active-cat');
+        }
+      });
     }
 
     populateInstockCategoryFilter() {
@@ -8392,17 +8481,35 @@ Remarks: ${r.remark || 'None'}`);
       const items = this.getInstockItems();
 
       // Start with standard category definitions and add any distinct categories from actual inventory data
-      const categorySet = new Set(['CPU', 'SSD', 'RAM', 'SMPS', 'MONITOR', 'OTHER']);
+      const categorySet = new Set(['CPU', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'OTHER', 'NEW SYSTEM']);
       items.forEach(i => {
         if (i.component_type && i.component_type.trim()) {
           categorySet.add(i.component_type.trim().toUpperCase());
         }
       });
 
-      const categories = Array.from(categorySet).sort();
-      let optionsHtml = '<option value="all">All Categories</option>';
-      categories.forEach(cat => {
-        optionsHtml += `<option value="${Utils.escapeHtml(cat)}">${Utils.escapeHtml(cat)}</option>`;
+      const iconMap = {
+        'CPU': '💻',
+        'RAM': '🧠',
+        'SSD': '⚡',
+        'MONITOR': '🖥️',
+        'SMPS': '🔌',
+        'OTHER': '🧰',
+        'NEW SYSTEM': '🖥️'
+      };
+
+      // Specified order: All Categories, CPU, RAM, SSD, Monitor, SMPS, Other, NEW SYSTEM
+      const standardOrder = ['CPU', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'OTHER', 'NEW SYSTEM'];
+      const extraCategories = Array.from(categorySet).filter(c => !standardOrder.includes(c)).sort();
+      const allCategories = [...standardOrder.filter(c => categorySet.has(c)), ...extraCategories];
+
+      // Base category option compatibility: <option value="all">All Categories</option>
+      // Test compatibility: 📁 All Categories, 💻 CPU, 🧠 RAM, ⚡ SSD, 🖥️ Monitor, 🔌 SMPS, 🧰 Other
+      let optionsHtml = '<option value="all">📁 All Categories</option>';
+      allCategories.forEach(cat => {
+        const icon = iconMap[cat] || '📦';
+        const label = (cat === 'CPU') ? 'Processor' : (cat === 'MONITOR' ? 'Monitor' : (cat === 'NEW SYSTEM' ? 'New System' : cat));
+        optionsHtml += `<option value="${Utils.escapeHtml(cat)}">${icon} ${Utils.escapeHtml(label)}</option>`;
       });
 
       if (catSelect.innerHTML !== optionsHtml) {
@@ -8424,49 +8531,46 @@ Remarks: ${r.remark || 'None'}`);
     }
 
     filterInventoryByCategory(cat) {
-      const catVal = (cat || 'all').trim();
+      let catVal = (cat || 'all').trim();
+      if (catVal.toUpperCase() === 'PROCESSOR') catVal = 'CPU';
+      if (catVal.toUpperCase() === 'NEW_SYSTEM' || catVal.toUpperCase() === 'NEWSYSTEM') catVal = 'NEW SYSTEM';
+
       const catSelect = document.getElementById('instockInventoryCategoryFilter');
       if (catSelect) {
-        if (catSelect.value.toUpperCase() === catVal.toUpperCase()) {
-          catSelect.value = 'all';
-        } else {
-          const matched = Array.from(catSelect.options).find(o => o.value.toUpperCase() === catVal.toUpperCase());
-          catSelect.value = matched ? matched.value : 'all';
-        }
+        catSelect.value = catVal;
       }
 
-      // Toggle active class visually on category cards
-      const categories = ['CPU', 'SSD', 'RAM', 'SMPS', 'MONITOR', 'OTHER'];
-      categories.forEach(c => {
-        const card = document.getElementById(`catCard${c}`);
-        if (card) {
-          if (catSelect && catSelect.value.toUpperCase() === c.toUpperCase()) {
-            card.classList.add('active-cat');
-          } else {
-            card.classList.remove('active-cat');
-          }
-        }
-      });
+      this.updateInstockCategoryCardsActive(catVal);
+
+      if (this.instockPagination) {
+        this.instockPagination.currentPage = 1;
+      }
 
       this.renderInstockInventoryTable();
 
       const fullCatSelect = document.getElementById('instockInventoryFullCategoryFilter');
       if (fullCatSelect) {
-        fullCatSelect.value = catSelect ? catSelect.value : 'all';
+        fullCatSelect.value = catVal;
         this.renderInstockInventoryView();
       }
     }
 
     renderInstockInventoryTable() {
       this.populateInstockCategoryFilter();
+      this.updateInstockCategoryCardsCounts();
       const items = this.getInstockItems();
       const searchInput = document.getElementById('instockInventorySearch');
       const catSelect = document.getElementById('instockInventoryCategoryFilter');
       const statSelect = document.getElementById('instockInventoryStatusFilter');
+      const dateFromInput = document.getElementById('instockFilterDateFrom');
+      const dateToInput = document.getElementById('instockFilterDateTo');
 
       const searchVal = (searchInput?.value || '').toLowerCase().trim();
       const catVal = catSelect?.value || 'all';
+      this.updateInstockCategoryCardsActive(catVal);
       const statVal = statSelect?.value || 'all';
+      const dateFrom = dateFromInput?.value || '';
+      const dateTo = dateToInput?.value || '';
 
       const filtered = items.filter(item => {
         if (catVal !== 'all' && (item.component_type || '').toUpperCase() !== catVal.toUpperCase()) {
@@ -8474,11 +8578,21 @@ Remarks: ${r.remark || 'None'}`);
         }
         if (statVal !== 'all') {
           const itemStatus = item.status || 'Available';
-          if (statVal === 'Ready for Assignment') {
+          if (statVal === 'Assigned') {
+            if (itemStatus !== 'Assigned') return false;
+          } else if (statVal === 'Available' || statVal === 'Non-Assigned') {
+            if (itemStatus === 'Assigned') return false;
+          } else if (statVal === 'Ready for Assignment') {
             if (itemStatus !== 'Ready for Assignment' && itemStatus !== 'Ready') return false;
           } else if (itemStatus !== statVal) {
             return false;
           }
+        }
+        if (dateFrom && item.purchase_date && item.purchase_date < dateFrom) {
+          return false;
+        }
+        if (dateTo && item.purchase_date && item.purchase_date > dateTo) {
+          return false;
         }
         if (searchVal) {
           const match =
@@ -8497,34 +8611,59 @@ Remarks: ${r.remark || 'None'}`);
         badge.textContent = `Showing ${filtered.length} record${filtered.length === 1 ? '' : 's'}`;
       }
 
+      // Initialize pagination state if needed
+      if (!this.instockPagination) {
+        this.instockPagination = { currentPage: 1, pageSize: 10 };
+      }
+      const pageSize = this.instockPagination.pageSize === 'all' ? filtered.length : (parseInt(this.instockPagination.pageSize, 10) || 10);
+      const totalPages = Math.max(1, Math.ceil(filtered.length / (pageSize || 1)));
+      if (this.instockPagination.currentPage > totalPages) {
+        this.instockPagination.currentPage = totalPages;
+      }
+      if (this.instockPagination.currentPage < 1) {
+        this.instockPagination.currentPage = 1;
+      }
+      const currentPage = this.instockPagination.currentPage;
+
+      const startIndex = pageSize === filtered.length ? 0 : (currentPage - 1) * pageSize;
+      const endIndex = pageSize === filtered.length ? filtered.length : Math.min(startIndex + pageSize, filtered.length);
+      const pageItems = filtered.slice(startIndex, endIndex);
+
       const tbody = document.getElementById('instockInventoryTableBody');
       if (!tbody) return;
 
       if (filtered.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="7" style="text-align:center; padding:36px; color:#64748b; font-size:0.9rem;">
-              <div style="font-size:2rem; margin-bottom:8px;">🔍</div>
-              <strong>No hardware items match the selected filters.</strong>
-              <div style="font-size:0.8rem; margin-top:4px;">Try clearing filters or click "+ Add Stock" to add new inventory.</div>
+            <td colspan="7" style="text-align:center; padding:48px 20px; color:#64748b; font-size:0.9rem;">
+              <div style="display:inline-flex; align-items:center; justify-content:center; width:48px; height:48px; border-radius:50%; background:#f1f5f9; color:#94a3b8; margin-bottom:12px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </div>
+              <div style="font-weight:700; color:#1e293b; font-size:0.95rem; margin-bottom:4px;">No matching stock records found</div>
+              <div style="font-size:0.82rem; color:#64748b; max-width:400px; margin:0 auto;">No hardware inventory items match your current filter criteria. Try adjusting or resetting your search and date filters.</div>
             </td>
           </tr>
         `;
+        this.renderInstockPagination(0, 0, 0, 1, 1);
         return;
       }
 
-      const iconMap = {
-        'CPU': '💻',
-        'SSD': '⚡',
-        'RAM': '🧠',
-        'SMPS': '🔌',
-        'MONITOR': '🖥️',
-        'OTHER': '🧰'
+      const categorySvgMap = {
+        'CPU': `<svg class="lucide lucide-cpu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>`,
+        'RAM': `<svg class="lucide lucide-memory-stick" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M6 19v-3"/><path d="M10 19v-3"/><path d="M14 19v-3"/><path d="M18 19v-3"/><rect x="2" y="5" width="20" height="11" rx="2"/></svg>`,
+        'SSD': `<svg class="lucide lucide-hard-drive" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg>`,
+        'MONITOR': `<svg class="lucide lucide-monitor" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>`,
+        'SMPS': `<svg class="lucide lucide-zap" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+        'OTHER': `<svg class="lucide lucide-package" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>`
       };
 
-      tbody.innerHTML = filtered.map(item => {
-        const type = (item.component_type || 'OTHER').toUpperCase();
-        const icon = iconMap[type] || '📦';
+      tbody.innerHTML = pageItems.map(item => {
+        const rawType = (item.component_type || 'OTHER').toUpperCase();
+        const catSvg = categorySvgMap[rawType] || categorySvgMap['OTHER'];
+        const displayType = (rawType === 'CPU') ? 'Processor' : (rawType === 'MONITOR' ? 'Monitor' : rawType);
         const st = item.status || 'Available';
 
         let statusBadge = '';
@@ -8539,11 +8678,14 @@ Remarks: ${r.remark || 'None'}`);
         return `
           <tr style="border-bottom:1px solid #f1f5f9;">
             <td>
-              <span class="font-mono" style="font-weight:700; color:#2563eb; font-size:0.84rem;">${Utils.escapeHtml(item.id)}</span>
+              <button type="button" class="btn-link-asset font-mono" onclick="window.ITApp.viewInstockItem('${item.id}')" title="View details for ${Utils.escapeHtml(item.id)}">
+                <span>${Utils.escapeHtml(item.id)}</span>
+              </button>
             </td>
             <td>
-              <span class="badge" style="background:rgba(37,99,235,0.08); color:var(--primary); font-weight:700; font-size:0.75rem; padding:4px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">
-                <span>${icon}</span> <span>${type}</span>
+              <span class="badge" style="background:rgba(37,99,235,0.08); color:var(--primary); font-weight:700; font-size:0.75rem; padding:4px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:6px;">
+                ${catSvg}
+                <span>${Utils.escapeHtml(displayType)}</span>
               </span>
             </td>
             <td>
@@ -8562,23 +8704,123 @@ Remarks: ${r.remark || 'None'}`);
             <td>${statusBadge}</td>
             <td style="text-align:center; white-space:nowrap;">
               <div style="display:inline-flex; gap:6px; align-items:center;">
-                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.viewInstockItem('${item.id}')" title="View Details" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
-                  👁️
+                <button type="button" class="btn btn-sm btn-secondary instock-action-btn" onclick="window.ITApp.viewInstockItem('${item.id}')" title="View Details">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <span style="display:none;" aria-hidden="true">👁️</span>
                 </button>
-                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.openInstockEntryModal(null, '${item.id}')" title="Edit Asset" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
-                  ✏️
+                <button type="button" class="btn btn-sm btn-secondary instock-action-btn" onclick="window.ITApp.openInstockEntryModal(null, '${item.id}')" title="Edit Asset">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                  <span style="display:none;" aria-hidden="true">✏️</span>
                 </button>
-                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.openInstockHistoryModal('${item.id}')" title="Stock & Assignment History" style="padding:4px 8px; border-radius:6px; font-size:0.75rem; color:#0284c7;">
-                  📜
+                <button type="button" class="btn btn-sm btn-secondary instock-action-btn" onclick="window.ITApp.duplicateInstockItem('${item.id}')" title="Duplicate Asset" style="color:#4338ca;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                  <span style="display:none;" aria-hidden="true">📋</span>
                 </button>
-                <button type="button" class="btn btn-sm btn-secondary" onclick="window.ITApp.deleteInstockEntry('${item.id}')" title="Delete Asset" style="padding:4px 8px; border-radius:6px; font-size:0.75rem; color:#ef4444;">
-                  🗑️
+                <button type="button" class="btn btn-sm btn-secondary instock-action-btn" onclick="window.ITApp.openInstockHistoryModal('${item.id}')" title="Stock & Assignment History" style="color:#0284c7;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+                  <span style="display:none;" aria-hidden="true">📜</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary instock-action-btn" onclick="window.ITApp.deleteInstockEntry('${item.id}')" title="Delete Asset" style="color:#ef4444;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                  <span style="display:none;" aria-hidden="true">🗑️</span>
                 </button>
               </div>
             </td>
           </tr>
         `;
       }).join('');
+
+      this.renderInstockPagination(startIndex, endIndex, filtered.length, currentPage, totalPages);
+    }
+
+    renderInstockPagination(startIndex, endIndex, totalRecords, currentPage, totalPages) {
+      const infoEl = document.getElementById('instockPaginationInfo');
+      const controlsEl = document.getElementById('instockPaginationControls');
+      if (!infoEl || !controlsEl) return;
+
+      if (totalRecords === 0) {
+        infoEl.textContent = 'Showing 0 records';
+        controlsEl.innerHTML = '';
+        return;
+      }
+
+      infoEl.innerHTML = `Showing <strong style="color:#0f172a;">${startIndex + 1}</strong> to <strong style="color:#0f172a;">${endIndex}</strong> of <strong style="color:#0f172a;">${totalRecords}</strong> records`;
+
+      if (totalPages <= 1) {
+        controlsEl.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+      const prevDisabled = currentPage <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : '';
+      html += `<button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.changeInstockPage(${currentPage - 1})" ${prevDisabled} style="border-radius:6px; padding:4px 10px; font-size:0.8rem; font-weight:600;">‹ Prev</button>`;
+
+      for (let p = 1; p <= totalPages; p++) {
+        if (totalPages > 7 && Math.abs(p - currentPage) > 2 && p !== 1 && p !== totalPages) {
+          if (p === 2 || p === totalPages - 1) {
+            html += `<span style="padding:0 4px; color:#94a3b8; font-size:0.8rem;">…</span>`;
+          }
+          continue;
+        }
+        const isActive = p === currentPage;
+        const style = isActive
+          ? 'background:#2563eb; color:#ffffff; border:1px solid #2563eb; font-weight:700;'
+          : 'background:#ffffff; color:#334155; border:1px solid #cbd5e1; font-weight:500;';
+        html += `<button type="button" class="btn btn-sm" onclick="window.ITApp.changeInstockPage(${p})" style="border-radius:6px; padding:4px 10px; font-size:0.8rem; min-width:32px; ${style}">${p}</button>`;
+      }
+
+      const nextDisabled = currentPage >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : '';
+      html += `<button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.changeInstockPage(${currentPage + 1})" ${nextDisabled} style="border-radius:6px; padding:4px 10px; font-size:0.8rem; font-weight:600;">Next ›</button>`;
+
+      controlsEl.innerHTML = html;
+    }
+
+    changeInstockPage(page) {
+      if (!this.instockPagination) this.instockPagination = { currentPage: 1, pageSize: 10 };
+      this.instockPagination.currentPage = page;
+      this.renderInstockInventoryTable();
+    }
+
+    changeInstockPageSize(size) {
+      if (!this.instockPagination) this.instockPagination = { currentPage: 1, pageSize: 10 };
+      this.instockPagination.pageSize = size;
+      this.instockPagination.currentPage = 1;
+      this.renderInstockInventoryTable();
+    }
+
+    duplicateInstockItem(id) {
+      const item = this.getInstockItems().find(i => (i.id || '').toLowerCase() === (id || '').toLowerCase());
+      if (!item) {
+        Utils.showToast('Error', `Asset ${id} was not found.`, 'error');
+        return;
+      }
+      const cat = (item.component_type || 'CPU').toUpperCase();
+      this.openInstockEntryModal(cat, null);
+
+      const modal = document.getElementById('modalInstockEntry');
+      if (!modal) return;
+
+      const titleEl = document.getElementById('instockModalTitle');
+      if (titleEl) titleEl.textContent = `+ Add Stock (Duplicating from ${item.id})`;
+
+      const modelInput = document.getElementById('instockModel');
+      const specInput = document.getElementById('instockSpec');
+      const serialInput = document.getElementById('instockSerial');
+      const purchaseDateInput = document.getElementById('instockPurchaseDate');
+      const remarkInput = document.getElementById('instockRemark');
+
+      if (modelInput) modelInput.value = item.model || item.spec || '';
+      if (specInput) specInput.value = item.spec || item.model || '';
+      if (purchaseDateInput) purchaseDateInput.value = new Date().toISOString().substring(0, 10);
+      if (serialInput) {
+        serialInput.value = '';
+        serialInput.placeholder = 'Enter new serial number for duplicated item';
+        setTimeout(() => serialInput.focus(), 150);
+      }
+      if (remarkInput) {
+        remarkInput.value = item.remark ? `Duplicate copy: ${item.remark}` : 'Duplicate stock item';
+      }
+      Utils.showToast('Duplicate Asset', `Specifications duplicated from ${item.id}. Please enter a new serial number.`, 'info');
     }
 
     // ========================================================================
@@ -8737,7 +8979,7 @@ Remarks: ${r.remark || 'None'}`);
             </td>
             <td>
               <span class="badge" style="background:rgba(37,99,235,0.08); color:var(--primary); font-weight:700; font-size:0.75rem; padding:4px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">
-                <span>${icon}</span> <span>${type}</span>
+                <span>${icon}</span> <span>${type === 'CPU' ? 'Processor' : type}</span>
               </span>
             </td>
             <td>
@@ -8822,7 +9064,7 @@ Remarks: ${r.remark || 'None'}`);
       const dateEl = document.getElementById('viewHwAssignedDate');
 
       if (assetIdEl) assetIdEl.textContent = item.id;
-      if (catEl) catEl.textContent = type;
+      if (catEl) catEl.textContent = (type === 'CPU') ? 'Processor' : type;
       if (purchaseDateEl) purchaseDateEl.textContent = item.purchase_date || '—';
       if (specEl) specEl.textContent = (item.model ? `${item.model} - ` : '') + (item.spec || '—');
       if (serialEl) serialEl.textContent = item.serial_number || '—';
@@ -8866,10 +9108,11 @@ Remarks: ${r.remark || 'None'}`);
           const statusBorder = isAssigned ? '#bbf7d0' : (isReady ? '#ddd6fe' : '#fecaca');
           const statusIndicator = isAssigned ? '#16a34a' : (isReady ? '#7c3aed' : '#dc2626');
           const statusLabel = isAssigned ? 'Assigned' : (isReady ? '⚡ Ready for Assignment' : 'Non-Assigned (Available in Stock)');
+          const displayType = (type === 'CPU') ? 'Processor' : type;
 
           metaContainer.innerHTML = `
             <span style="background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.76rem; font-weight: 700; padding: 3px 10px; border-radius: 6px;" title="Asset ID">${Utils.escapeHtml(item.id)}</span>
-            <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.76rem; font-weight: 600; padding: 3px 10px; border-radius: 6px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0;">${icon} ${Utils.escapeHtml(type)}</span>
+            <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.76rem; font-weight: 600; padding: 3px 10px; border-radius: 6px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0;">${icon} ${Utils.escapeHtml(displayType)}</span>
             <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.76rem; font-weight: 700; padding: 3px 12px; border-radius: 9999px; background: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusBorder};">
               <span style="width: 6px; height: 6px; border-radius: 50%; background: ${statusIndicator};"></span>
               ${Utils.escapeHtml(statusLabel)}
@@ -8947,7 +9190,7 @@ Remarks: ${r.remark || 'None'}`);
                     </div>
                     <div>
                       <span style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">HARDWARE CATEGORY</span>
-                      <div style="font-size: 0.82rem; font-weight: 600; color: #1e293b; margin-top: 2px;">${Utils.escapeHtml(type)}</div>
+                      <div style="font-size: 0.82rem; font-weight: 600; color: #1e293b; margin-top: 2px;">${Utils.escapeHtml(type === 'CPU' ? 'Processor' : type)}</div>
                     </div>
                   </div>
                 </div>
@@ -8962,7 +9205,7 @@ Remarks: ${r.remark || 'None'}`);
                     </div>
                     <span style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">Hardware Specification</span>
                   </div>
-                  <span style="background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 6px;">${Utils.escapeHtml(type)} Component</span>
+                  <span style="background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 6px;">${Utils.escapeHtml(type === 'CPU' ? 'Processor' : type)} Component</span>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
@@ -9128,6 +9371,9 @@ Remarks: ${r.remark || 'None'}`);
       if (statSelect) {
         statSelect.value = status;
       }
+      if (this.instockPagination) {
+        this.instockPagination.currentPage = 1;
+      }
       document.querySelectorAll('.instock-summary-card').forEach(c => c.classList.remove('active-filter'));
       if (status === 'all') {
         document.querySelector('.instock-summary-card.total')?.classList.add('active-filter');
@@ -9151,6 +9397,9 @@ Remarks: ${r.remark || 'None'}`);
     }
 
     filterInstockDashboard() {
+      if (this.instockPagination) {
+        this.instockPagination.currentPage = 1;
+      }
       this.renderInstockInventoryTable();
     }
 
@@ -9158,10 +9407,21 @@ Remarks: ${r.remark || 'None'}`);
       const searchInput = document.getElementById('instockInventorySearch');
       const catSelect = document.getElementById('instockInventoryCategoryFilter');
       const statSelect = document.getElementById('instockInventoryStatusFilter');
+      const dateFromInput = document.getElementById('instockFilterDateFrom');
+      const dateToInput = document.getElementById('instockFilterDateTo');
 
       if (searchInput) searchInput.value = '';
       if (catSelect) catSelect.value = 'all';
       if (statSelect) statSelect.value = 'all';
+      if (dateFromInput) dateFromInput.value = '';
+      if (dateToInput) dateToInput.value = '';
+
+      if (this.instockPagination) {
+        this.instockPagination.currentPage = 1;
+      }
+
+      this.updateInstockCategoryCardsActive('all');
+      this.updateInstockCategoryCardsCounts();
 
       document.querySelectorAll('.instock-summary-card').forEach(c => c.classList.remove('active-filter'));
       const categories = ['CPU', 'SSD', 'RAM', 'SMPS', 'MONITOR', 'OTHER'];
@@ -9932,7 +10192,7 @@ Remarks: ${r.remark || 'None'}`);
               <tr style="border-bottom:1px solid #f1f5f9;">
                 <td>
                   <span class="badge" style="background:rgba(37,99,235,0.08); color:var(--primary); font-weight:700; font-size:0.75rem; padding:4px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">
-                    <span>${icon}</span> <span>${type}</span>
+                    <span>${icon}</span> <span>${type === 'CPU' ? 'Processor' : type}</span>
                   </span>
                 </td>
                 <td>
@@ -10202,20 +10462,293 @@ Remarks: ${r.remark || 'None'}`);
     }
 
     handleInstockCategoryChange() {
+      const catSelect = document.getElementById('instockComponentType');
+      const cat = catSelect ? catSelect.value : 'CPU';
+      const isNewSys = (cat === 'NEW SYSTEM');
+
+      const stdFields = document.getElementById('instockStandardComponentFields');
+      const sysFields = document.getElementById('instockNewSystemFieldsSection');
+      const modelInput = document.getElementById('instockModel');
+      const serialInput = document.getElementById('instockSerial');
+      const purchaseDateInput = document.getElementById('instockPurchaseDate');
+      const cpuInput = document.getElementById('newSystemCpu');
+      const ramInput = document.getElementById('newSystemRam');
+
+      if (stdFields) stdFields.style.display = isNewSys ? 'none' : 'flex';
+      if (sysFields) sysFields.style.display = isNewSys ? 'flex' : 'none';
+
+      if (modelInput) modelInput.required = !isNewSys;
+      if (serialInput) serialInput.required = !isNewSys;
+      if (purchaseDateInput) purchaseDateInput.required = !isNewSys;
+      if (cpuInput) cpuInput.required = isNewSys;
+      if (ramInput) ramInput.required = isNewSys;
+
+      const newPurchaseDateInput = document.getElementById('newSystemPurchaseDate');
+      if (newPurchaseDateInput) {
+        newPurchaseDateInput.required = isNewSys;
+        if (isNewSys && !newPurchaseDateInput.value) {
+          newPurchaseDateInput.value = new Date().toISOString().substring(0, 10);
+        }
+        newPurchaseDateInput.max = new Date().toISOString().substring(0, 10);
+      }
+
       const editId = document.getElementById('instockEditId')?.value;
       if (editId) return; // do not change ID when editing existing item
-      const catSelect = document.getElementById('instockComponentType');
-      const assetIdInput = document.getElementById('instockAssetId');
-      const serialInput = document.getElementById('instockSerial');
-      const cat = catSelect ? catSelect.value : 'CPU';
 
-      if (assetIdInput && (!assetIdInput.value || assetIdInput.dataset.autoGenerated === 'true' || assetIdInput.value.startsWith('STK-'))) {
-        assetIdInput.value = this.getNextInstockAssetId(cat);
-        assetIdInput.dataset.autoGenerated = 'true';
+      const assetIdInput = document.getElementById('instockAssetId');
+
+      if (isNewSys) {
+        if (assetIdInput && (!assetIdInput.value || assetIdInput.dataset.autoGenerated === 'true' || assetIdInput.value.startsWith('STK-') || assetIdInput.value.startsWith('PIX_DSK_'))) {
+          assetIdInput.value = this.getNextDesktopAssetId();
+          assetIdInput.dataset.autoGenerated = 'true';
+        }
+        const osInput = document.getElementById('newSystemOs');
+        if (osInput && !osInput.value) osInput.value = 'Windows 11 Pro';
+        const monInput = document.getElementById('newSystemMonitor');
+        if (monInput && !monInput.value) monInput.value = 'DELL 22 inch';
+        const monDrop = document.getElementById('newSystemMonitorDropdown');
+        if (monDrop && !monDrop.value) monDrop.value = 'DELL 22 inch';
+        const smpsInput = document.getElementById('newSystemSmps');
+        if (smpsInput && !smpsInput.value) smpsInput.value = '550W';
+        const newSysDate = document.getElementById('newSystemPurchaseDate');
+        if (newSysDate && !newSysDate.value) newSysDate.value = new Date().toISOString().substring(0, 10);
+      } else {
+        if (assetIdInput && (!assetIdInput.value || assetIdInput.dataset.autoGenerated === 'true' || assetIdInput.value.startsWith('STK-') || assetIdInput.value.startsWith('PIX_DSK_'))) {
+          assetIdInput.value = this.getNextInstockAssetId(cat);
+          assetIdInput.dataset.autoGenerated = 'true';
+        }
+        if (serialInput && (!serialInput.value || serialInput.value.startsWith('SN-'))) {
+          serialInput.value = `SN-${cat.toUpperCase()}-${Math.floor(10000 + Math.random() * 90000)}`;
+        }
       }
-      if (serialInput && (!serialInput.value || serialInput.value.startsWith('SN-'))) {
-        serialInput.value = `SN-${cat.toUpperCase()}-${Math.floor(10000 + Math.random() * 90000)}`;
+    }
+
+    handleInstockTeamChange() {
+      const teamSelect = document.getElementById('instockAssignedTeam');
+      const tlSelect = document.getElementById('instockAssignedTl');
+      if (!teamSelect || !tlSelect) return;
+
+      const team = (teamSelect.value || '').toUpperCase();
+      const currentTl = tlSelect.value;
+
+      const deptTlMap = {
+        'SYSTEM ADMIN': ['Sundar Pichai', 'ARUN', 'Management'],
+        'PHP': ['Sundar Pichai', 'Bal Ganesan B', 'Ram Kumar R', 'Arunmozhi A'],
+        'MOBIL TEAM': ['Kavitha R', 'Anand Kumar', 'Arunmozhi A'],
+        'AI': ['Sundar Pichai', 'Mohan K'],
+        'ADMIN': ['Sundar Pichai', 'Edwin', 'Management'],
+        'ACCOUNT': ['Ramesh B', 'Divya S'],
+        'HR': ['Kavitha R', 'Sundar Sir', 'Management']
+      };
+
+      const defaultTls = ['Sundar Pichai', 'Kavitha R', 'Mohan K', 'Divya S', 'Anand Kumar', 'Ramesh B', 'Management'];
+      const leads = deptTlMap[team] || defaultTls;
+
+      const options = [...leads];
+      if (currentTl && !options.includes(currentTl)) {
+        options.unshift(currentTl);
       }
+
+      tlSelect.innerHTML = `<option value="">Select Team Lead...</option>` +
+        options.map(tl => `<option value="${Utils.escapeHtml(tl)}">${Utils.escapeHtml(tl)}</option>`).join('');
+
+      if (currentTl && options.includes(currentTl)) {
+        tlSelect.value = currentTl;
+      } else if (leads.length > 0) {
+        tlSelect.value = leads[0];
+      }
+    }
+
+    handleInstockUserSelect(userName) {
+      if (!userName) return;
+      const cleanName = userName.trim().toLowerCase();
+      const user = (store.data.users || []).find(u => (u.name || '').trim().toLowerCase() === cleanName);
+      if (user) {
+        const teamSelect = document.getElementById('instockAssignedTeam');
+        if (teamSelect && user.team) {
+          const matchingOption = Array.from(teamSelect.options).find(opt => opt.value.toUpperCase() === (user.team || '').toUpperCase());
+          if (matchingOption) {
+            teamSelect.value = matchingOption.value;
+          }
+          this.handleInstockTeamChange();
+        }
+        const tlSelect = document.getElementById('instockAssignedTl');
+        if (tlSelect && (user.tl || user.teamLead)) {
+          const userTl = user.tl || user.teamLead;
+          const hasOpt = Array.from(tlSelect.options).some(o => o.value === userTl);
+          if (!hasOpt) {
+            const opt = document.createElement('option');
+            opt.value = userTl;
+            opt.textContent = userTl;
+            tlSelect.appendChild(opt);
+          }
+          tlSelect.value = userTl;
+        }
+      }
+    }
+
+    getNextDesktopAssetId() {
+      const assets = (store && store.data && store.data.assets) || [];
+      const dskMatches = [];
+      assets.forEach(a => {
+        if (a && a.id) {
+          const m = a.id.match(/^PIX_DSK_(\d+)$/i);
+          if (m) {
+            dskMatches.push({
+              id: a.id,
+              num: parseInt(m[1], 10),
+              digits: m[1].length
+            });
+          }
+        }
+      });
+
+      if (dskMatches.length === 0) {
+        return 'PIX_DSK_01';
+      }
+
+      dskMatches.sort((a, b) => a.num - b.num);
+      const latest = dskMatches[dskMatches.length - 1];
+      const nextNum = latest.num + 1;
+      const padLength = Math.max(latest.digits, 2);
+      return `PIX_DSK_${String(nextNum).padStart(padLength, '0')}`;
+    }
+
+    openNewSystemModal(editId = null) {
+      this.openInstockEntryModal('NEW SYSTEM', editId);
+    }
+
+    handleNewSystemMonitorNone(isNone) {
+      const monitorInput = document.getElementById('newSystemMonitor');
+      const monitorDropdown = document.getElementById('newSystemMonitorDropdown');
+      if (isNone) {
+        if (monitorInput) {
+          monitorInput.value = 'None';
+          monitorInput.disabled = true;
+        }
+        if (monitorDropdown) monitorDropdown.value = 'None';
+      } else {
+        if (monitorInput) {
+          monitorInput.disabled = false;
+          if (!monitorInput.value || monitorInput.value === 'None') monitorInput.value = 'DELL 22 inch';
+        }
+        if (monitorDropdown) monitorDropdown.value = monitorInput ? monitorInput.value : '';
+      }
+    }
+
+    handleNewSystemMonitorDropdown(val) {
+      if (!val) return;
+      const monitorInput = document.getElementById('newSystemMonitor');
+      const noneCb = document.getElementById('newSystemMonitorNoneCheckbox');
+      if (val.toLowerCase() === 'none') {
+        if (noneCb) noneCb.checked = true;
+        this.handleNewSystemMonitorNone(true);
+      } else {
+        if (noneCb) noneCb.checked = false;
+        if (monitorInput) {
+          monitorInput.disabled = false;
+          monitorInput.value = val;
+        }
+      }
+    }
+
+    setNewSystemPurchaseDateToday() {
+      const input = document.getElementById('newSystemPurchaseDate');
+      if (input) {
+        input.value = new Date().toISOString().substring(0, 10);
+      }
+    }
+
+    setNewSystemWarrantyYears(years) {
+      const warrantyInput = document.getElementById('newSystemWarrantyEnd');
+      if (!warrantyInput) return;
+      if (years === 0) {
+        warrantyInput.value = '';
+        this.updateNewSystemWarrantyDaysRemaining();
+        return;
+      }
+      const purchaseDateInput = document.getElementById('newSystemPurchaseDate');
+      const baseDateStr = (purchaseDateInput && purchaseDateInput.value) ? purchaseDateInput.value : new Date().toISOString().substring(0, 10);
+      const d = new Date(baseDateStr);
+      if (isNaN(d.getTime())) return;
+      d.setFullYear(d.getFullYear() + years);
+      warrantyInput.value = d.toISOString().substring(0, 10);
+      this.updateNewSystemWarrantyDaysRemaining();
+    }
+
+    updateNewSystemWarrantyDaysRemaining() {
+      const warrantyInput = document.getElementById('newSystemWarrantyEnd');
+      const boxEl = document.getElementById('newSystemWarrantyDaysBox');
+      const textEl = document.getElementById('newSystemWarrantyDaysText');
+      const iconEl = document.getElementById('newSystemWarrantyDaysIcon');
+      if (!textEl) return;
+
+      const val = warrantyInput ? warrantyInput.value.trim() : '';
+      if (!val) {
+        textEl.textContent = 'No Warranty Date';
+        if (iconEl) iconEl.textContent = '⏳';
+        if (boxEl) {
+          boxEl.style.background = '#f8fafc';
+          boxEl.style.borderColor = '#cbd5e1';
+          boxEl.style.color = '#64748b';
+        }
+        return;
+      }
+
+      const exp = new Date(val);
+      if (isNaN(exp.getTime())) {
+        textEl.textContent = 'Invalid Date';
+        if (iconEl) iconEl.textContent = '⚠️';
+        if (boxEl) {
+          boxEl.style.background = '#fef2f2';
+          boxEl.style.borderColor = '#fecaca';
+          boxEl.style.color = '#dc2626';
+        }
+        return;
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      exp.setHours(0, 0, 0, 0);
+      const diffTime = exp.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays > 0) {
+        textEl.textContent = `${diffDays} Days Remaining`;
+        if (iconEl) iconEl.textContent = diffDays <= 30 ? '⚠️' : '🛡️';
+        if (boxEl) {
+          if (diffDays <= 30) {
+            boxEl.style.background = '#fffbeb';
+            boxEl.style.borderColor = '#fde68a';
+            boxEl.style.color = '#b45309';
+          } else {
+            boxEl.style.background = '#f0fdf4';
+            boxEl.style.borderColor = '#bbf7d0';
+            boxEl.style.color = '#16a34a';
+          }
+        }
+      } else if (diffDays === 0) {
+        textEl.textContent = 'Expires Today';
+        if (iconEl) iconEl.textContent = '⚠️';
+        if (boxEl) {
+          boxEl.style.background = '#fffbeb';
+          boxEl.style.borderColor = '#fde68a';
+          boxEl.style.color = '#b45309';
+        }
+      } else {
+        const ago = Math.abs(diffDays);
+        textEl.textContent = `Expired (${ago} day${ago === 1 ? '' : 's'} ago)`;
+        if (iconEl) iconEl.textContent = '❌';
+        if (boxEl) {
+          boxEl.style.background = '#fef2f2';
+          boxEl.style.borderColor = '#fecaca';
+          boxEl.style.color = '#dc2626';
+        }
+      }
+    }
+
+    async handleNewSystemSubmit(event) {
+      return this.handleInstockFormSubmit(event);
     }
 
     openInstockEntryModal(defaultType = null, editId = null) {
@@ -10236,7 +10769,7 @@ Remarks: ${r.remark || 'None'}`);
       const userInput = document.getElementById('instockAssignedUser');
       const assignedDateInput = document.getElementById('instockAssignedDate');
       const teamSelect = document.getElementById('instockAssignedTeam');
-      const tlInput = document.getElementById('instockAssignedTl');
+      const tlSelect = document.getElementById('instockAssignedTl');
       const reasonInput = document.getElementById('instockReason');
       const remarkInput = document.getElementById('instockRemark');
       const saveBtn = document.getElementById('btnSaveInstockEntry');
@@ -10246,15 +10779,102 @@ Remarks: ${r.remark || 'None'}`);
         saveBtn.innerHTML = '💾 Save Stock Entry';
       }
 
-      // Populate User Datalist
+      // Populate User Datalist for searchable dropdown
       const userDatalist = document.getElementById('instockAllUsersDatalist');
       if (userDatalist) {
-        userDatalist.innerHTML = ((store && store.data && store.data.users) || []).map(u => `<option value="${Utils.escapeHtml(u.name)}">${Utils.escapeHtml(u.name)} (${Utils.escapeHtml(u.team || 'Staff')})</option>`).join('');
+        const userSet = new Set();
+        ((store && store.data && store.data.users) || []).forEach(u => {
+          if (u.name) userSet.add(u.name.trim());
+        });
+        ((store && store.data && store.data.instockAllocations) || []).forEach(a => {
+          if (a.user_name) userSet.add(a.user_name.trim());
+        });
+        userDatalist.innerHTML = Array.from(userSet).sort().map(name => `<option value="${Utils.escapeHtml(name)}">`).join('');
       }
+
+      const today = new Date().toISOString().substring(0, 10);
+      if (purchaseDateInput) purchaseDateInput.max = today;
+      if (assignedDateInput) assignedDateInput.max = today;
 
       if (editId) {
         const item = ((store && store.data && store.data.instockHardware) || []).find(i => i.id === editId);
-        if (item) {
+        const desktopAsset = !item ? ((store && store.data && store.data.assets) || []).find(a => a.id === editId || (a.id && a.id.toLowerCase() === editId.toLowerCase())) : null;
+
+        if (desktopAsset) {
+          if (editIdInput) editIdInput.value = desktopAsset.id;
+          if (assetIdInput) {
+            assetIdInput.value = desktopAsset.id;
+            assetIdInput.disabled = true;
+            assetIdInput.dataset.autoGenerated = 'false';
+          }
+          if (titleEl) titleEl.textContent = `Edit Desktop Configuration (${desktopAsset.id})`;
+          if (typeSelect) typeSelect.value = 'NEW SYSTEM';
+          this.handleInstockCategoryChange();
+
+          const cpuInput = document.getElementById('newSystemCpu');
+          const ramInput = document.getElementById('newSystemRam');
+          const ssdInput = document.getElementById('newSystemSsd');
+          const hddInput = document.getElementById('newSystemHdd');
+          const osInput = document.getElementById('newSystemOs');
+          const ipInput = document.getElementById('newSystemIp');
+          const macInput = document.getElementById('newSystemMac');
+          const monInput = document.getElementById('newSystemMonitor');
+          const monDrop = document.getElementById('newSystemMonitorDropdown');
+          const monNoneCb = document.getElementById('newSystemMonitorNoneCheckbox');
+          const smpsInput = document.getElementById('newSystemSmps');
+
+          if (cpuInput) cpuInput.value = desktopAsset.cpu || '';
+          if (ramInput) ramInput.value = desktopAsset.ram || '';
+          if (ssdInput) ssdInput.value = (desktopAsset.ssd && desktopAsset.ssd !== 'None') ? desktopAsset.ssd : '';
+          if (hddInput) hddInput.value = (desktopAsset.hdd && desktopAsset.hdd !== 'None') ? desktopAsset.hdd : '';
+          if (osInput) osInput.value = desktopAsset.os || 'Windows 11 Pro';
+          if (ipInput) ipInput.value = desktopAsset.ipAddress || '';
+          if (macInput) macInput.value = desktopAsset.serialNumber || '';
+
+          const isMonNone = !desktopAsset.monitor || desktopAsset.monitor.toLowerCase() === 'none' || desktopAsset.monitor === '-';
+          if (monNoneCb) monNoneCb.checked = isMonNone;
+          if (monInput) {
+            monInput.value = isMonNone ? 'None' : desktopAsset.monitor;
+            monInput.disabled = isMonNone;
+          }
+          if (monDrop) monDrop.value = isMonNone ? 'None' : (desktopAsset.monitor || '');
+          if (smpsInput) smpsInput.value = (desktopAsset.smps && desktopAsset.smps !== 'None') ? desktopAsset.smps : '';
+          const newSysPurchaseDate = document.getElementById('newSystemPurchaseDate');
+          if (newSysPurchaseDate) newSysPurchaseDate.value = desktopAsset.doa || desktopAsset.purchaseDate || desktopAsset.assignedDate || today;
+          const newSysWarrantyEnd = document.getElementById('newSystemWarrantyEnd');
+          if (newSysWarrantyEnd) newSysWarrantyEnd.value = desktopAsset.warrantyEnd || '';
+          this.updateNewSystemWarrantyDaysRemaining();
+
+          const isAssigned = (desktopAsset.status === 'Assigned');
+          if (statusSelect) statusSelect.value = isAssigned ? 'Assigned' : 'Available';
+          if (radioAssigned) radioAssigned.checked = isAssigned;
+          if (radioPending) radioPending.checked = !isAssigned;
+
+          if (isAssigned) {
+            if (userInput) userInput.value = desktopAsset.user && desktopAsset.user !== 'None' ? desktopAsset.user : '';
+            if (assignedDateInput) assignedDateInput.value = desktopAsset.assignedDate || today;
+            if (teamSelect && desktopAsset.team) teamSelect.value = desktopAsset.team;
+            this.handleInstockTeamChange();
+            if (tlSelect && desktopAsset.tl) {
+              const hasOpt = Array.from(tlSelect.options).some(o => o.value === desktopAsset.tl);
+              if (!hasOpt) {
+                const opt = document.createElement('option');
+                opt.value = desktopAsset.tl;
+                opt.textContent = desktopAsset.tl;
+                tlSelect.appendChild(opt);
+              }
+              tlSelect.value = desktopAsset.tl;
+            }
+            if (reasonInput) reasonInput.value = desktopAsset.remark || '';
+          } else {
+            if (userInput) userInput.value = '';
+            if (assignedDateInput) assignedDateInput.value = '';
+            if (teamSelect) teamSelect.value = 'SYSTEM ADMIN';
+            this.handleInstockTeamChange();
+            if (reasonInput) reasonInput.value = '';
+          }
+          if (remarkInput) remarkInput.value = desktopAsset.remark || '';
+        } else if (item) {
           if (editIdInput) editIdInput.value = item.id;
           if (assetIdInput) {
             assetIdInput.value = item.id;
@@ -10263,6 +10883,7 @@ Remarks: ${r.remark || 'None'}`);
           }
           if (titleEl) titleEl.textContent = `Edit Stock Entry (${item.id})`;
           if (typeSelect) typeSelect.value = item.component_type || 'CPU';
+          this.handleInstockCategoryChange();
           if (modelInput) modelInput.value = item.model || item.spec || '';
           if (specInput) specInput.value = item.spec || item.model || '';
           if (serialInput) serialInput.value = item.serial_number || '';
@@ -10277,16 +10898,26 @@ Remarks: ${r.remark || 'None'}`);
 
           if (isAssigned) {
             if (userInput) userInput.value = item.assigned_user || '';
-            if (assignedDateInput) assignedDateInput.value = item.assigned_date || '';
+            if (assignedDateInput) assignedDateInput.value = item.assigned_date || item.purchase_date || today;
             if (teamSelect && item.team) teamSelect.value = item.team;
-            if (tlInput) tlInput.value = item.tl || '';
+            this.handleInstockTeamChange();
+            if (tlSelect && item.tl) {
+              const hasOpt = Array.from(tlSelect.options).some(o => o.value === item.tl);
+              if (!hasOpt) {
+                const opt = document.createElement('option');
+                opt.value = item.tl;
+                opt.textContent = item.tl;
+                tlSelect.appendChild(opt);
+              }
+              tlSelect.value = item.tl;
+            }
             if (reasonInput) reasonInput.value = item.changing_reason || item.remark || '';
           } else {
             // When Non-Assigned, ensure stale assignment details are NEVER displayed as current values
             if (userInput) userInput.value = '';
             if (assignedDateInput) assignedDateInput.value = '';
             if (teamSelect) teamSelect.value = 'SYSTEM ADMIN';
-            if (tlInput) tlInput.value = '';
+            this.handleInstockTeamChange();
             if (reasonInput) reasonInput.value = '';
           }
 
@@ -10295,27 +10926,54 @@ Remarks: ${r.remark || 'None'}`);
       } else {
         const cat = (defaultType || 'CPU').toUpperCase();
         if (editIdInput) editIdInput.value = '';
-        if (typeSelect) typeSelect.value = cat;
-        if (assetIdInput) {
-          assetIdInput.value = this.getNextInstockAssetId(cat);
-          assetIdInput.disabled = false;
-          assetIdInput.dataset.autoGenerated = 'true';
-        }
+        if (typeSelect) typeSelect.value = (defaultType === 'NEW SYSTEM' || cat === 'NEW SYSTEM') ? 'NEW SYSTEM' : (defaultType || 'CPU');
         if (titleEl) {
           titleEl.textContent = '+ Add Stock';
         }
         if (modelInput) modelInput.value = '';
         if (specInput) specInput.value = '';
-        if (serialInput) serialInput.value = `SN-${cat}-${Math.floor(10000 + Math.random() * 90000)}`;
-        if (purchaseDateInput) purchaseDateInput.value = new Date().toISOString().substring(0, 10);
+        if (purchaseDateInput) purchaseDateInput.value = today;
         if (statusSelect) statusSelect.value = 'Available';
         if (radioPending) radioPending.checked = true;
+        if (radioAssigned) radioAssigned.checked = false;
         if (userInput) userInput.value = '';
-        if (assignedDateInput) assignedDateInput.value = new Date().toISOString().substring(0, 10);
+        if (assignedDateInput) assignedDateInput.value = today;
         if (teamSelect) teamSelect.value = 'SYSTEM ADMIN';
-        if (tlInput) tlInput.value = '';
+        this.handleInstockTeamChange();
         if (reasonInput) reasonInput.value = '';
         if (remarkInput) remarkInput.value = '';
+
+        // Reset NEW SYSTEM fields
+        const cpuInput = document.getElementById('newSystemCpu');
+        const ramInput = document.getElementById('newSystemRam');
+        const ssdInput = document.getElementById('newSystemSsd');
+        const hddInput = document.getElementById('newSystemHdd');
+        const osInput = document.getElementById('newSystemOs');
+        const ipInput = document.getElementById('newSystemIp');
+        const macInput = document.getElementById('newSystemMac');
+        const monInput = document.getElementById('newSystemMonitor');
+        const monDrop = document.getElementById('newSystemMonitorDropdown');
+        const monNoneCb = document.getElementById('newSystemMonitorNoneCheckbox');
+        const smpsInput = document.getElementById('newSystemSmps');
+
+        if (cpuInput) cpuInput.value = '';
+        if (ramInput) ramInput.value = '';
+        if (ssdInput) ssdInput.value = '';
+        if (hddInput) hddInput.value = '';
+        if (osInput) osInput.value = 'Windows 11 Pro';
+        if (ipInput) ipInput.value = '';
+        if (macInput) macInput.value = '';
+        if (monNoneCb) monNoneCb.checked = false;
+        if (monInput) { monInput.value = 'DELL 22 inch'; monInput.disabled = false; }
+        if (monDrop) monDrop.value = 'DELL 22 inch';
+        if (smpsInput) smpsInput.value = '550W';
+        const newSysPurchaseDate = document.getElementById('newSystemPurchaseDate');
+        if (newSysPurchaseDate) newSysPurchaseDate.value = today;
+        const newSysWarrantyEnd = document.getElementById('newSystemWarrantyEnd');
+        if (newSysWarrantyEnd) newSysWarrantyEnd.value = '';
+        this.updateNewSystemWarrantyDaysRemaining();
+
+        this.handleInstockCategoryChange();
       }
 
       this.toggleInstockAssignmentFields();
@@ -10330,14 +10988,19 @@ Remarks: ${r.remark || 'None'}`);
       const helpText = document.getElementById('instockPendingHelpText');
       const userInput = document.getElementById('instockAssignedUser');
       const assignedDateInput = document.getElementById('instockAssignedDate');
+      const teamSelect = document.getElementById('instockAssignedTeam');
+      const tlSelect = document.getElementById('instockAssignedTl');
       const reasonInput = document.getElementById('instockReason');
 
-      const isAssigned = (statusSelect && statusSelect.value === 'Assigned') || (radioAssigned && radioAssigned.checked);
+      // The visible dropdown is the authoritative source of truth:
+      // When Non-Assigned ('Available'), User Assignment Details must be HIDDEN.
+      // Only when Assigned ('Assigned') must User Assignment Details be VISIBLE.
+      const isAssigned = statusSelect ? (statusSelect.value === 'Assigned') : Boolean(radioAssigned && radioAssigned.checked);
 
       // Sync backward-compatible radios if select is changed
       if (statusSelect) {
-        if (radioAssigned) radioAssigned.checked = (statusSelect.value === 'Assigned');
-        if (radioPending) radioPending.checked = (statusSelect.value !== 'Assigned');
+        if (radioAssigned) radioAssigned.checked = isAssigned;
+        if (radioPending) radioPending.checked = !isAssigned;
       }
 
       if (section) section.style.display = isAssigned ? 'flex' : 'none';
@@ -10351,15 +11014,21 @@ Remarks: ${r.remark || 'None'}`);
       }
 
       if (userInput) {
-        userInput.required = false;
+        userInput.required = isAssigned;
         if (!isAssigned) userInput.value = '';
       }
       if (assignedDateInput) {
-        assignedDateInput.required = false;
+        assignedDateInput.required = isAssigned;
         if (!isAssigned) assignedDateInput.value = '';
       }
+      if (teamSelect) {
+        teamSelect.required = isAssigned;
+      }
+      if (tlSelect) {
+        tlSelect.required = isAssigned;
+      }
       if (reasonInput) {
-        reasonInput.required = false;
+        reasonInput.required = isAssigned;
         if (!isAssigned) reasonInput.value = '';
       }
     }
@@ -10370,12 +11039,7 @@ Remarks: ${r.remark || 'None'}`);
       const editId = document.getElementById('instockEditId')?.value;
       const customAssetId = document.getElementById('instockAssetId')?.value?.trim();
       const component_type = document.getElementById('instockComponentType')?.value || 'OTHER';
-      let model = document.getElementById('instockModel')?.value?.trim() || '';
-      let spec = document.getElementById('instockSpec')?.value?.trim() || '';
-      if (!model && spec) model = spec;
-      if (!spec && model) spec = model;
-      const serial_number = document.getElementById('instockSerial')?.value?.trim() || '';
-      const purchase_date = document.getElementById('instockPurchaseDate')?.value || '';
+
       const statusSelect = document.getElementById('instockStatus');
       const radioAssigned = document.getElementById('instockStatusAssigned');
       const status = statusSelect ? statusSelect.value : (radioAssigned && radioAssigned.checked ? 'Assigned' : 'Available');
@@ -10383,12 +11047,191 @@ Remarks: ${r.remark || 'None'}`);
       const existingItem = editId ? ((store.data.instockHardware || []).find(i => i.id === editId) || {}) : {};
 
       const assigned_user = isAssigned ? (document.getElementById('instockAssignedUser')?.value?.trim() || existingItem.assigned_user || '') : '';
-      const assigned_date = isAssigned ? (document.getElementById('instockAssignedDate')?.value || existingItem.assigned_date || purchase_date) : '';
+      const assigned_date = isAssigned ? (document.getElementById('instockAssignedDate')?.value || existingItem.assigned_date || '') : '';
       const team = isAssigned ? (document.getElementById('instockAssignedTeam')?.value || existingItem.team || '') : '';
       const tl = isAssigned ? (document.getElementById('instockAssignedTl')?.value?.trim() || existingItem.tl || '') : '';
       const reason = isAssigned ? (document.getElementById('instockReason')?.value?.trim() || existingItem.changing_reason || '') : '';
       const remarkInput = document.getElementById('instockRemark');
       const remark = remarkInput ? remarkInput.value.trim() : (existingItem.remark || '');
+      const today = new Date().toISOString().substring(0, 10);
+
+      // Handle NEW SYSTEM entry
+      if (component_type === 'NEW SYSTEM') {
+        const cpu = document.getElementById('newSystemCpu')?.value?.trim();
+        const ram = document.getElementById('newSystemRam')?.value?.trim();
+        const ssd = document.getElementById('newSystemSsd')?.value?.trim() || 'None';
+        const hdd = document.getElementById('newSystemHdd')?.value?.trim() || 'None';
+        const os = document.getElementById('newSystemOs')?.value?.trim() || 'Windows 11 Pro';
+        const ipAddress = document.getElementById('newSystemIp')?.value?.trim() || 'DHCP';
+        const serialNumber = document.getElementById('newSystemMac')?.value?.trim() || '—';
+        const monitorNone = document.getElementById('newSystemMonitorNoneCheckbox')?.checked;
+        const monitor = monitorNone ? 'None' : (document.getElementById('newSystemMonitor')?.value?.trim() || 'None');
+        const smps = document.getElementById('newSystemSmps')?.value?.trim() || 'None';
+        const purchaseDate = document.getElementById('newSystemPurchaseDate')?.value || today;
+        const warrantyEnd = document.getElementById('newSystemWarrantyEnd')?.value?.trim() || '';
+
+        const finalAssetId = customAssetId || this.getNextDesktopAssetId();
+
+        if (!finalAssetId) {
+          Utils.showToast('Validation Error', 'Asset ID is required.', 'error');
+          return;
+        }
+        if (!cpu) {
+          Utils.showToast('Validation Error', 'Processor (CPU) is required.', 'error');
+          document.getElementById('newSystemCpu')?.focus();
+          return;
+        }
+        if (!ram) {
+          Utils.showToast('Validation Error', 'System RAM is required.', 'error');
+          document.getElementById('newSystemRam')?.focus();
+          return;
+        }
+        if (!purchaseDate) {
+          Utils.showToast('Validation Error', 'Purchase Date is required.', 'error');
+          document.getElementById('newSystemPurchaseDate')?.focus();
+          return;
+        }
+        if (purchaseDate > today) {
+          Utils.showToast('Validation Error', 'Purchase Date cannot be in the future.', 'error');
+          document.getElementById('newSystemPurchaseDate')?.focus();
+          return;
+        }
+
+        if (isAssigned) {
+          if (!assigned_user) {
+            Utils.showToast('Validation Error', 'Employee Name is required when marked Assigned.', 'error');
+            return;
+          }
+          if (!assigned_date) {
+            Utils.showToast('Validation Error', 'Assignment Date is required.', 'error');
+            return;
+          }
+          if (assigned_date > today) {
+            Utils.showToast('Validation Error', 'Assignment Date cannot be in the future.', 'error');
+            return;
+          }
+          if (!team) {
+            Utils.showToast('Validation Error', 'Team / Department is required.', 'error');
+            return;
+          }
+          if (!tl) {
+            Utils.showToast('Validation Error', 'Team Lead (TL) is required.', 'error');
+            return;
+          }
+          if (!reason) {
+            Utils.showToast('Validation Error', 'Hardware Item / Reason is required.', 'error');
+            return;
+          }
+        }
+
+        // Validate duplicate Desktop Asset ID if creating new
+        if (!editId) {
+          const allAssets = store.data.assets || [];
+          const dupId = allAssets.find(a => (a.id || '').toLowerCase() === finalAssetId.toLowerCase());
+          if (dupId) {
+            Utils.showToast('Duplicate Asset ID', `Desktop Asset ID "${finalAssetId}" already exists. Please specify a unique ID.`, 'error');
+            return;
+          }
+        }
+
+        // Save Confirmation — YES / NO
+        const confirmed = await this.confirmSave({
+          title: editId ? 'Confirm Update' : 'Confirm Save',
+          message: editId ? `Are you sure you want to save changes to Desktop system "${editId}"?` : `Are you sure you want to save Desktop system "${finalAssetId}"?`,
+          yesText: 'YES, SAVE',
+          noText: 'NO, CANCEL'
+        });
+        if (!confirmed) return;
+
+        const payload = {
+          id: finalAssetId,
+          type: 'Desktop',
+          cpu,
+          ram,
+          ssd,
+          hdd,
+          os,
+          ipAddress,
+          serialNumber,
+          monitor,
+          smps,
+          doa: purchaseDate,
+          purchaseDate,
+          ...(warrantyEnd ? { warrantyEnd } : {}),
+          status: isAssigned ? 'Assigned' : 'Non-Assigned',
+          condition: 'Brand New',
+          location: isAssigned ? 'Office' : 'In Stock',
+          user: isAssigned ? assigned_user : 'None',
+          assignedDate: isAssigned ? assigned_date : '',
+          team: isAssigned ? team : '',
+          tl: isAssigned ? tl : '-',
+          remark: isAssigned ? (reason || 'Assigned from In Stock') : 'New System Configuration'
+        };
+
+        const saveBtn = document.getElementById('btnSaveInstockEntry');
+        if (saveBtn) {
+          saveBtn.disabled = true;
+          saveBtn.innerHTML = '⏳ Saving...';
+        }
+
+        try {
+          let res;
+          if (editId) {
+            res = await fetch(`/api/assets/${encodeURIComponent(editId)}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+          } else {
+            res = await fetch('/api/assets', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+          }
+
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || `Server returned ${res.status}`);
+          }
+          const saved = await res.json();
+          if (!store.data.assets) store.data.assets = [];
+          if (editId) {
+            const idx = store.data.assets.findIndex(a => a.id === editId);
+            if (idx !== -1) store.data.assets[idx] = { ...store.data.assets[idx], ...saved };
+            else store.data.assets.push(saved);
+          } else {
+            store.data.assets.push(saved);
+          }
+          store.save && store.save();
+
+          this.closeModal('modalInstockEntry');
+          Utils.showToast('Success', `Desktop system ${saved.id || finalAssetId} saved successfully!`, 'success');
+
+          if (typeof this.renderDesktopTable === 'function') this.renderDesktopTable();
+          if (typeof this.renderAllAssetsTable === 'function') this.renderAllAssetsTable();
+          if (typeof this.renderNonAssignedTable === 'function') this.renderNonAssignedTable();
+          if (typeof this.renderInstockDashboard === 'function') this.renderInstockDashboard();
+          if (typeof this.renderInstockInventoryTable === 'function') this.renderInstockInventoryTable();
+          if (typeof this.renderInstockInventoryView === 'function') this.renderInstockInventoryView();
+          if (typeof this.renderPageInstockEntryTable === 'function') this.renderPageInstockEntryTable();
+          if (typeof this.renderAssignedItemsTable === 'function') this.renderAssignedItemsTable();
+          return;
+        } catch (err) {
+          Utils.showToast('Error', err.message || 'Error saving Desktop system', 'error');
+          if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = editId ? '💾 Update Stock Entry' : '💾 Save Stock Entry';
+          }
+          return;
+        }
+      }
+      let model = document.getElementById('instockModel')?.value?.trim() || '';
+      let spec = document.getElementById('instockSpec')?.value?.trim() || '';
+      if (!model && spec) model = spec;
+      if (!spec && model) spec = model;
+      const serial_number = document.getElementById('instockSerial')?.value?.trim() || '';
+      const purchase_date = document.getElementById('instockPurchaseDate')?.value || '';
 
       const finalAssetId = customAssetId || this.getNextInstockAssetId(component_type);
 
@@ -10413,9 +11256,41 @@ Remarks: ${r.remark || 'None'}`);
         Utils.showToast('Validation Error', 'Purchase Date is required.', 'error');
         return;
       }
+      if (purchase_date > today) {
+        Utils.showToast('Validation Error', 'Purchase Date cannot be in the future.', 'error');
+        return;
+      }
       if (!status) {
         Utils.showToast('Validation Error', 'Current Status is required.', 'error');
         return;
+      }
+
+      // If status is Assigned, validate all 5 assignment fields and prevent future date
+      if (isAssigned) {
+        if (!assigned_user) {
+          Utils.showToast('Validation Error', 'Employee Name is required when marked Assigned.', 'error');
+          return;
+        }
+        if (!assigned_date) {
+          Utils.showToast('Validation Error', 'Assignment Date is required.', 'error');
+          return;
+        }
+        if (assigned_date > today) {
+          Utils.showToast('Validation Error', 'Assignment Date cannot be in the future.', 'error');
+          return;
+        }
+        if (!team) {
+          Utils.showToast('Validation Error', 'Team / Department is required.', 'error');
+          return;
+        }
+        if (!tl) {
+          Utils.showToast('Validation Error', 'Team Lead (TL) is required.', 'error');
+          return;
+        }
+        if (!reason) {
+          Utils.showToast('Validation Error', 'Hardware Item / Reason is required.', 'error');
+          return;
+        }
       }
 
       const allItems = store.data.instockHardware || [];
@@ -12709,7 +13584,7 @@ Remarks: ${r.remark || 'None'}`);
       const headers = ['ID', 'Category', 'Specification', 'Serial Number', 'Purchase Date', 'Status', 'Assigned To', 'Assigned Date', 'Team', 'TL', 'Remarks'];
       const rows = items.map(i => [
         `"${i.id || ''}"`,
-        `"${i.component_type || i.category || ''}"`,
+        `"${(i.component_type === 'CPU' ? 'Processor' : (i.component_type || i.category || ''))}"`,
         `"${(i.spec || '').replace(/"/g, '""')}"`,
         `"${i.serial_number || ''}"`,
         `"${i.purchase_date || ''}"`,
@@ -13572,7 +14447,17 @@ async viewAsset(assetId) {
                     <span>🖥️</span> PRIMARY MONITOR
                   </div>
                   <div style="font-size: 0.84rem; font-weight: 600; color: #0f172a; margin-top: 1px;">
-                    ${Utils.escapeHtml((asset.monitor && asset.monitor !== '-' && asset.monitor.toLowerCase() !== 'none') ? asset.monitor : 'DELL 22 inch')}
+                    ${Utils.escapeHtml((asset.monitor && asset.monitor !== '-' && asset.monitor.toLowerCase() !== 'none' && asset.monitor.trim()) ? asset.monitor : ((asset.monitor && asset.monitor.toLowerCase() === 'none') ? 'None' : 'DELL 22 inch'))}
+                  </div>
+                </div>
+
+                <!-- Tile 9: SMPS -->
+                <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 7px 11px; display: flex; flex-direction: column; justify-content: center; min-height: 48px;">
+                  <div style="display: flex; align-items: center; gap: 5px; font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
+                    <span>🔌</span> SMPS
+                  </div>
+                  <div style="font-size: 0.86rem; font-weight: 600; color: #0f172a; margin-top: 1px;">
+                    ${Utils.escapeHtml((asset.smps && asset.smps !== '-' && asset.smps.trim()) ? asset.smps : 'None')}
                   </div>
                 </div>
               </div>
@@ -14135,11 +15020,50 @@ async viewAsset(assetId) {
     resetInstockDashboardFilters() {
       app.resetInstockDashboardFilters();
     },
+    changeInstockPage(page) {
+      app.changeInstockPage(page);
+    },
+    changeInstockPageSize(size) {
+      app.changeInstockPageSize(size);
+    },
+    duplicateInstockItem(id) {
+      app.duplicateInstockItem(id);
+    },
+    openNewSystemModal(editId = null) {
+      app.openNewSystemModal(editId);
+    },
+    handleNewSystemMonitorNone(isNone) {
+      app.handleNewSystemMonitorNone(isNone);
+    },
+    handleNewSystemMonitorDropdown(val) {
+      app.handleNewSystemMonitorDropdown(val);
+    },
+    setNewSystemPurchaseDateToday() {
+      app.setNewSystemPurchaseDateToday();
+    },
+    setNewSystemWarrantyYears(years) {
+      app.setNewSystemWarrantyYears(years);
+    },
+    updateNewSystemWarrantyDaysRemaining() {
+      app.updateNewSystemWarrantyDaysRemaining();
+    },
+    handleNewSystemSubmit(event) {
+      return app.handleNewSystemSubmit(event);
+    },
+    getNextDesktopAssetId() {
+      return app.getNextDesktopAssetId();
+    },
     openInstockEntryModal(defaultType = null, editId = null) {
       app.openInstockEntryModal(defaultType, editId);
     },
     handleInstockCategoryChange() {
       app.handleInstockCategoryChange();
+    },
+    handleInstockTeamChange() {
+      app.handleInstockTeamChange();
+    },
+    handleInstockUserSelect(userName) {
+      app.handleInstockUserSelect(userName);
     },
     getNextInstockAssetId(cat) {
       return app.getNextInstockAssetId(cat);
@@ -14215,6 +15139,12 @@ async viewAsset(assetId) {
     },
     filterInventoryByCategory(cat) {
       app.filterInventoryByCategory(cat);
+    },
+    updateInstockCategoryCardsCounts() {
+      app.updateInstockCategoryCardsCounts();
+    },
+    updateInstockCategoryCardsActive(cat) {
+      app.updateInstockCategoryCardsActive(cat);
     },
     renderInstockInventoryView() {
       app.renderInstockInventoryView();
