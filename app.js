@@ -8528,10 +8528,12 @@ Remarks: ${r.remark || 'None'}`);
       setGroup('OTHER', other);
     }
 
-    updateInstockCategoryCardsActive(selectedCat) {
+    updateInstockCategoryCardsActive(selectedCat, selectedStatus) {
       let activeKey = (selectedCat || 'all').trim();
       if (activeKey.toUpperCase() === 'PROCESSOR') activeKey = 'CPU';
       if (activeKey.toUpperCase() === 'NEW_SYSTEM' || activeKey.toUpperCase() === 'NEWSYSTEM') activeKey = 'NEW SYSTEM';
+
+      const statVal = (selectedStatus !== undefined ? selectedStatus : (document.getElementById('instockInventoryStatusFilter')?.value || 'all')).trim();
 
       const cardMap = {
         'all': 'instockCatCard_all',
@@ -8562,6 +8564,38 @@ Remarks: ${r.remark || 'None'}`);
             card.classList.add('active');
           } else {
             card.classList.remove('active');
+          }
+        }
+      });
+
+      // Synchronize active status styling on AV & ASS pills
+      const catKeys = [
+        { code: 'NEW_SYSTEM', match: 'NEW SYSTEM' },
+        { code: 'CPU', match: 'CPU' },
+        { code: 'RAM', match: 'RAM' },
+        { code: 'SSD', match: 'SSD' },
+        { code: 'MONITOR', match: 'MONITOR' },
+        { code: 'SMPS', match: 'SMPS' },
+        { code: 'OTHER', match: 'OTHER' }
+      ];
+
+      catKeys.forEach(({ code, match }) => {
+        const avPill = document.getElementById(`instockCatPill_${code}_av`);
+        const assPill = document.getElementById(`instockCatPill_${code}_ass`);
+        const isCurrentCat = (normKey === match);
+
+        if (avPill) {
+          if (isCurrentCat && (statVal === 'Available' || statVal === 'Non-Assigned')) {
+            avPill.classList.add('active-status');
+          } else {
+            avPill.classList.remove('active-status');
+          }
+        }
+        if (assPill) {
+          if (isCurrentCat && statVal === 'Assigned') {
+            assPill.classList.add('active-status');
+          } else {
+            assPill.classList.remove('active-status');
           }
         }
       });
@@ -8638,6 +8672,8 @@ Remarks: ${r.remark || 'None'}`);
       if (catVal.toUpperCase() === 'NEW_SYSTEM' || catVal.toUpperCase() === 'NEWSYSTEM') catVal = 'NEW SYSTEM';
 
       const catSelect = document.getElementById('instockInventoryCategoryFilter');
+      const statSelect = document.getElementById('instockInventoryStatusFilter');
+
       // Toggle feature: if clicking currently active category, toggle off to 'all'
       if (catSelect && catSelect.value.toUpperCase() === catVal.toUpperCase() && catVal !== 'all') {
         catVal = 'all';
@@ -8646,8 +8682,48 @@ Remarks: ${r.remark || 'None'}`);
       if (catSelect) {
         catSelect.value = catVal;
       }
+      if (statSelect) {
+        statSelect.value = 'all';
+      }
 
-      this.updateInstockCategoryCardsActive(catVal);
+      this.updateInstockCategoryCardsActive(catVal, 'all');
+
+      if (this.instockPagination) {
+        this.instockPagination.currentPage = 1;
+      }
+
+      this.renderInstockInventoryTable();
+
+      const fullCatSelect = document.getElementById('instockInventoryFullCategoryFilter');
+      if (fullCatSelect) {
+        fullCatSelect.value = catVal;
+        this.renderInstockInventoryView();
+      }
+    }
+
+    filterInventoryByCatAndStatus(cat, status) {
+      let catVal = (cat || 'all').trim();
+      if (catVal.toUpperCase() === 'PROCESSOR') catVal = 'CPU';
+      if (catVal.toUpperCase() === 'NEW_SYSTEM' || catVal.toUpperCase() === 'NEWSYSTEM') catVal = 'NEW SYSTEM';
+
+      const catSelect = document.getElementById('instockInventoryCategoryFilter');
+      const statSelect = document.getElementById('instockInventoryStatusFilter');
+
+      const currentCat = (catSelect?.value || 'all').toUpperCase();
+      const currentStat = (statSelect?.value || 'all').toUpperCase();
+      const targetCat = catVal.toUpperCase();
+      const targetStat = (status || 'all').toUpperCase();
+
+      // If clicking already active cat + status, toggle off status to 'all'
+      let newStat = status;
+      if (currentCat === targetCat && currentStat === targetStat) {
+        newStat = 'all';
+      }
+
+      if (catSelect) catSelect.value = catVal;
+      if (statSelect) statSelect.value = newStat;
+
+      this.updateInstockCategoryCardsActive(catVal, newStat);
 
       if (this.instockPagination) {
         this.instockPagination.currentPage = 1;
@@ -8674,8 +8750,8 @@ Remarks: ${r.remark || 'None'}`);
 
       const searchVal = (searchInput?.value || '').toLowerCase().trim();
       const catVal = catSelect?.value || 'all';
-      this.updateInstockCategoryCardsActive(catVal);
       const statVal = statSelect?.value || 'all';
+      this.updateInstockCategoryCardsActive(catVal, statVal);
       const dateFrom = dateFromInput?.value || '';
       const dateTo = dateToInput?.value || '';
 
@@ -15257,6 +15333,9 @@ async viewAsset(assetId) {
     },
     filterInventoryByCategory(cat) {
       app.filterInventoryByCategory(cat);
+    },
+    filterInventoryByCatAndStatus(cat, status) {
+      app.filterInventoryByCatAndStatus(cat, status);
     },
     updateInstockCategoryCardsCounts() {
       app.updateInstockCategoryCardsCounts();

@@ -4965,7 +4965,7 @@ a[href="#non-it-assets"],
 .instock-category-card .cat-card-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
   min-width: 0;
 }
 
@@ -5035,9 +5035,9 @@ a[href="#non-it-assets"],
 }
 
 .instock-category-card .cat-card-title {
-  font-size: 0.86rem;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #0f172a;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -5081,52 +5081,82 @@ a[href="#non-it-assets"],
   color: #1d4ed8;
 }
 
-/* AV & ASS Subcounts Row */
+/* AV & ASS Subcounts Row (Clickable Interactive Status Pills) */
 .instock-category-card .cat-card-subcounts {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.instock-category-card .cat-subcount-pill {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-}
-
-.instock-category-card .cat-subcount-pill {
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
   font-size: 0.72rem;
   font-weight: 600;
-  padding: 3px 6px;
+  padding: 4px 8px;
   border-radius: 6px;
-  line-height: 1.2;
-  white-space: nowrap;
+  line-height: 1.25;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  border: 1px solid transparent;
+  outline: none;
+  font-family: inherit;
+  text-align: left;
 }
 
 .instock-category-card .cat-subcount-pill strong {
   font-weight: 800;
+  font-size: 0.78rem;
 }
 
 .instock-category-card .cat-subcount-av {
   background: #f0fdf4;
   color: #166534;
-  border: 1px solid #bbf7d0;
+  border-color: #bbf7d0;
+}
+
+.instock-category-card .cat-subcount-av:hover {
+  background: #dcfce7;
+  border-color: #86efac;
+  transform: translateY(-0.5px);
+}
+
+.instock-category-card .cat-subcount-av.active-status {
+  background: #16a34a !important;
+  color: #ffffff !important;
+  border-color: #15803d !important;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
+}
+
+.instock-category-card .cat-subcount-av.active-status strong {
+  color: #ffffff !important;
 }
 
 .instock-category-card .cat-subcount-ass {
   background: #faf5ff;
   color: #6b21a8;
-  border: 1px solid #e9d5ff;
+  border-color: #e9d5ff;
 }
 
-.instock-category-card.active .cat-subcount-av {
-  background: #dcfce7;
-  border-color: #86efac;
-}
-
-.instock-category-card.active .cat-subcount-ass {
+.instock-category-card .cat-subcount-ass:hover {
   background: #f3e8ff;
   border-color: #d8b4fe;
+  transform: translateY(-0.5px);
+}
+
+.instock-category-card .cat-subcount-ass.active-status {
+  background: #7c3aed !important;
+  color: #ffffff !important;
+  border-color: #6d28d9 !important;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3);
+}
+
+.instock-category-card .cat-subcount-ass.active-status strong {
+  color: #ffffff !important;
 }
 
 .instock-category-card .cat-card-badge {

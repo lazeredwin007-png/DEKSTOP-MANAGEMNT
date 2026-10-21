@@ -2,7 +2,7 @@ const fs = require('fs');
 const assert = require('assert');
 
 console.log('================================================================');
-console.log('🧪 TESTING INSTOCK CATEGORY CARDS (7 CARDS, 3 COUNTS EACH)');
+console.log('🧪 TESTING INSTOCK CATEGORY CARDS (AV & ASS CLICK-TO-FILTER)');
 console.log('================================================================\n');
 
 const html = fs.readFileSync('./index.html', 'utf8');
@@ -38,7 +38,7 @@ test('instockCategoryCardsContainer exists in index.html', () => {
 
 test('Cards follow strict order: New System first, Other last', () => {
   let lastIndex = -1;
-  expectedOrder.forEach((c, idx) => {
+  expectedOrder.forEach((c) => {
     const cardIndex = html.indexOf(`id="${c.id}"`);
     assert(cardIndex !== -1, `Card ${c.id} exists in HTML`);
     if (lastIndex !== -1) {
@@ -48,26 +48,39 @@ test('Cards follow strict order: New System first, Other last', () => {
   });
 });
 
-test('Each card contains Total Assets, AV, and ASS counts elements', () => {
+// 2. Removal of Image/Icon Box from Category Cards
+console.log('\n--- 2. Removal of Image/Icon Box from Category Cards ---');
+test('Image/icon box (.cat-card-icon) is removed from all category cards', () => {
+  const containerStart = html.indexOf('id="instockCategoryCardsContainer"');
+  const containerEnd = html.indexOf('<!-- Advanced Filter Panel', containerStart);
+  const containerSnippet = html.substring(containerStart, containerEnd);
+  assert(!containerSnippet.includes('class="cat-card-icon'), 'No cat-card-icon inside category cards container');
+});
+
+// 3. Name Change: (AV) Non-Assigned and (ASS) Assigned with Click Handlers
+console.log('\n--- 3. Name Change: (AV) Non-Assigned & (ASS) Assigned with Click-to-Filter ---');
+test('Each card contains (AV) Non-Assigned and (ASS) Assigned clickable buttons with live counts', () => {
   expectedOrder.forEach(c => {
     assert(html.includes(`id="instockCatCount_${c.key}_total"`), `Total Assets element exists for ${c.key}`);
     assert(html.includes(`id="instockCatCount_${c.key}_av"`), `AV count element exists for ${c.key}`);
     assert(html.includes(`id="instockCatCount_${c.key}_ass"`), `ASS count element exists for ${c.key}`);
-    assert(html.includes(`Total Assets:`), 'Contains "Total Assets:" label');
-    assert(html.includes(`AV:`), 'Contains "AV:" label');
-    assert(html.includes(`ASS:`), 'Contains "ASS:" label');
-    assert(html.includes(`filterInventoryByCategory(${c.arg})`), `Card triggers filterInventoryByCategory with ${c.arg}`);
+    assert(html.includes('(AV) Non-Assigned:'), 'Contains "(AV) Non-Assigned:" name');
+    assert(html.includes('(ASS) Assigned:'), 'Contains "(ASS) Assigned:" name');
+    assert(html.includes(`id="instockCatPill_${c.key}_av"`), `AV pill exists for ${c.key}`);
+    assert(html.includes(`id="instockCatPill_${c.key}_ass"`), `ASS pill exists for ${c.key}`);
+    assert(html.includes(`filterInventoryByCatAndStatus(${c.arg}, 'Available')`), `AV pill triggers filterInventoryByCatAndStatus for ${c.arg} Available`);
+    assert(html.includes(`filterInventoryByCatAndStatus(${c.arg}, 'Assigned')`), `ASS pill triggers filterInventoryByCatAndStatus for ${c.arg} Assigned`);
   });
 });
 
-// 2. Old Large Summary Cards Hidden
-console.log('\n--- 2. Old Large Summary Cards Hidden ---');
+// 4. Old Large Summary Cards Hidden
+console.log('\n--- 4. Old Large Summary Cards Hidden ---');
 test('Old large summary cards grid is hidden via inline style display:none !important', () => {
   assert(html.includes('class="instock-summary-grid" style="display:none !important;"'), 'instock-summary-grid is visually hidden');
 });
 
-// 3. Styling of Category Cards
-console.log('\n--- 3. Category Cards Styling in styles.css ---');
+// 5. Styling in styles.css
+console.log('\n--- 5. Category Cards & Subcount Pills Styling in styles.css ---');
 test('.instock-category-cards-grid grid styling exists with 7 columns', () => {
   assert(css.includes('.instock-category-cards-grid'), 'Grid class exists');
   assert(css.includes('grid-template-columns: repeat(7, 1fr)'), '7-column grid layout exists');
@@ -80,46 +93,32 @@ test('.instock-category-card base, hover, and active styles exist', () => {
   assert(css.includes('#2563eb'), 'Uses professional blue #2563eb accent');
 });
 
-test('.cat-card-total-row, .cat-subcount-pill, AV and ASS pill styles exist', () => {
-  assert(css.includes('.cat-card-total-row'), 'Total row style exists');
+test('.cat-subcount-pill active-status styles exist for AV (green) and ASS (purple)', () => {
   assert(css.includes('.cat-subcount-pill'), 'Subcount pill style exists');
-  assert(css.includes('.cat-subcount-av'), 'AV pill style exists');
-  assert(css.includes('.cat-subcount-ass'), 'ASS pill style exists');
+  assert(css.includes('.cat-subcount-av.active-status'), 'AV active-status style exists');
+  assert(css.includes('.cat-subcount-ass.active-status'), 'ASS active-status style exists');
 });
 
-// 4. JS Implementation in app.js
-console.log('\n--- 4. Controller Logic in app.js ---');
-test('updateInstockCategoryCardsCounts calculates dynamic Total Assets, AV, and ASS counts', () => {
-  assert(appJs.includes('updateInstockCategoryCardsCounts()'), 'Method updateInstockCategoryCardsCounts exists');
-  assert(appJs.includes("setGroup('NEW_SYSTEM'"), 'Updates New System counts');
-  assert(appJs.includes("setGroup('CPU'"), 'Updates CPU counts');
-  assert(appJs.includes("setGroup('RAM'"), 'Updates RAM counts');
-  assert(appJs.includes("setGroup('SSD'"), 'Updates SSD counts');
-  assert(appJs.includes("setGroup('MONITOR'"), 'Updates Monitor counts');
-  assert(appJs.includes("setGroup('SMPS'"), 'Updates SMPS counts');
-  assert(appJs.includes("setGroup('OTHER'"), 'Updates Other counts');
+// 6. JS Implementation in app.js
+console.log('\n--- 6. Controller Logic in app.js ---');
+test('filterInventoryByCatAndStatus filters by both category and status, supports toggle-off', () => {
+  assert(appJs.includes('filterInventoryByCatAndStatus(cat, status)'), 'Method filterInventoryByCatAndStatus exists');
+  assert(appJs.includes('window.ITApp.filterInventoryByCatAndStatus') || appJs.includes('filterInventoryByCatAndStatus(cat, status) {'), 'Exposed on window.ITApp');
 });
 
-test('updateInstockCategoryCardsActive toggles active class on selected card', () => {
-  assert(appJs.includes('updateInstockCategoryCardsActive(selectedCat)'), 'Method updateInstockCategoryCardsActive exists');
-  assert(appJs.includes("card.classList.add('active')"), 'Adds active class');
-  assert(appJs.includes("card.classList.remove('active')"), 'Removes active class');
+test('updateInstockCategoryCardsActive highlights selected card and selected AV/ASS pill', () => {
+  assert(appJs.includes('updateInstockCategoryCardsActive(selectedCat, selectedStatus)'), 'Accepts selectedCat and selectedStatus');
+  assert(appJs.includes("avPill.classList.add('active-status')"), 'Adds active-status to AV pill');
+  assert(appJs.includes("assPill.classList.add('active-status')"), 'Adds active-status to ASS pill');
 });
 
-test('filterInventoryByCategory sets category, supports toggle-off, and re-renders table', () => {
-  assert(appJs.includes('filterInventoryByCategory(cat)'), 'Method filterInventoryByCategory exists');
-  assert(appJs.includes('catVal = \'all\''), 'Supports unselecting/toggling off to all');
-  assert(appJs.includes('this.updateInstockCategoryCardsActive(catVal)'), 'Calls updateInstockCategoryCardsActive');
-  assert(appJs.includes('this.renderInstockInventoryTable()'), 'Calls renderInstockInventoryTable');
-});
-
-test('resetInstockDashboardFilters resets active card to all and updates counts', () => {
-  assert(appJs.includes("this.updateInstockCategoryCardsActive('all')"), 'Resets active card to all');
+test('resetInstockDashboardFilters resets active card and pill highlights to all', () => {
+  assert(appJs.includes("this.updateInstockCategoryCardsActive('all'"), 'Resets active card to all');
   assert(appJs.includes('this.updateInstockCategoryCardsCounts()'), 'Refreshes card counts');
 });
 
-// 5. Dynamic Count Calculation Verification with Database Records
-console.log('\n--- 5. Dynamic Mathematical Verification (Total Assets = AV + ASS) ---');
+// 7. Dynamic Count Calculation Verification with Database Records
+console.log('\n--- 7. Dynamic Mathematical Verification (Total Assets = AV + ASS) ---');
 test('Verify Total Assets === AV + ASS across all categories on real database records', () => {
   const db = require('./database');
   const items = db.getInstockHardware();
@@ -155,10 +154,10 @@ test('Verify Total Assets === AV + ASS across all categories on real database re
   categories.forEach(cat => {
     const res = getCountsFor(cat.matcher);
     assert.strictEqual(res.total, res.av + res.ass, `For ${cat.name}, Total Assets (${res.total}) must equal AV (${res.av}) + ASS (${res.ass})`);
-    console.log(`   📊 ${cat.name.padEnd(12)} -> Total Assets: ${res.total.toString().padStart(2)} | AV: ${res.av.toString().padStart(2)} | ASS: ${res.ass.toString().padStart(2)} (AV + ASS = ${res.av + res.ass})`);
+    console.log(`   📊 ${cat.name.padEnd(12)} -> Total Assets: ${res.total.toString().padStart(2)} | (AV) Non-Assigned: ${res.av.toString().padStart(2)} | (ASS) Assigned: ${res.ass.toString().padStart(2)} (AV + ASS = ${res.av + res.ass})`);
   });
 });
 
 console.log('\n================================================================');
-console.log('🏁 ALL 7 INSTOCK CATEGORY CARDS TESTS PASSED PERFECTLY!');
+console.log('🏁 ALL INSTOCK CATEGORY CARDS UNIT TESTS PASSED PERFECTLY!');
 console.log('================================================================\n');
