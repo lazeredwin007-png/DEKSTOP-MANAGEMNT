@@ -7,8 +7,8 @@ console.log('🧪 VERIFYING COMPLETE INSTOCK UI REDESIGN SPECIFICATION');
 console.log('================================================================\n');
 
 const html = fs.readFileSync('index.html', 'utf8');
-const appJs = fs.readFileSync('app.js', 'utf8');
-const css = fs.readFileSync('styles.css', 'utf8');
+const appJs = fs.readFileSync('app.js', 'utf8').replace(/\r\n/g, '\n');
+const css = fs.readFileSync('styles.css', 'utf8').replace(/\r\n/g, '\n');
 
 let passed = 0;
 let total = 0;
