@@ -8473,19 +8473,45 @@ Remarks: ${r.remark || 'None'}`);
       const items = this.getInstockItems();
       const total = items.length;
 
-      const cpuCount = items.filter(i => (i.component_type || '').toUpperCase() === 'CPU').length;
-      const ramCount = items.filter(i => (i.component_type || '').toUpperCase() === 'RAM').length;
-      const ssdCount = items.filter(i => (i.component_type || '').toUpperCase() === 'SSD').length;
-      const monitorCount = items.filter(i => (i.component_type || '').toUpperCase() === 'MONITOR').length;
-      const smpsCount = items.filter(i => (i.component_type || '').toUpperCase() === 'SMPS').length;
-      const newSysCount = items.filter(i => {
+      const getCountsFor = (matcher) => {
+        const catItems = items.filter(matcher);
+        const catTotal = catItems.length;
+        const catAss = catItems.filter(i => (i.status || '') === 'Assigned').length;
+        const catAv = catTotal - catAss;
+        return { total: catTotal, av: catAv, ass: catAss };
+      };
+
+      const newSys = getCountsFor(i => {
         const ct = (i.component_type || '').toUpperCase();
         return ct === 'NEW SYSTEM' || ct === 'NEW_SYSTEM';
-      }).length;
-      const otherCount = items.filter(i => {
+      });
+
+      const cpu = getCountsFor(i => {
         const ct = (i.component_type || '').toUpperCase();
-        return !['CPU', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'NEW SYSTEM', 'NEW_SYSTEM'].includes(ct);
-      }).length;
+        return ct === 'CPU' || ct === 'PROCESSOR';
+      });
+
+      const ram = getCountsFor(i => (i.component_type || '').toUpperCase() === 'RAM');
+      const ssd = getCountsFor(i => (i.component_type || '').toUpperCase() === 'SSD');
+      const monitor = getCountsFor(i => (i.component_type || '').toUpperCase() === 'MONITOR');
+      const smps = getCountsFor(i => (i.component_type || '').toUpperCase() === 'SMPS');
+
+      const other = getCountsFor(i => {
+        const ct = (i.component_type || '').toUpperCase();
+        return !['CPU', 'PROCESSOR', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'NEW SYSTEM', 'NEW_SYSTEM'].includes(ct);
+      });
+
+      const setGroup = (key, data) => {
+        const totalEl = document.getElementById(`instockCatCount_${key}_total`);
+        const badgeEl = document.getElementById(`instockCatCount_${key}`);
+        const avEl = document.getElementById(`instockCatCount_${key}_av`);
+        const assEl = document.getElementById(`instockCatCount_${key}_ass`);
+
+        if (totalEl) totalEl.textContent = data.total;
+        if (badgeEl) badgeEl.textContent = data.total;
+        if (avEl) avEl.textContent = data.av;
+        if (assEl) assEl.textContent = data.ass;
+      };
 
       const setVal = (id, val) => {
         const el = document.getElementById(id);
@@ -8493,13 +8519,13 @@ Remarks: ${r.remark || 'None'}`);
       };
 
       setVal('instockCatCount_all', total);
-      setVal('instockCatCount_CPU', cpuCount);
-      setVal('instockCatCount_RAM', ramCount);
-      setVal('instockCatCount_SSD', ssdCount);
-      setVal('instockCatCount_MONITOR', monitorCount);
-      setVal('instockCatCount_SMPS', smpsCount);
-      setVal('instockCatCount_OTHER', otherCount);
-      setVal('instockCatCount_NEW_SYSTEM', newSysCount);
+      setGroup('NEW_SYSTEM', newSys);
+      setGroup('CPU', cpu);
+      setGroup('RAM', ram);
+      setGroup('SSD', ssd);
+      setGroup('MONITOR', monitor);
+      setGroup('SMPS', smps);
+      setGroup('OTHER', other);
     }
 
     updateInstockCategoryCardsActive(selectedCat) {
@@ -8509,13 +8535,13 @@ Remarks: ${r.remark || 'None'}`);
 
       const cardMap = {
         'all': 'instockCatCard_all',
+        'NEW SYSTEM': 'instockCatCard_NEW_SYSTEM',
         'CPU': 'instockCatCard_CPU',
         'RAM': 'instockCatCard_RAM',
         'SSD': 'instockCatCard_SSD',
         'MONITOR': 'instockCatCard_MONITOR',
         'SMPS': 'instockCatCard_SMPS',
-        'OTHER': 'instockCatCard_OTHER',
-        'NEW SYSTEM': 'instockCatCard_NEW_SYSTEM'
+        'OTHER': 'instockCatCard_OTHER'
       };
 
       let normKey = 'all';
@@ -8532,7 +8558,7 @@ Remarks: ${r.remark || 'None'}`);
       Object.entries(cardMap).forEach(([k, cardId]) => {
         const card = document.getElementById(cardId);
         if (card) {
-          if (k === normKey) {
+          if (normKey !== 'all' && k === normKey) {
             card.classList.add('active');
           } else {
             card.classList.remove('active');
@@ -8574,8 +8600,8 @@ Remarks: ${r.remark || 'None'}`);
         'NEW SYSTEM': '🖥️'
       };
 
-      // Specified order: All Categories, CPU, RAM, SSD, Monitor, SMPS, Other, NEW SYSTEM
-      const standardOrder = ['CPU', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'OTHER', 'NEW SYSTEM'];
+      // Specified order: All Categories, New System, Processor, RAM, SSD, Monitor, SMPS, Other
+      const standardOrder = ['NEW SYSTEM', 'CPU', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'OTHER'];
       const extraCategories = Array.from(categorySet).filter(c => !standardOrder.includes(c)).sort();
       const allCategories = [...standardOrder.filter(c => categorySet.has(c)), ...extraCategories];
 
@@ -8612,6 +8638,11 @@ Remarks: ${r.remark || 'None'}`);
       if (catVal.toUpperCase() === 'NEW_SYSTEM' || catVal.toUpperCase() === 'NEWSYSTEM') catVal = 'NEW SYSTEM';
 
       const catSelect = document.getElementById('instockInventoryCategoryFilter');
+      // Toggle feature: if clicking currently active category, toggle off to 'all'
+      if (catSelect && catSelect.value.toUpperCase() === catVal.toUpperCase() && catVal !== 'all') {
+        catVal = 'all';
+      }
+
       if (catSelect) {
         catSelect.value = catVal;
       }
@@ -8649,8 +8680,19 @@ Remarks: ${r.remark || 'None'}`);
       const dateTo = dateToInput?.value || '';
 
       const filtered = items.filter(item => {
-        if (catVal !== 'all' && (item.component_type || '').toUpperCase() !== catVal.toUpperCase()) {
-          return false;
+        if (catVal !== 'all') {
+          const itemType = (item.component_type || '').toUpperCase();
+          const target = catVal.toUpperCase();
+          if (target === 'CPU' || target === 'PROCESSOR') {
+            if (itemType !== 'CPU' && itemType !== 'PROCESSOR') return false;
+          } else if (target === 'NEW SYSTEM' || target === 'NEW_SYSTEM') {
+            if (itemType !== 'NEW SYSTEM' && itemType !== 'NEW_SYSTEM') return false;
+          } else if (target === 'OTHER') {
+            const known = ['CPU', 'PROCESSOR', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'NEW SYSTEM', 'NEW_SYSTEM'];
+            if (known.includes(itemType)) return false;
+          } else if (itemType !== target) {
+            return false;
+          }
         }
         if (statVal !== 'all') {
           const itemStatus = item.status || 'Available';

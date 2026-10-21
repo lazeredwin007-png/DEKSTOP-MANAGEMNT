@@ -4903,11 +4903,11 @@ a[href="#non-it-assets"],
   }
 }
 
-/* Instock Clickable Category Cards with Click-to-Filter */
+/* Instock Clickable Category Cards with Click-to-Filter (7 Strictly Ordered Cards) */
 .instock-category-cards-grid {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
   margin-bottom: 20px;
 }
 
@@ -4932,23 +4932,23 @@ a[href="#non-it-assets"],
 .instock-category-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 10px 12px;
+  border-radius: 12px;
+  padding: 12px 14px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: space-between;
   gap: 8px;
   cursor: pointer;
-  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .instock-category-card:hover {
   border-color: #93c5fd;
   background: #f8fafc;
-  transform: translateY(-1.5px);
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
 }
 
 .instock-category-card:active {
@@ -4959,7 +4959,14 @@ a[href="#non-it-assets"],
 .instock-category-card.active {
   background: #eff6ff;
   border-color: #2563eb;
-  box-shadow: 0 0 0 1.5px #2563eb, 0 4px 12px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 0 0 1.5px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.12);
+}
+
+.instock-category-card .cat-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
 .instock-category-card .cat-card-left {
@@ -4970,9 +4977,9 @@ a[href="#non-it-assets"],
 }
 
 .instock-category-card .cat-card-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -4985,6 +4992,11 @@ a[href="#non-it-assets"],
 .instock-category-card .cat-card-icon.cat-icon-all {
   background: #eff6ff;
   color: #2563eb;
+}
+
+.instock-category-card .cat-card-icon.cat-icon-new-system {
+  background: #e0e7ff;
+  color: #4338ca;
 }
 
 .instock-category-card .cat-card-icon.cat-icon-cpu {
@@ -5017,18 +5029,13 @@ a[href="#non-it-assets"],
   color: #475569;
 }
 
-.instock-category-card .cat-card-icon.cat-icon-new-system {
-  background: #e0e7ff;
-  color: #4338ca;
-}
-
 .instock-category-card.active .cat-card-icon {
   background: #2563eb !important;
   color: #ffffff !important;
 }
 
 .instock-category-card .cat-card-title {
-  font-size: 0.84rem;
+  font-size: 0.86rem;
   font-weight: 700;
   color: #1e293b;
   white-space: nowrap;
@@ -5041,6 +5048,85 @@ a[href="#non-it-assets"],
 .instock-category-card.active .cat-card-title {
   color: #1d4ed8;
   font-weight: 800;
+}
+
+/* Total Assets Row */
+.instock-category-card .cat-card-total-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 4px 0 2px 0;
+  border-top: 1px dashed #f1f5f9;
+}
+
+.instock-category-card.active .cat-card-total-row {
+  border-top-color: #dbeafe;
+}
+
+.instock-category-card .cat-stat-label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: capitalize;
+}
+
+.instock-category-card .cat-stat-total {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.instock-category-card.active .cat-stat-total {
+  color: #1d4ed8;
+}
+
+/* AV & ASS Subcounts Row */
+.instock-category-card .cat-card-subcounts {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.instock-category-card .cat-subcount-pill {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 6px;
+  border-radius: 6px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.instock-category-card .cat-subcount-pill strong {
+  font-weight: 800;
+}
+
+.instock-category-card .cat-subcount-av {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.instock-category-card .cat-subcount-ass {
+  background: #faf5ff;
+  color: #6b21a8;
+  border: 1px solid #e9d5ff;
+}
+
+.instock-category-card.active .cat-subcount-av {
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
+.instock-category-card.active .cat-subcount-ass {
+  background: #f3e8ff;
+  border-color: #d8b4fe;
 }
 
 .instock-category-card .cat-card-badge {
