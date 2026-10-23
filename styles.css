@@ -2202,6 +2202,17 @@ textarea.form-control {
   transform: translateY(1px);
 }
 
+.login-quick-btn:hover {
+  background: rgba(37, 99, 235, 0.3) !important;
+  border-color: rgba(96, 165, 250, 0.6) !important;
+  color: #93c5fd !important;
+  transform: translateY(-1px);
+}
+
+.login-quick-btn:active {
+  transform: translateY(1px);
+}
+
 /* Quick Demo Role Presets */
 .login-presets-section {
   margin-top: 24px;
@@ -2221,7 +2232,7 @@ textarea.form-control {
 
 .login-preset-btns {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
 
@@ -4932,23 +4943,26 @@ a[href="#non-it-assets"],
 .instock-category-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 12px 14px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  min-height: 124px;
+  height: 100%;
+  box-sizing: border-box;
   gap: 8px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .instock-category-card:hover {
-  border-color: #93c5fd;
+  border-color: #cbd5e1;
   background: #f8fafc;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
 .instock-category-card:active {
@@ -4959,13 +4973,13 @@ a[href="#non-it-assets"],
 .instock-category-card.active {
   background: #eff6ff;
   border-color: #2563eb;
-  box-shadow: 0 0 0 1.5px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 0 0 1.5px #2563eb, 0 3px 10px rgba(37, 99, 235, 0.12);
 }
 
 .instock-category-card .cat-card-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -4979,14 +4993,14 @@ a[href="#non-it-assets"],
 .instock-category-card .cat-card-icon {
   width: 28px;
   height: 28px;
-  border-radius: 7px;
+  border-radius: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   background: #f1f5f9;
   color: #475569;
-  transition: all 0.18s ease;
+  transition: all 0.15s ease;
 }
 
 .instock-category-card .cat-card-icon.cat-icon-all {
@@ -5035,14 +5049,14 @@ a[href="#non-it-assets"],
 }
 
 .instock-category-card .cat-card-title {
-  font-size: 0.92rem;
-  font-weight: 800;
-  color: #0f172a;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1e293b;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   letter-spacing: -0.01em;
-  transition: color 0.18s ease;
+  transition: color 0.15s ease;
 }
 
 .instock-category-card.active .cat-card-title {
@@ -5056,7 +5070,7 @@ a[href="#non-it-assets"],
   align-items: baseline;
   justify-content: space-between;
   padding: 4px 0 2px 0;
-  border-top: 1px dashed #f1f5f9;
+  border-top: 1px solid #f1f5f9;
 }
 
 .instock-category-card.active .cat-card-total-row {
@@ -5064,14 +5078,14 @@ a[href="#non-it-assets"],
 }
 
 .instock-category-card .cat-stat-label {
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: #64748b;
   text-transform: capitalize;
 }
 
 .instock-category-card .cat-stat-total {
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 800;
   color: #0f172a;
   line-height: 1;
@@ -5085,7 +5099,7 @@ a[href="#non-it-assets"],
 .instock-category-card .cat-card-subcounts {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
   margin-top: 4px;
 }
 
@@ -5095,13 +5109,13 @@ a[href="#non-it-assets"],
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  font-size: 0.72rem;
+  font-size: 0.71rem;
   font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 3.5px 7px;
+  border-radius: 5px;
   line-height: 1.25;
   cursor: pointer;
-  transition: all 0.16s ease;
+  transition: all 0.15s ease;
   border: 1px solid transparent;
   outline: none;
   font-family: inherit;
@@ -5110,7 +5124,7 @@ a[href="#non-it-assets"],
 
 .instock-category-card .cat-subcount-pill strong {
   font-weight: 800;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
 }
 
 .instock-category-card .cat-subcount-av {
@@ -5122,14 +5136,13 @@ a[href="#non-it-assets"],
 .instock-category-card .cat-subcount-av:hover {
   background: #dcfce7;
   border-color: #86efac;
-  transform: translateY(-0.5px);
 }
 
 .instock-category-card .cat-subcount-av.active-status {
   background: #16a34a !important;
   color: #ffffff !important;
   border-color: #15803d !important;
-  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.25);
 }
 
 .instock-category-card .cat-subcount-av.active-status strong {
@@ -5145,14 +5158,13 @@ a[href="#non-it-assets"],
 .instock-category-card .cat-subcount-ass:hover {
   background: #f3e8ff;
   border-color: #d8b4fe;
-  transform: translateY(-0.5px);
 }
 
 .instock-category-card .cat-subcount-ass.active-status {
   background: #7c3aed !important;
   color: #ffffff !important;
   border-color: #6d28d9 !important;
-  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3);
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25);
 }
 
 .instock-category-card .cat-subcount-ass.active-status strong {
@@ -5196,19 +5208,20 @@ a[href="#non-it-assets"],
 }
 
 #instockInventoryTable th {
-  padding: 12px 16px;
-  font-size: 0.78rem;
+  padding: 12px 14px;
+  font-size: 0.76rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   background: #f8fafc;
   color: #475569;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 #instockInventoryTable td {
-  padding: 14px 16px;
+  padding: 12px 14px;
   vertical-align: middle;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   color: #1e293b;
   border-bottom: 1px solid #f1f5f9;
 }
@@ -5228,20 +5241,23 @@ a[href="#non-it-assets"],
   background: #ffffff;
   color: #475569;
   cursor: pointer;
-  transition: all 0.15s ease;
-  font-size: 0.95rem;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
 }
 
 .instock-action-btn:hover {
   background: #eff6ff;
-  border-color: #bfdbfe;
+  border-color: #93c5fd;
   color: #2563eb;
+  transform: translateY(-1px);
 }
 
-.instock-action-btn.delete:hover {
+.instock-action-btn.instock-action-delete:hover,
+.instock-action-btn[title="Delete Asset"]:hover {
   background: #fef2f2;
-  border-color: #fecaca;
+  border-color: #fca5a5;
   color: #dc2626;
+  transform: translateY(-1px);
 }
 
 .btn-link-asset {
@@ -5258,5 +5274,403 @@ a[href="#non-it-assets"],
   text-decoration: underline;
 }
 
+/* ==========================================================================
+   HARDWARE INVENTORY RECORDS - COMPACT EYE VIEW MODAL STYLING
+   ========================================================================== */
+.modal-dialog.eye-view-compact-dialog {
+  max-width: 620px !important;
+  width: 95vw !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+}
 
+.eye-view-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
 
+@media (max-width: 560px) {
+  .eye-view-details-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .eye-view-detail-card.span-2 {
+    grid-column: span 1 !important;
+  }
+}
+
+.eye-view-detail-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.eye-view-detail-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.eye-view-detail-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.eye-view-detail-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  word-break: break-word;
+  line-height: 1.35;
+}
+
+.eye-view-warranty-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  line-height: 1.3;
+}
+
+/* ==========================================================================
+   THEME TOGGLE SWITCH & DAY / NIGHT MODE SYSTEM
+   ========================================================================== */
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 6px 13px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.theme-toggle-btn:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.06);
+}
+
+.theme-toggle-btn:active {
+  transform: translateY(0);
+}
+
+.theme-toggle-icon-dark svg,
+.theme-toggle-icon-light svg {
+  display: block;
+}
+
+/* Specification Details compact badge styling */
+.spec-details-compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+
+.spec-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  padding: 2.5px 7px;
+  font-size: 0.74rem;
+  color: #334155;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.spec-pill strong {
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+}
+
+/* ==========================================================================
+   DARK THEME SYSTEM TOKENS & ELEMENT STYLING
+   ========================================================================== */
+:root[data-theme="dark"],
+[data-theme="dark"],
+body.dark-theme {
+  --bg-body: #0b0f19;
+  --bg-card: #111827;
+  --bg-input: #1e293b;
+  --bg-subtle: #1e293b;
+  --bg-hover: #1f2937;
+
+  --border-color: #334155;
+  --border-focus: #3b82f6;
+
+  --text-main: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
+
+  --sidebar-bg: #090d16;
+  --sidebar-hover: #131c2e;
+  --sidebar-active: #1d4ed8;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-text: #94a3b8;
+  --sidebar-text-bright: #f8fafc;
+  --sidebar-heading: #64748b;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 2px 6px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-modal: 0 20px 30px rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="dark"] body,
+body.dark-theme {
+  background-color: #0b0f19;
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .app-container {
+  background-color: #0b0f19;
+}
+
+[data-theme="dark"] .main-content,
+[data-theme="dark"] .app-main,
+[data-theme="dark"] .content-area,
+[data-theme="dark"] .view-container {
+  background-color: #0b0f19;
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .top-header {
+  background-color: #111827;
+  border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .current-page-title,
+[data-theme="dark"] .header-page-info h1,
+[data-theme="dark"] .header-page-info h2 {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .card,
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .table-container,
+[data-theme="dark"] .filter-card,
+[data-theme="dark"] .section-card,
+[data-theme="dark"] .instock-category-card,
+[data-theme="dark"] .eye-view-detail-card,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .summary-card {
+  background-color: #111827 !important;
+  border-color: #334155 !important;
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .instock-category-card {
+  background-color: #111827 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .instock-category-card:hover {
+  background-color: #1a2234 !important;
+  border-color: #475569 !important;
+}
+
+[data-theme="dark"] .instock-category-card.active {
+  background-color: #1e293b !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 1.5px #3b82f6, 0 3px 10px rgba(59, 130, 246, 0.25) !important;
+}
+
+[data-theme="dark"] .instock-category-card .cat-card-title {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .instock-category-card .cat-stat-total {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .instock-category-card .cat-card-total-row {
+  border-top-color: #334155;
+}
+
+[data-theme="dark"] .data-table {
+  background-color: #111827;
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .data-table thead tr {
+  background-color: #1e293b !important;
+  color: #cbd5e1 !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .data-table th {
+  background-color: #1e293b !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .data-table td {
+  border-color: #1e293b;
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .data-table tbody tr:hover {
+  background-color: #1a2234 !important;
+}
+
+[data-theme="dark"] .data-table code {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="date"],
+[data-theme="dark"] input[type="search"],
+[data-theme="dark"] input[type="password"],
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus,
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
+}
+
+[data-theme="dark"] .modal-dialog {
+  background-color: #111827;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .modal-body {
+  background-color: #111827 !important;
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-footer {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .modal-section-box {
+  background-color: #1a2234 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .modal-section-box.hardware-accent {
+  background-color: rgba(30, 58, 138, 0.2) !important;
+  border-color: rgba(59, 130, 246, 0.35) !important;
+}
+
+[data-theme="dark"] .modal-section-title {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .form-label {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .theme-toggle-btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .theme-toggle-btn:hover {
+  background: #334155;
+  border-color: #475569;
+}
+
+[data-theme="dark"] .date-badge,
+[data-theme="dark"] .notification-btn,
+[data-theme="dark"] .admin-profile {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .admin-name {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .notification-popover,
+[data-theme="dark"] .spotlight-results-dropdown,
+[data-theme="dark"] .dropdown-menu {
+  background-color: #111827;
+  border-color: #334155;
+  color: #f8fafc;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .btn-secondary {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+  background-color: #334155;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .spec-details-compact .spec-pill {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .spec-details-compact .spec-pill strong {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .eye-view-detail-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .eye-view-detail-value {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .eye-view-detail-label {
+  color: #94a3b8 !important;
+}

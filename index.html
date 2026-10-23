@@ -12,6 +12,26 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="styles.css?v=20261020-premium-v3">
+
+  <script>
+    // Immediate auth & theme check before rendering to prevent flicker
+    (function() {
+      try {
+        var savedTheme = localStorage.getItem('it_asset_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        if (savedTheme === 'dark') {
+          document.documentElement.classList.add('dark-theme');
+        }
+        var isAuth = localStorage.getItem('it_asset_auth_active') === 'true' || sessionStorage.getItem('it_asset_auth_active') === 'true';
+        if (isAuth) {
+          var s = document.createElement('style');
+          s.id = 'instantAuthStyle';
+          s.innerHTML = '#loginWrapper { display: none !important; } #appContainer { display: flex !important; }';
+          document.head.appendChild(s);
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
   <!-- ======================================================================
@@ -30,13 +50,13 @@
         <span id="loginErrorMessage">Invalid username or password.</span>
       </div>
 
-      <form id="portalLoginForm" onsubmit="window.ITApp.handleLoginSubmit(event)">
+      <form id="portalLoginForm" onsubmit="event.preventDefault(); return (window.ITApp && window.ITApp.handleLoginSubmit ? window.ITApp.handleLoginSubmit(event) : (window.emergencyLogin && window.emergencyLogin()));">
         <!-- Username -->
         <div class="login-form-group">
           <label class="login-label" for="loginUsername">Username / ID</label>
           <div class="login-input-wrapper">
             <span class="login-input-icon">👤</span>
-            <input type="text" class="login-input" id="loginUsername" placeholder="e.g. admin or support" required autofocus autocomplete="username" value="admin">
+            <input type="text" class="login-input" id="loginUsername" placeholder="e.g. admin or edwin" required autofocus autocomplete="username" value="admin">
           </div>
         </div>
 
@@ -46,7 +66,7 @@
           <div class="login-input-wrapper">
             <span class="login-input-icon">🔒</span>
             <input type="password" class="login-input" id="loginPassword" placeholder="Enter password" required autocomplete="current-password" value="admin">
-            <button type="button" class="login-pwd-toggle" id="loginPwdToggle" onclick="window.ITApp.togglePasswordVisibility()" title="Show/Hide Password" aria-label="Toggle password visibility">
+            <button type="button" class="login-pwd-toggle" id="loginPwdToggle" onclick="window.ITApp ? window.ITApp.togglePasswordVisibility() : null" title="Show/Hide Password" aria-label="Toggle password visibility">
               👁️
             </button>
           </div>
@@ -62,25 +82,34 @@
         </div>
 
         <!-- Submit Button -->
-        <button type="submit" class="login-submit-btn" id="loginSubmitBtn">
+        <button type="submit" class="login-submit-btn" id="loginSubmitBtn" onclick="event.preventDefault(); return (window.ITApp && window.ITApp.handleLoginSubmit ? window.ITApp.handleLoginSubmit(event) : (window.emergencyLogin && window.emergencyLogin()));">
           <span>Sign In to Dashboard</span>
           <span>→</span>
+        </button>
+
+        <!-- 1-Click Instant Login -->
+        <button type="button" class="login-quick-btn" onclick="window.emergencyLogin ? window.emergencyLogin() : (window.ITApp && window.ITApp.quickLogin('admin'))" style="width:100%; margin-top:10px; background:rgba(37,99,235,0.15); border:1px solid rgba(59,130,246,0.3); color:#60a5fa; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.85rem; transition:all 0.2s ease;">
+          <span>⚡ 1-Click Instant Login (SysAdmin)</span>
         </button>
       </form>
 
       <!-- Demo Role Presets for Quick Testing -->
       <div class="login-presets-section">
-        <div class="login-presets-title">Quick Role Credentials</div>
+        <div class="login-presets-title">Quick Role Credentials (Click to Sign In)</div>
         <div class="login-preset-btns">
-          <button type="button" class="login-preset-btn" onclick="window.ITApp.fillRolePreset('admin')" title="Fill Admin Credentials">
+          <button type="button" class="login-preset-btn" onclick="window.ITApp ? window.ITApp.fillRolePreset('edwin', true) : window.emergencyLogin('edwin')" title="Instant Login as Edwin (SysAdmin)">
+            <span>👑 Edwin</span>
+            <span class="login-preset-badge">edwin / admin</span>
+          </button>
+          <button type="button" class="login-preset-btn" onclick="window.ITApp ? window.ITApp.fillRolePreset('admin', true) : window.emergencyLogin('admin')" title="Instant Login as Admin">
             <span>👑 Admin</span>
             <span class="login-preset-badge">admin / admin</span>
           </button>
-          <button type="button" class="login-preset-btn" onclick="window.ITApp.fillRolePreset('support')" title="Fill IT Support Credentials">
-            <span>🛠️ IT Support</span>
+          <button type="button" class="login-preset-btn" onclick="window.ITApp ? window.ITApp.fillRolePreset('support', true) : window.emergencyLogin('support')" title="Instant Login as IT Support">
+            <span>🛠️ Support</span>
             <span class="login-preset-badge">support / support</span>
           </button>
-          <button type="button" class="login-preset-btn" onclick="window.ITApp.fillRolePreset('viewer')" title="Fill Read-Only Viewer Credentials">
+          <button type="button" class="login-preset-btn" onclick="window.ITApp ? window.ITApp.fillRolePreset('viewer', true) : window.emergencyLogin('viewer')" title="Instant Login as Viewer">
             <span>👁️ Viewer</span>
             <span class="login-preset-badge">viewer / viewer</span>
           </button>
@@ -88,6 +117,58 @@
       </div>
     </div>
   </div>
+
+  <script>
+    // Bulletproof fallback so user is NEVER blocked by login
+    window.emergencyLogin = function(roleKey) {
+      roleKey = (roleKey || 'admin').toLowerCase();
+      var isEdwin = roleKey === 'edwin';
+      var user = {
+        id: isEdwin ? 'usr_edwin' : (roleKey === 'support' ? 'usr_support' : roleKey === 'viewer' ? 'usr_viewer' : 'usr_admin'),
+        username: isEdwin ? 'edwin' : roleKey,
+        displayName: isEdwin ? 'Edwin (SysAdmin)' : roleKey === 'support' ? 'IT Support Engineer' : roleKey === 'viewer' ? 'Asset Auditor / Viewer' : 'Sundar Pichai (SysAdmin)',
+        role: roleKey === 'viewer' ? 'Viewer' : roleKey === 'support' ? 'IT Support' : 'Admin',
+        avatar: isEdwin ? 'ED' : roleKey === 'support' ? 'IT' : roleKey === 'viewer' ? 'VW' : 'SP',
+        permissions: {
+          manageUsers: roleKey !== 'viewer' && roleKey !== 'support',
+          editAssets: roleKey !== 'viewer',
+          deleteAssets: roleKey === 'admin' || isEdwin,
+          assignSystems: roleKey !== 'viewer',
+          systemSwap: roleKey !== 'viewer',
+          repairs: roleKey !== 'viewer',
+          warranty: roleKey !== 'viewer',
+          network: roleKey !== 'viewer',
+          antivirus: roleKey !== 'viewer',
+          reports: true,
+          settings: roleKey === 'admin' || isEdwin,
+          exportImport: roleKey === 'admin' || isEdwin
+        }
+      };
+      try {
+        localStorage.setItem('it_asset_auth_active', 'true');
+        localStorage.setItem('it_asset_session_token', 'tok_direct_' + Date.now());
+        localStorage.setItem('it_asset_auth_user', JSON.stringify(user));
+      } catch (e) {}
+
+      var lw = document.getElementById('loginWrapper');
+      var ac = document.getElementById('appContainer');
+      if (lw) {
+        lw.style.setProperty('display', 'none', 'important');
+        lw.style.display = 'none';
+      }
+      if (ac) {
+        ac.style.setProperty('display', 'flex', 'important');
+        ac.style.display = 'flex';
+      }
+
+      if (window.ITAppControllerInstance) {
+        try {
+          window.ITAppControllerInstance.initAuthGuard();
+        } catch (e) {}
+      }
+      return false;
+    };
+  </script>
 
   <div class="app-container" id="appContainer" style="display: none;">
     <!-- ======================================================================
@@ -158,6 +239,11 @@
                 <li>
                   <a href="#swap-system" class="submenu-link" data-target-view="swap-system">
                     <span class="submenu-bullet"></span> Swap System
+                  </a>
+                </li>
+                <li>
+                  <a href="#asset-lifecycle-history" class="submenu-link" data-target-view="asset-lifecycle-history">
+                    <span class="submenu-bullet"></span> Asset Lifecycle History
                   </a>
                 </li>
                 <li style="display: none !important;">
@@ -432,6 +518,29 @@
             <span class="status-dot-pulse" style="width:7px; height:7px; background:#10b981;"></span>
             <span id="headerCurrentDate">Mon, Oct 5, 2026</span>
           </div>
+
+          <!-- Light Mode / Dark Mode Toggle Switch -->
+          <button type="button" class="theme-toggle-btn" id="themeToggleBtn" onclick="window.ITApp.toggleTheme()" title="Switch to Dark Mode" aria-label="Toggle Light / Dark Mode">
+            <span class="theme-toggle-icon-dark" aria-hidden="true" style="display:inline-flex; align-items:center;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+            </span>
+            <span class="theme-toggle-icon-light" aria-hidden="true" style="display:none; align-items:center;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+            </span>
+            <span class="theme-toggle-label" id="themeToggleLabel">Dark</span>
+          </button>
 
           <!-- Notification Bell with Popover -->
           <div style="position:relative;">
@@ -1897,25 +2006,8 @@
               </div>
             </div>
 
-            <!-- 5. Instock Inventory Section with Advanced 2-Row Filter Panel and Table -->
+            <!-- 5. Instock Inventory Section (Category Cards & Clean Inventory Table) -->
             <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:22px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
-              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; gap:12px;">
-                <div>
-                  <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a; margin:0; display:flex; align-items:center; gap:10px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#2563eb;">
-                      <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>
-                    </svg>
-                    <span>Hardware Inventory Records</span>
-                  </h3>
-                  <p style="font-size:0.82rem; color:#64748b; margin:4px 0 0 0;">Searchable and filterable real-time stock table</p>
-                </div>
-                <div style="display:flex; align-items:center; gap:10px;">
-                  <span id="instockInventoryCountBadge" class="badge" style="background:#eff6ff; color:#2563eb; font-weight:700; font-size:0.8rem; border:1px solid #bfdbfe; padding:6px 14px; border-radius:20px;">
-                    0 Items
-                  </span>
-                </div>
-              </div>
-
               <!-- Clickable Category Cards: Strictly Ordered (1. New System, 2. Processor, 3. RAM, 4. SSD, 5. Monitor, 6. SMPS, 7. Other) -->
               <div class="instock-category-cards-grid" id="instockCategoryCardsContainer">
                 <!-- Hidden legacy / all categories reference for backwards compatibility -->
@@ -1924,239 +2016,190 @@
                 <!-- 1. New System -->
                 <div class="instock-category-card" id="instockCatCard_NEW_SYSTEM" onclick="window.ITApp.filterInventoryByCategory('NEW SYSTEM')" role="button" tabindex="0" title="Filter by New System">
                   <div class="cat-card-header">
+                    <div class="cat-card-icon cat-icon-new-system">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="3" width="14" height="12" rx="2"/><path d="M6 18h6M9 15v3M19 5v14M22 8h-3M22 12h-3"/>
+                      </svg>
+                    </div>
                     <span class="cat-card-title">New System</span>
                   </div>
                   <div class="cat-card-total-row">
                     <span class="cat-stat-label">Total Assets:</span>
                     <strong class="cat-stat-total" id="instockCatCount_NEW_SYSTEM_total">0</strong>
                     <span id="instockCatCount_NEW_SYSTEM" style="display:none;">0</span>
-                  </div>
-                  <div class="cat-card-subcounts">
-                    <button type="button" class="cat-subcount-pill cat-subcount-av" id="instockCatPill_NEW_SYSTEM_av" onclick="event.stopPropagation(); window.ITApp.filterInventoryByCatAndStatus('NEW SYSTEM', 'Available')" title="Filter Available / Non-Assigned stock for New System">
-                      <span class="pill-label">(AV) Non-Assigned:</span>
-                      <strong id="instockCatCount_NEW_SYSTEM_av">0</strong>
-                    </button>
-                    <button type="button" class="cat-subcount-pill cat-subcount-ass" id="instockCatPill_NEW_SYSTEM_ass" onclick="event.stopPropagation(); window.ITApp.filterInventoryByCatAndStatus('NEW SYSTEM', 'Assigned')" title="Filter Assigned stock for New System">
-                      <span class="pill-label">(ASS) Assigned:</span>
-                      <strong id="instockCatCount_NEW_SYSTEM_ass">0</strong>
-                    </button>
+                    <span id="instockCatCount_NEW_SYSTEM_av" style="display:none;">0</span>
+                    <span id="instockCatCount_NEW_SYSTEM_ass" style="display:none;">0</span>
                   </div>
                 </div>
 
                 <!-- 2. Processor -->
                 <div class="instock-category-card" id="instockCatCard_CPU" onclick="window.ITApp.filterInventoryByCategory('CPU')" role="button" tabindex="0" title="Filter by Processor">
                   <div class="cat-card-header">
+                    <div class="cat-card-icon cat-icon-cpu">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/>
+                      </svg>
+                    </div>
                     <span class="cat-card-title">Processor</span>
                   </div>
                   <div class="cat-card-total-row">
                     <span class="cat-stat-label">Total Assets:</span>
                     <strong class="cat-stat-total" id="instockCatCount_CPU_total">0</strong>
                     <span id="instockCatCount_CPU" style="display:none;">0</span>
-                  </div>
-                  <div class="cat-card-subcounts">
-                    <button type="button" class="cat-subcount-pill cat-subcount-av" id="instockCatPill_CPU_av" onclick="event.stopPropagation(); window.ITApp.filterInventoryByCatAndStatus('CPU', 'Available')" title="Filter Available / Non-Assigned stock for Processor">
-                      <span class="pill-label">(AV) Non-Assigned:</span>
-                      <strong id="instockCatCount_CPU_av">0</strong>
-                    </button>
-                    <button type="button" class="cat-subcount-pill cat-subcount-ass" id="instockCatPill_CPU_ass" onclick="event.stopPropagation(); window.ITApp.filterInventoryByCatAndStatus('CPU', 'Assigned')" title="Filter Assigned stock for Processor">
-                      <span class="pill-label">(ASS) Assigned:</span>
-                      <strong id="instockCatCount_CPU_ass">0</strong>
-                    </button>
+                    <span id="instockCatCount_CPU_av" style="display:none;">0</span>
+                    <span id="instockCatCount_CPU_ass" style="display:none;">0</span>
                   </div>
                 </div>
 
                 <!-- 3. RAM -->
                 <div class="instock-category-card" id="instockCatCard_RAM" onclick="window.ITApp.filterInventoryByCategory('RAM')" role="button" tabindex="0" title="Filter by RAM">
                   <div class="cat-card-header">
+                    <div class="cat-card-icon cat-icon-ram">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 19v-3M10 19v-3M14 19v-3M18 19v-3M2 6h20v10H2z"/>
+                      </svg>
+                    </div>
                     <span class="cat-card-title">RAM</span>
                   </div>
                   <div class="cat-card-total-row">
                     <span class="cat-stat-label">Total Assets:</span>
                     <strong class="cat-stat-total" id="instockCatCount_RAM_total">0</strong>
                     <span id="instockCatCount_RAM" style="display:none;">0</span>
-                  </div>
-                  <div class="cat-card-subcounts">
-                    <button type="button" class="cat-subcount-pill cat-subcount-av" id="instockCatPill_RAM_av" onclick="event.stopPropagation(); window.ITApp.filterInventoryByCatAndStatus('RAM', 'Available')" title="Filter Available / Non-Assigned stock for RAM">
-                      <span class="pill-label">(AV) Non-Assigned:</span>
-                      <strong id="instockCatCount_RAM_av">0</strong>
-                    </button>
-                    <button type="button" class="cat-subcount-pill cat-subcount-ass" id="instockCatPill_RAM_ass" onclick="event.stopPropagation(); window.ITApp.filterInventoryByCatAndStatus('RAM', 'Assigned')" title="Filter Assigned stock for RAM">
-                      <span class="pill-label">(ASS) Assigned:</span>
-                      <strong id="instockCatCount_RAM_ass">0</strong>
-                    </button>
+                    <span id="instockCatCount_RAM_av" style="display:none;">0</span>
+                    <span id="instockCatCount_RAM_ass" style="display:none;">0</span>
                   </div>
                 </div>
 
                 <!-- 4. SSD -->
                 <div class="instock-category-card" id="instockCatCard_SSD" onclick="window.ITApp.filterInventoryByCategory('SSD')" role="button" tabindex="0" title="Filter by SSD">
                   <div class="cat-card-header">
+                    <div class="cat-card-icon cat-icon-ssd">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h2M7 12h2M7 16h2M17 12v.01"/>
+                      </svg>
+                    </div>
                     <span class="cat-card-title">SSD</span>
                   </div>
                   <div class="cat-card-total-row">
                     <span class="cat-stat-label">Total Assets:</span>
                     <strong class="cat-stat-total" id="instockCatCount_SSD_total">0</strong>
                     <span id="instockCatCount_SSD" style="display:none;">0</span>
-                  </div>
-                  <div class="cat-card-subcounts">
-                    <button type="button" class="cat-subcount-pill cat-subcount-av" id="instockCatPill_SSD_av" onclick="event.stopPropagation(); window.ITApp.filterInventoryByCatAndStatus('SSD', 'Available')" title="Filter Available / Non-Assigned stock for SSD">
-                      <span class="pill-label">(AV) Non-Assigned:</span>
-                      <strong id="instockCatCount_SSD_av">0</strong>
-                    </button>
-                    <button type="button" class="cat-subcount-pill cat-subcount-ass" id="instockCatPill_SSD_ass" onclick="event.stopPropagation(); window.ITApp.filterInventoryByCatAndStatus('SSD', 'Assigned')" title="Filter Assigned stock for SSD">
-                      <span class="pill-label">(ASS) Assigned:</span>
-                      <strong id="instockCatCount_SSD_ass">0</strong>
-                    </button>
+                    <span id="instockCatCount_SSD_av" style="display:none;">0</span>
+                    <span id="instockCatCount_SSD_ass" style="display:none;">0</span>
                   </div>
                 </div>
 
                 <!-- 5. Monitor -->
                 <div class="instock-category-card" id="instockCatCard_MONITOR" onclick="window.ITApp.filterInventoryByCategory('MONITOR')" role="button" tabindex="0" title="Filter by Monitor">
                   <div class="cat-card-header">
+                    <div class="cat-card-icon cat-icon-monitor">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>
+                      </svg>
+                    </div>
                     <span class="cat-card-title">Monitor</span>
                   </div>
                   <div class="cat-card-total-row">
                     <span class="cat-stat-label">Total Assets:</span>
                     <strong class="cat-stat-total" id="instockCatCount_MONITOR_total">0</strong>
                     <span id="instockCatCount_MONITOR" style="display:none;">0</span>
-                  </div>
-                  <div class="cat-card-subcounts">
-                    <button type="button" class="cat-subcount-pill cat-subcount-av" id="instockCatPill_MONITOR_av" onclick="event.stopPropagation(); window.ITApp.filterInventoryByCatAndStatus('MONITOR', 'Available')" title="Filter Available / Non-Assigned stock for Monitor">
-                      <span class="pill-label">(AV) Non-Assigned:</span>
-                      <strong id="instockCatCount_MONITOR_av">0</strong>
-                    </button>
-                    <button type="button" class="cat-subcount-pill cat-subcount-ass" id="instockCatPill_MONITOR_ass" onclick="event.stopPropagation(); window.ITApp.filterInventoryByCatAndStatus('MONITOR', 'Assigned')" title="Filter Assigned stock for Monitor">
-                      <span class="pill-label">(ASS) Assigned:</span>
-                      <strong id="instockCatCount_MONITOR_ass">0</strong>
-                    </button>
+                    <span id="instockCatCount_MONITOR_av" style="display:none;">0</span>
+                    <span id="instockCatCount_MONITOR_ass" style="display:none;">0</span>
                   </div>
                 </div>
 
                 <!-- 6. SMPS -->
                 <div class="instock-category-card" id="instockCatCard_SMPS" onclick="window.ITApp.filterInventoryByCategory('SMPS')" role="button" tabindex="0" title="Filter by SMPS">
                   <div class="cat-card-header">
+                    <div class="cat-card-icon cat-icon-smps">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                      </svg>
+                    </div>
                     <span class="cat-card-title">SMPS</span>
                   </div>
                   <div class="cat-card-total-row">
                     <span class="cat-stat-label">Total Assets:</span>
                     <strong class="cat-stat-total" id="instockCatCount_SMPS_total">0</strong>
                     <span id="instockCatCount_SMPS" style="display:none;">0</span>
-                  </div>
-                  <div class="cat-card-subcounts">
-                    <button type="button" class="cat-subcount-pill cat-subcount-av" id="instockCatPill_SMPS_av" onclick="event.stopPropagation(); window.ITApp.filterInventoryByCatAndStatus('SMPS', 'Available')" title="Filter Available / Non-Assigned stock for SMPS">
-                      <span class="pill-label">(AV) Non-Assigned:</span>
-                      <strong id="instockCatCount_SMPS_av">0</strong>
-                    </button>
-                    <button type="button" class="cat-subcount-pill cat-subcount-ass" id="instockCatPill_SMPS_ass" onclick="event.stopPropagation(); window.ITApp.filterInventoryByCatAndStatus('SMPS', 'Assigned')" title="Filter Assigned stock for SMPS">
-                      <span class="pill-label">(ASS) Assigned:</span>
-                      <strong id="instockCatCount_SMPS_ass">0</strong>
-                    </button>
+                    <span id="instockCatCount_SMPS_av" style="display:none;">0</span>
+                    <span id="instockCatCount_SMPS_ass" style="display:none;">0</span>
                   </div>
                 </div>
 
                 <!-- 7. Other -->
                 <div class="instock-category-card" id="instockCatCard_OTHER" onclick="window.ITApp.filterInventoryByCategory('OTHER')" role="button" tabindex="0" title="Filter by Other">
                   <div class="cat-card-header">
+                    <div class="cat-card-icon cat-icon-other">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+                      </svg>
+                    </div>
                     <span class="cat-card-title">Other</span>
                   </div>
                   <div class="cat-card-total-row">
                     <span class="cat-stat-label">Total Assets:</span>
                     <strong class="cat-stat-total" id="instockCatCount_OTHER_total">0</strong>
                     <span id="instockCatCount_OTHER" style="display:none;">0</span>
-                  </div>
-                  <div class="cat-card-subcounts">
-                    <button type="button" class="cat-subcount-pill cat-subcount-av" id="instockCatPill_OTHER_av" onclick="event.stopPropagation(); window.ITApp.filterInventoryByCatAndStatus('OTHER', 'Available')" title="Filter Available / Non-Assigned stock for Other">
-                      <span class="pill-label">(AV) Non-Assigned:</span>
-                      <strong id="instockCatCount_OTHER_av">0</strong>
-                    </button>
-                    <button type="button" class="cat-subcount-pill cat-subcount-ass" id="instockCatPill_OTHER_ass" onclick="event.stopPropagation(); window.ITApp.filterInventoryByCatAndStatus('OTHER', 'Assigned')" title="Filter Assigned stock for Other">
-                      <span class="pill-label">(ASS) Assigned:</span>
-                      <strong id="instockCatCount_OTHER_ass">0</strong>
-                    </button>
+                    <span id="instockCatCount_OTHER_av" style="display:none;">0</span>
+                    <span id="instockCatCount_OTHER_ass" style="display:none;">0</span>
                   </div>
                 </div>
               </div>
 
-              <!-- Advanced Filter Panel: 2-Row Spacious Layout -->
-              <div class="instock-filter-toolbar instock-filter-panel">
-                <!-- Row 1: Search and Status (Category Filter Handled by Cards Above) -->
-                <div class="instock-filter-row-1">
-                  <div class="instock-filter-field">
-                    <label for="instockInventorySearch" class="instock-filter-label">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                      <span>Search Inventory</span>
-                    </label>
-                    <div style="position:relative; width:100%;">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); pointer-events:none;">
-                        <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                      </svg>
-                      <input type="text" id="instockInventorySearch" class="form-control" placeholder="Search by Asset ID, Model, Spec, or Serial..." oninput="window.ITApp.filterInstockDashboard()" style="padding-left:38px; width:100%; border-radius:8px; font-size:0.86rem; height:40px; border:1px solid #cbd5e1; background:#ffffff;" aria-label="Search by Asset ID, Model, Spec, or Serial...">
-                    </div>
-                  </div>
-
-                  <div class="instock-filter-field">
-                    <label for="instockInventoryStatusFilter" class="instock-filter-label">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                      <span>Current Status</span>
-                    </label>
-                    <select id="instockInventoryStatusFilter" class="form-select" onchange="window.ITApp.filterInstockDashboard()" style="width:100%; height:40px; border-radius:8px; font-size:0.86rem; border:1px solid #cbd5e1; background:#ffffff;" aria-label="Filter by Status">
-                      <option value="all">All Status</option>
-                      <option value="Assigned">Assigned</option>
-                      <option value="Available">Non-Assigned</option>
-                    </select>
-                  </div>
-
-                  <!-- Hidden Category Dropdown for Full Test Compatibility & State Preservation -->
-                  <select id="instockInventoryCategoryFilter" style="display:none;" aria-hidden="true" onchange="window.ITApp.filterInstockDashboard()">
-                    <option value="all">📁 All Categories</option>
-                    <option value="CPU">💻 Processor</option>
-                    <option value="RAM">🧠 RAM</option>
-                    <option value="SSD">⚡ SSD</option>
-                    <option value="MONITOR">🖥️ Monitor</option>
-                    <option value="SMPS">🔌 SMPS</option>
-                    <option value="OTHER">🧰 Other</option>
-                    <option value="NEW SYSTEM">🖥️ New System</option>
-                  </select>
+              <!-- Hardware Inventory Records Section Header -->
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-top:20px; margin-bottom:16px; flex-wrap:wrap; gap:12px; padding-top:18px; border-top:1px solid #f1f5f9;">
+                <div>
+                  <h3 style="font-size:1.05rem; font-weight:700; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#2563eb;">
+                      <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>
+                    </svg>
+                    <span>Hardware Inventory Records</span>
+                  </h3>
+                  <p style="font-size:0.8rem; color:#64748b; margin:3px 0 0 0;">Searchable and filterable real-time stock table</p>
                 </div>
-
-                <!-- Row 2: Purchase Date From, Purchase Date To, Reset Button -->
-                <div class="instock-filter-row-2">
-                  <div class="instock-filter-field">
-                    <label for="instockFilterDateFrom" class="instock-filter-label">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                      <span>Purchase Date From</span>
-                    </label>
-                    <input type="date" id="instockFilterDateFrom" class="form-control" title="From Purchase Date" onchange="window.ITApp.filterInstockDashboard()" style="height:40px; border-radius:8px; font-size:0.86rem; border:1px solid #cbd5e1; background:#ffffff; padding:0 12px; width:100%;" aria-label="From Date">
-                  </div>
-
-                  <div class="instock-filter-field">
-                    <label for="instockFilterDateTo" class="instock-filter-label">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                      <span>Purchase Date To</span>
-                    </label>
-                    <input type="date" id="instockFilterDateTo" class="form-control" title="To Purchase Date" onchange="window.ITApp.filterInstockDashboard()" style="height:40px; border-radius:8px; font-size:0.86rem; border:1px solid #cbd5e1; background:#ffffff; padding:0 12px; width:100%;" aria-label="To Date">
-                  </div>
-
-                  <div style="display:flex; align-items:flex-end;">
-                    <button type="button" class="btn btn-secondary" onclick="window.ITApp.resetInstockDashboardFilters()" title="Reset Filters" style="height:40px; padding:0 20px; border-radius:8px; font-weight:700; font-size:0.86rem; border:1px solid #cbd5e1; background:#ffffff; color:#334155; display:inline-flex; align-items:center; gap:8px; cursor:pointer; white-space:nowrap;">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                      <span>Reset Filters</span>
-                    </button>
-                  </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span id="instockInventoryCountBadge" class="badge" style="background:#eff6ff; color:#2563eb; font-weight:700; font-size:0.78rem; border:1px solid #bfdbfe; padding:5px 12px; border-radius:9999px;">
+                    0 Items
+                  </span>
                 </div>
+              </div>
+
+              <!-- Filter state preservation (display:none !important; zero visual footprint) -->
+              <div style="display:none !important;" aria-hidden="true">
+                <input type="text" id="instockInventorySearch" value="">
+                <select id="instockInventoryStatusFilter">
+                  <option value="all">All Status</option>
+                  <option value="Assigned">Assigned</option>
+                  <option value="Available">Non-Assigned</option>
+                </select>
+                <select id="instockInventoryCategoryFilter">
+                  <option value="all">📁 All Categories</option>
+                  <option value="CPU">💻 Processor</option>
+                  <option value="RAM">🧠 RAM</option>
+                  <option value="SSD">⚡ SSD</option>
+                  <option value="MONITOR">🖥️ Monitor</option>
+                  <option value="SMPS">🔌 SMPS</option>
+                  <option value="OTHER">🧰 Other</option>
+                  <option value="NEW SYSTEM">🖥️ New System</option>
+                </select>
+                <input type="date" id="instockFilterDateFrom">
+                <input type="date" id="instockFilterDateTo">
+                <button type="button" id="btnResetInstockFilters" onclick="window.ITApp.resetInstockDashboardFilters()">Reset Filters</button>
               </div>
 
               <!-- Inventory Data Table (7 Columns) -->
-              <div class="table-container" style="overflow-x:auto; border:1px solid #e2e8f0; border-radius:10px;">
+              <div class="table-container" style="overflow-x:auto; border:1px solid #e2e8f0; border-radius:10px; background:#ffffff;">
                 <table class="data-table" id="instockInventoryTable" style="width:100%; border-collapse:collapse;">
                   <thead>
-                    <tr style="background:#f8fafc; color:#475569; border-bottom:2px solid #e2e8f0;">
-                      <th style="min-width:120px;">Asset ID</th>
-                      <th style="min-width:120px;">Category</th>
-                      <th style="min-width:240px;">Specification / Model</th>
-                      <th style="min-width:140px;">Serial Number</th>
-                      <th style="min-width:120px;">Purchase Date</th>
-                      <th style="min-width:140px;">Current Status</th>
-                      <th style="min-width:220px; text-align:center;">Actions</th>
+                    <tr style="background:#f8fafc; color:#475569; border-bottom:1px solid #e2e8f0;">
+                      <th style="min-width:110px; width:120px;">Asset ID</th>
+                      <th style="min-width:120px; width:130px;">Category</th>
+                      <th style="min-width:180px; width:200px;">Specification / Model</th>
+                      <th style="min-width:280px;">Specification Details</th>
+                      <th style="min-width:110px; width:120px;">Purchase Date</th>
+                      <th style="min-width:150px; width:170px;">Current Status</th>
+                      <th style="min-width:110px; width:110px; text-align:center;">Actions</th>
                     </tr>
                   </thead>
                   <tbody id="instockInventoryTableBody">
@@ -2259,7 +2302,7 @@
                     <label class="form-label" for="entryPageAssetId" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
                       Asset ID <span style="font-size:0.75rem; color:#64748b; font-weight:normal;">(Auto-generated if left blank)</span>
                     </label>
-                    <input type="text" id="entryPageAssetId" class="form-control" placeholder="e.g. STK-CPU-109 or leave blank" style="width:100%; border-radius:8px; padding:10px 14px; font-family:var(--font-mono, monospace);">
+                    <input type="text" id="entryPageAssetId" class="form-control" style="width:100%; border-radius:8px; padding:10px 14px; font-family:var(--font-mono, monospace);">
                   </div>
 
                   <div class="form-group">
@@ -2282,7 +2325,7 @@
                   <label class="form-label" for="entryPageSpec" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
                     Specification / Model <span style="color:#ef4444;">*</span>
                   </label>
-                  <input type="text" id="entryPageSpec" class="form-control" placeholder="e.g. Intel Core i7-12700 12th Gen / Crucial 16GB DDR4 / Samsung 980 1TB NVMe" required style="width:100%; border-radius:8px; padding:10px 14px;">
+                  <input type="text" id="entryPageSpec" class="form-control" required style="width:100%; border-radius:8px; padding:10px 14px;">
                 </div>
 
                 <!-- Grid Row 3: Serial Number, Purchase Date & Current Status -->
@@ -2291,7 +2334,7 @@
                     <label class="form-label" for="entryPageSerial" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
                       Serial Number <span style="color:#ef4444;">*</span>
                     </label>
-                    <input type="text" id="entryPageSerial" class="form-control" placeholder="e.g. SN-CPU-99488" required style="width:100%; border-radius:8px; padding:10px 14px; font-family:var(--font-mono, monospace);">
+                    <input type="text" id="entryPageSerial" class="form-control" required style="width:100%; border-radius:8px; padding:10px 14px; font-family:var(--font-mono, monospace);">
                   </div>
 
                   <div class="form-group">
@@ -2323,7 +2366,7 @@
                       <label class="form-label" for="entryPageAssignedUser" style="font-weight:600; font-size:0.82rem; color:#1e293b; margin-bottom:4px; display:block;">
                         Employee Name <span style="color:#ef4444;">*</span>
                       </label>
-                      <input type="text" id="entryPageAssignedUser" class="form-control" placeholder="e.g. Dinesh Kumar" list="entryPageUsersDatalist" style="width:100%; border-radius:8px; padding:8px 12px; background:#fff;">
+                      <input type="text" id="entryPageAssignedUser" class="form-control" list="entryPageUsersDatalist" style="width:100%; border-radius:8px; padding:8px 12px; background:#fff;">
                       <datalist id="entryPageUsersDatalist"></datalist>
                     </div>
 
@@ -2346,7 +2389,7 @@
                       <label class="form-label" for="entryPageAssignedTl" style="font-weight:600; font-size:0.82rem; color:#1e293b; margin-bottom:4px; display:block;">
                         Team Leader (TL)
                       </label>
-                      <input type="text" id="entryPageAssignedTl" class="form-control" placeholder="e.g. Sundar Pichai" style="width:100%; border-radius:8px; padding:8px 12px; background:#fff;">
+                      <input type="text" id="entryPageAssignedTl" class="form-control" style="width:100%; border-radius:8px; padding:8px 12px; background:#fff;">
                     </div>
 
                     <div class="form-group">
@@ -2363,7 +2406,7 @@
                   <label class="form-label" for="entryPageRemark" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
                     Remarks / Hardware Notes
                   </label>
-                  <textarea id="entryPageRemark" class="form-control" rows="2" placeholder="e.g. Purchased for new engineering batch, lab spares..." style="width:100%; border-radius:8px; padding:10px 14px;"></textarea>
+                  <textarea id="entryPageRemark" class="form-control" rows="2" style="width:100%; border-radius:8px; padding:10px 14px;"></textarea>
                 </div>
 
                 <!-- Form Buttons -->
@@ -3331,7 +3374,7 @@
               <!-- Team Leader (TL) -->
               <div class="form-group">
                 <label class="form-label" for="editAssetTl">Team Leader (TL)</label>
-                <input type="text" class="form-control" name="editTl" id="editAssetTl" placeholder="e.g. Sundar Sir, Ram Kumar R, Management">
+                <input type="text" class="form-control" name="editTl" id="editAssetTl">
               </div>
 
 
@@ -3409,37 +3452,37 @@
               <!-- CPU -->
               <div class="form-group">
                 <label class="form-label" for="editAssetCpu">CPU Configuration <span class="req">*</span></label>
-                <input type="text" class="form-control" name="editCpu" id="editAssetCpu" list="cpuPresetList" placeholder="e.g. Intel Core i7-13700 3.4GHz" required>
+                <input type="text" class="form-control" name="editCpu" id="editAssetCpu" list="cpuPresetList" required>
               </div>
 
               <!-- RAM -->
               <div class="form-group">
                 <label class="form-label" for="editAssetRam">RAM Memory <span class="req">*</span></label>
-                <input type="text" class="form-control" name="editRam" id="editAssetRam" list="ramPresetList" placeholder="e.g. 32GB DDR5" required>
+                <input type="text" class="form-control" name="editRam" id="editAssetRam" list="ramPresetList" required>
               </div>
 
               <!-- Primary Storage SSD -->
               <div class="form-group">
                 <label class="form-label" for="editAssetSsd">Solid State Drive (SSD)</label>
-                <input type="text" class="form-control" name="editSsd" id="editAssetSsd" list="ssdPresetList" placeholder="e.g. 512GB NVMe M.2">
+                <input type="text" class="form-control" name="editSsd" id="editAssetSsd" list="ssdPresetList">
               </div>
 
               <!-- Secondary Storage HDD -->
               <div class="form-group">
                 <label class="form-label" for="editAssetHdd">Hard Disk Drive (HDD)</label>
-                <input type="text" class="form-control" name="editHdd" id="editAssetHdd" list="hddPresetList" placeholder="e.g. 1TB HDD (or None)">
+                <input type="text" class="form-control" name="editHdd" id="editAssetHdd" list="hddPresetList">
               </div>
 
               <!-- Monitor Model -->
               <div class="form-group">
                 <label class="form-label" for="editAssetMonitor">Monitor Model &amp; Display</label>
-                <input type="text" class="form-control" name="editMonitor" id="editAssetMonitor" list="monitorPresetList" placeholder="e.g. Dell UltraSharp 27&quot; 4K / Dual LG 27&quot;">
+                <input type="text" class="form-control" name="editMonitor" id="editAssetMonitor" list="monitorPresetList">
               </div>
 
               <!-- Asset Hardware Type -->
               <div class="form-group">
                 <label class="form-label" for="editAssetType">Asset Type <span class="req">*</span></label>
-                <input type="text" class="form-control" name="editType" id="editAssetType" placeholder="Select or type Asset Type..." required list="assetTypeList" autocomplete="off" value="Desktop">
+                <input type="text" class="form-control" name="editType" id="editAssetType" required list="assetTypeList" autocomplete="off" value="Desktop">
               </div>
 
               <!-- Asset ID / Tag -->
@@ -3451,13 +3494,13 @@
               <!-- MAC Address -->
               <div class="form-group">
                 <label class="form-label" for="editAssetSerialNumber">MAC Address</label>
-                <input type="text" class="form-control" name="editSerialNumber" id="editAssetSerialNumber" placeholder="e.g. 00:7c:6c:83:44:74" autocomplete="off">
+                <input type="text" class="form-control" name="editSerialNumber" id="editAssetSerialNumber" autocomplete="off">
               </div>
 
               <!-- IP Address -->
               <div class="form-group">
                 <label class="form-label" for="editAssetIpAddress">IP Address</label>
-                <input type="text" class="form-control" name="editIpAddress" id="editAssetIpAddress" placeholder="e.g. 192.168.10.45 or DHCP">
+                <input type="text" class="form-control" name="editIpAddress" id="editAssetIpAddress">
               </div>
 
               <!-- Operating System -->
@@ -3483,7 +3526,7 @@
               <!-- SMPS Power Supply -->
               <div class="form-group">
                 <label class="form-label" for="editAssetSmps">SMPS (Power Supply)</label>
-                <input type="text" class="form-control" name="editSmps" id="editAssetSmps" placeholder="e.g. 550W or None">
+                <input type="text" class="form-control" name="editSmps" id="editAssetSmps">
               </div>
             </div>
           </div>
@@ -3596,7 +3639,7 @@
             <!-- Remarks / Notes -->
             <div class="form-group" style="margin-top: 14px;">
               <label class="form-label" for="editAssetRemark">Admin Notes / Hardware Upgrade History</label>
-              <input type="text" class="form-control" name="editRemark" id="editAssetRemark" placeholder="e.g. Upgraded RAM to 32GB and added Dell 27-inch 4K monitor.">
+              <input type="text" class="form-control" name="editRemark" id="editAssetRemark">
             </div>
           </div>
 
@@ -5494,7 +5537,7 @@
         <button class="modal-close-btn" type="button" onclick="window.ITApp.closeModal('modalInstockEntry')" title="Close" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#64748b;">✕</button>
       </div>
 
-      <form id="formInstockEntry" onsubmit="window.ITApp.handleInstockFormSubmit(event)">
+      <form id="formInstockEntry" autocomplete="off" onsubmit="window.ITApp.handleInstockFormSubmit(event)">
         <input type="hidden" id="instockEditId" value="">
         <div class="modal-body" style="padding: 24px; display:flex; flex-direction:column; gap:18px; background:#ffffff; max-height:75vh; overflow-y:auto;">
           
@@ -5504,7 +5547,7 @@
               <label class="form-label" for="instockAssetId" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
                 Asset ID <span style="color:#ef4444;">*</span> <span style="font-size:0.75rem; color:#64748b; font-weight:normal;">(Auto-generated or custom)</span>
               </label>
-              <input type="text" id="instockAssetId" class="form-control" placeholder="e.g. STK-CPU-105" required style="width:100%; border-radius:8px; padding:9px 12px; font-family:var(--font-mono, monospace);">
+              <input type="text" id="instockAssetId" class="form-control" autocomplete="off" required style="width:100%; border-radius:8px; padding:9px 12px; font-family:var(--font-mono, monospace);">
             </div>
             <div class="form-group">
               <label class="form-label" for="instockComponentType" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
@@ -5530,13 +5573,13 @@
                 <label class="form-label" for="instockModel" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
                   Specification / Model <span style="color:#ef4444;">*</span>
                 </label>
-                <input type="text" id="instockModel" class="form-control" placeholder="e.g. Intel Core i7-12700 / Crucial DDR4 / Dell 24 FHD" required style="width:100%; border-radius:8px; padding:9px 12px;">
+                <input type="text" id="instockModel" class="form-control" autocomplete="off" required style="width:100%; border-radius:8px; padding:9px 12px;">
               </div>
               <div class="form-group">
                 <label class="form-label" for="instockSpec" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
                   Specification Details
                 </label>
-                <input type="text" id="instockSpec" class="form-control" placeholder="e.g. 12th Gen 12-Core 2.1GHz / 16GB 3200MHz" style="width:100%; border-radius:8px; padding:9px 12px;">
+                <input type="text" id="instockSpec" class="form-control" autocomplete="off" style="width:100%; border-radius:8px; padding:9px 12px;">
               </div>
             </div>
 
@@ -5546,13 +5589,13 @@
                 <label class="form-label" for="instockSerial" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
                   Serial Number <span style="color:#ef4444;">*</span>
                 </label>
-                <input type="text" id="instockSerial" class="form-control" placeholder="e.g. SN-CPU-99481" required style="width:100%; border-radius:8px; padding:9px 12px; font-family:var(--font-mono, monospace);">
+                <input type="text" id="instockSerial" class="form-control" autocomplete="off" required style="width:100%; border-radius:8px; padding:9px 12px; font-family:var(--font-mono, monospace);">
               </div>
               <div class="form-group">
                 <label class="form-label" for="instockPurchaseDate" style="font-weight:700; font-size:0.85rem; color:#334155; margin-bottom:6px; display:block;">
                   Purchase Date <span style="color:#ef4444;">*</span>
                 </label>
-                <input type="date" id="instockPurchaseDate" class="form-control" required style="width:100%; border-radius:8px; padding:9px 12px;">
+                <input type="date" id="instockPurchaseDate" class="form-control" autocomplete="off" required style="width:100%; border-radius:8px; padding:9px 12px;">
               </div>
             </div>
           </div>
@@ -5583,7 +5626,7 @@
                 <label class="form-label" for="newSystemCpu" style="font-weight:700; font-size:0.8rem; color:#1e293b; margin:0; line-height:1.2;">
                   CPU Configuration <span class="req" style="color:#ef4444;">*</span>
                 </label>
-                <input type="text" class="form-control" name="cpu" id="newSystemCpu" list="cpuPresetList" placeholder="e.g. i3 2nd Gen" style="font-weight:600; width:100%; border-radius:6px; height:35px; padding:5px 9px; font-size:0.84rem; box-sizing:border-box; border:1px solid #cbd5e1;">
+                <input type="text" class="form-control" name="cpu" id="newSystemCpu" autocomplete="off" list="cpuPresetList" style="font-weight:600; width:100%; border-radius:6px; height:35px; padding:5px 9px; font-size:0.84rem; box-sizing:border-box; border:1px solid #cbd5e1;">
               </div>
 
               <!-- RAM Memory -->
@@ -5591,7 +5634,7 @@
                 <label class="form-label" for="newSystemRam" style="font-weight:700; font-size:0.8rem; color:#1e293b; margin:0; line-height:1.2;">
                   RAM Memory <span class="req" style="color:#ef4444;">*</span>
                 </label>
-                <input type="text" class="form-control" name="ram" id="newSystemRam" list="ramPresetList" placeholder="e.g. 8 GB DDR3" style="font-weight:600; width:100%; border-radius:6px; height:35px; padding:5px 9px; font-size:0.84rem; box-sizing:border-box; border:1px solid #cbd5e1;">
+                <input type="text" class="form-control" name="ram" id="newSystemRam" autocomplete="off" list="ramPresetList" style="font-weight:600; width:100%; border-radius:6px; height:35px; padding:5px 9px; font-size:0.84rem; box-sizing:border-box; border:1px solid #cbd5e1;">
               </div>
 
               <!-- Solid State Drive (SSD) -->
@@ -5599,7 +5642,7 @@
                 <label class="form-label" for="newSystemSsd" style="font-weight:700; font-size:0.8rem; color:#1e293b; margin:0; line-height:1.2;">
                   Solid State Drive (SSD)
                 </label>
-                <input type="text" class="form-control" name="ssd" id="newSystemSsd" list="ssdPresetList" placeholder="e.g. 240GB SSD" style="width:100%; border-radius:6px; height:35px; padding:5px 9px; font-size:0.84rem; box-sizing:border-box; border:1px solid #cbd5e1;">
+                <input type="text" class="form-control" name="ssd" id="newSystemSsd" autocomplete="off" list="ssdPresetList" style="width:100%; border-radius:6px; height:35px; padding:5px 9px; font-size:0.84rem; box-sizing:border-box; border:1px solid #cbd5e1;">
               </div>
 
               <!-- Hard Disk Drive (HDD) -->
@@ -5607,7 +5650,7 @@
                 <label class="form-label" for="newSystemHdd" style="font-weight:700; font-size:0.8rem; color:#1e293b; margin:0; line-height:1.2;">
                   Hard Disk Drive (HDD)
                 </label>
-                <input type="text" class="form-control" name="hdd" id="newSystemHdd" list="hddPresetList" placeholder="e.g. 500GB HDD (or None)" style="width:100%; border-radius:6px; height:35px; padding:5px 9px; font-size:0.84rem; box-sizing:border-box; border:1px solid #cbd5e1;">
+                <input type="text" class="form-control" name="hdd" id="newSystemHdd" autocomplete="off" list="hddPresetList" style="width:100%; border-radius:6px; height:35px; padding:5px 9px; font-size:0.84rem; box-sizing:border-box; border:1px solid #cbd5e1;">
               </div>
 
               <!-- Operating System (DOM order: 5) -->
@@ -5615,7 +5658,7 @@
                 <label class="form-label" for="newSystemOs" style="font-weight:700; font-size:0.8rem; color:#1e293b; margin:0; line-height:1.2;">
                   Operating System
                 </label>
-                <input type="text" class="form-control" name="os" id="newSystemOs" list="newSystemOsPresetList" value="Windows 11 Pro" style="font-weight:600; width:100%; border-radius:6px; height:35px; padding:5px 9px; font-size:0.84rem; box-sizing:border-box; border:1px solid #cbd5e1;">
+                <input type="text" class="form-control" name="os" id="newSystemOs" autocomplete="off" list="newSystemOsPresetList" value="" style="font-weight:600; width:100%; border-radius:6px; height:35px; padding:5px 9px; font-size:0.84rem; box-sizing:border-box; border:1px solid #cbd5e1;">
                 <datalist id="newSystemOsPresetList">
                   <option value="Windows 11 Pro">
                   <option value="Windows 10 Pro">
@@ -5631,7 +5674,7 @@
                 <label class="form-label" for="newSystemIp" style="font-weight:700; font-size:0.8rem; color:#1e293b; margin:0; line-height:1.2;">
                   IP Address
                 </label>
-                <input type="text" class="form-control font-mono" name="ipAddress" id="newSystemIp" placeholder="e.g. 192.168.1.100 or DHCP" style="width:100%; border-radius:6px; height:35px; padding:5px 9px; font-size:0.84rem; box-sizing:border-box; border:1px solid #cbd5e1;">
+                <input type="text" class="form-control font-mono" name="ipAddress" id="newSystemIp" autocomplete="off" value="" style="width:100%; border-radius:6px; height:35px; padding:5px 9px; font-size:0.84rem; box-sizing:border-box; border:1px solid #cbd5e1;">
               </div>
 
               <!-- MAC Address (DOM order: 7) -->
@@ -5639,7 +5682,7 @@
                 <label class="form-label" for="newSystemMac" style="font-weight:700; font-size:0.8rem; color:#1e293b; margin:0; line-height:1.2;">
                   MAC Address <span style="font-size:0.7rem; color:#64748b; font-weight:normal;">(or Serial No)</span>
                 </label>
-                <input type="text" class="form-control font-mono" name="serialNumber" id="newSystemMac" placeholder="e.g. 00:1A:2B:3C:4D:5E or SN-DSK-99281" style="width:100%; border-radius:6px; height:35px; padding:5px 9px; font-size:0.84rem; box-sizing:border-box; border:1px solid #cbd5e1;">
+                <input type="text" class="form-control font-mono" name="serialNumber" id="newSystemMac" autocomplete="off" style="width:100%; border-radius:6px; height:35px; padding:5px 9px; font-size:0.84rem; box-sizing:border-box; border:1px solid #cbd5e1;">
               </div>
 
               <!-- Primary Monitor (DOM order: 8) -->
@@ -5649,7 +5692,7 @@
                 </label>
                 <div style="display:flex; flex-direction:column; gap:2px;">
                   <div style="display:flex; gap:6px;">
-                    <input type="text" class="form-control" name="monitor" id="newSystemMonitor" list="monitorPresetList" placeholder="e.g. DELL 22 inch" style="flex:1; border-radius:6px; height:35px; padding:5px 9px; font-size:0.84rem; box-sizing:border-box; border:1px solid #cbd5e1;">
+                    <input type="text" class="form-control" name="monitor" id="newSystemMonitor" list="monitorPresetList" style="flex:1; border-radius:6px; height:35px; padding:5px 9px; font-size:0.84rem; box-sizing:border-box; border:1px solid #cbd5e1;">
                     <select id="newSystemMonitorDropdown" class="form-select" onchange="window.ITApp.handleNewSystemMonitorDropdown(this.value)" style="width:108px; border-radius:6px; height:35px; font-size:0.78rem; background:#fff; padding:3px 6px; box-sizing:border-box; border:1px solid #cbd5e1;">
                       <option value="">Quick Select...</option>
                       <option value="None">None</option>
@@ -5672,7 +5715,7 @@
                 <label class="form-label" for="newSystemSmps" style="font-weight:700; font-size:0.8rem; color:#1e293b; margin:0; line-height:1.2;">
                   SMPS (Power Supply)
                 </label>
-                <input type="text" class="form-control" name="smps" id="newSystemSmps" list="smpsPresetList" placeholder="e.g. 550W or None" style="width:100%; border-radius:6px; height:35px; padding:5px 9px; font-size:0.84rem; box-sizing:border-box; border:1px solid #cbd5e1;">
+                <input type="text" class="form-control" name="smps" id="newSystemSmps" list="smpsPresetList" style="width:100%; border-radius:6px; height:35px; padding:5px 9px; font-size:0.84rem; box-sizing:border-box; border:1px solid #cbd5e1;">
                 <datalist id="smpsPresetList">
                   <option value="None">
                   <option value="450W">
@@ -5747,7 +5790,7 @@
                 <label class="form-label" for="instockAssignedUser" style="font-weight:600; font-size:0.82rem; color:#1e293b; margin-bottom:4px; display:block;">
                   Employee Name <span style="color:#ef4444;">*</span>
                 </label>
-                <input type="text" id="instockAssignedUser" list="instockAllUsersDatalist" class="form-control" placeholder="Search or select employee..." autocomplete="off" oninput="window.ITApp.handleInstockUserSelect(this.value)" style="width:100%; border-radius:8px; padding:8px 12px; background:#fff;">
+                <input type="text" id="instockAssignedUser" list="instockAllUsersDatalist" class="form-control" autocomplete="off" oninput="window.ITApp.handleInstockUserSelect(this.value)" style="width:100%; border-radius:8px; padding:8px 12px; background:#fff;">
                 <datalist id="instockAllUsersDatalist"></datalist>
               </div>
               <div class="form-group">
@@ -5789,7 +5832,7 @@
               <label class="form-label" for="instockReason" style="font-weight:600; font-size:0.82rem; color:#1e293b; margin-bottom:4px; display:block;">
                 Hardware Item / Reason <span style="color:#ef4444;">*</span>
               </label>
-              <input type="text" id="instockReason" class="form-control" placeholder="e.g. Workstation setup, RAM expansion, Project allotment..." style="width:100%; border-radius:8px; padding:8px 12px; background:#fff;">
+              <input type="text" id="instockReason" class="form-control" style="width:100%; border-radius:8px; padding:8px 12px; background:#fff;">
             </div>
           </div>
 

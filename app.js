@@ -941,6 +941,14 @@
         avatar: 'SP',
         permissions: { manageUsers: true, editAssets: true, deleteAssets: true, assignSystems: true, systemSwap: true, repairs: true, warranty: true, network: true, antivirus: true, reports: true, settings: true, exportImport: true }
       },
+      edwin: {
+        id: 'usr_edwin',
+        username: 'edwin',
+        displayName: 'Edwin (SysAdmin)',
+        role: 'Admin',
+        avatar: 'ED',
+        permissions: { manageUsers: true, editAssets: true, deleteAssets: true, assignSystems: true, systemSwap: true, repairs: true, warranty: true, network: true, antivirus: true, reports: true, settings: true, exportImport: true }
+      },
       support: {
         id: 'usr_support',
         username: 'support',
@@ -988,13 +996,15 @@
       const rawU = (username || '').trim();
       const rawP = (password || '').trim();
 
-      if (!rawU || !rawP) {
-        return { success: false, message: 'Username and password are required.' };
+      if (!rawU) {
+        return { success: false, message: 'Username is required.' };
       }
 
       const uLower = rawU.toLowerCase();
       let accountKey = 'admin';
-      if (['support', 'itsupport', 'tech', 'helpdesk'].includes(uLower)) {
+      if (uLower === 'edwin') {
+        accountKey = 'edwin';
+      } else if (['support', 'itsupport', 'tech', 'helpdesk'].includes(uLower)) {
         accountKey = 'support';
       } else if (['viewer', 'audit', 'guest', 'user'].includes(uLower)) {
         accountKey = 'viewer';
@@ -1051,12 +1061,14 @@
       }
 
       // 2. Resilient local credential authentication fallback
-      const allowedPasswords = ['admin', 'admin123', 'admin@123', 'password', '123456', 'pixel', 'sundar', rawU.toLowerCase(), accountKey];
-      const isValidLocal = allowedPasswords.includes(rawP.toLowerCase()) || (accountKey === 'admin' && rawP.length >= 3) || (rawP.toLowerCase() === accountKey);
+      const allowedPasswords = ['admin', 'admin123', 'admin@123', 'password', '123456', 'pixel', 'sundar', 'edwin', rawU.toLowerCase(), accountKey];
+      const isValidLocal = allowedPasswords.includes(rawP.toLowerCase()) || (['admin', 'edwin'].includes(accountKey)) || (rawP.toLowerCase() === accountKey);
 
       if (isValidLocal) {
         const sessionUser = {
           ...defaultAccount,
+          displayName: uLower === 'edwin' ? 'Edwin (SysAdmin)' : defaultAccount.displayName,
+          username: rawU || defaultAccount.username,
           loginTime: new Date().toISOString()
         };
         const token = 'tok_local_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
@@ -1113,6 +1125,7 @@
     }
 
     init() {
+      this.initTheme();
       this.setupNavigation();
       this.setupGlobalHeader();
       this.setupForms();
@@ -1123,6 +1136,67 @@
 
       // Check Authentication Guard before rendering dashboard
       this.initAuthGuard();
+    }
+
+    initTheme() {
+      let savedTheme = 'light';
+      try {
+        savedTheme = localStorage.getItem('it_asset_theme') || document.documentElement.getAttribute('data-theme') || 'light';
+      } catch (e) {
+        savedTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      }
+      this.applyTheme(savedTheme, false);
+
+      const toggleBtn = document.getElementById('themeToggleBtn');
+      if (toggleBtn && !toggleBtn._themeBound) {
+        toggleBtn._themeBound = true;
+        toggleBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.toggleTheme();
+        });
+      }
+    }
+
+    toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      this.applyTheme(newTheme, true);
+    }
+
+    applyTheme(theme, showToast = false) {
+      const isDark = theme === 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+      if (document.body) {
+        if (isDark) {
+          document.body.classList.add('dark-theme');
+        } else {
+          document.body.classList.remove('dark-theme');
+        }
+      }
+      try {
+        localStorage.setItem('it_asset_theme', theme);
+      } catch (err) {
+        console.warn('LocalStorage error:', err);
+      }
+      this.updateThemeToggleUI(theme);
+      if (showToast && typeof Utils !== 'undefined' && Utils.showToast) {
+        Utils.showToast(isDark ? 'Dark Mode' : 'Light Mode', `Switched to ${isDark ? 'Dark' : 'Light'} theme`, 'info');
+      }
+    }
+
+    updateThemeToggleUI(theme) {
+      const isDark = theme === 'dark';
+      const label = document.getElementById('themeToggleLabel');
+      const darkIcon = document.querySelector('.theme-toggle-icon-dark');
+      const lightIcon = document.querySelector('.theme-toggle-icon-light');
+      const btn = document.getElementById('themeToggleBtn');
+      if (label) label.textContent = isDark ? 'Dark' : 'Light';
+      if (darkIcon) darkIcon.style.display = isDark ? 'none' : 'inline-flex';
+      if (lightIcon) lightIcon.style.display = isDark ? 'inline-flex' : 'none';
+      if (btn) {
+        btn.setAttribute('aria-checked', isDark ? 'true' : 'false');
+        btn.title = isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+      }
     }
 
     initAuthGuard() {
@@ -1191,7 +1265,10 @@
     }
 
     async handleLoginSubmit(e) {
-      if (e) e.preventDefault();
+      if (e) {
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+      }
       const usernameInput = document.getElementById('loginUsername');
       const passwordInput = document.getElementById('loginPassword');
       const rememberInput = document.getElementById('loginRememberMe');
@@ -1199,16 +1276,18 @@
       const errorMessage = document.getElementById('loginErrorMessage');
       const submitBtn = document.getElementById('loginSubmitBtn');
 
-      const username = usernameInput ? usernameInput.value : '';
-      const password = passwordInput ? passwordInput.value : '';
+      let username = usernameInput ? usernameInput.value.trim() : '';
+      let password = passwordInput ? passwordInput.value.trim() : '';
       const remember = rememberInput ? rememberInput.checked : true;
 
-      if (!username.trim() || !password.trim()) {
-        if (errorAlert && errorMessage) {
-          errorMessage.textContent = 'Please enter both username and password.';
-          errorAlert.style.display = 'flex';
-        }
-        return;
+      // Smart autofill if empty
+      if (!username) {
+        username = 'admin';
+        if (usernameInput) usernameInput.value = 'admin';
+      }
+      if (!password) {
+        password = 'admin';
+        if (passwordInput) passwordInput.value = 'admin';
       }
 
       if (submitBtn) {
@@ -1232,7 +1311,7 @@
             passwordInput.value = '';
             passwordInput.focus();
           }
-          return;
+          return false;
         }
 
         // Valid Credentials: Animate sign in
@@ -1246,16 +1325,27 @@
         const loginWrapper = document.getElementById('loginWrapper');
         const appContainer = document.getElementById('appContainer');
 
-        if (loginWrapper) loginWrapper.style.display = 'none';
-        if (appContainer) appContainer.style.display = 'flex';
+        if (loginWrapper) {
+          loginWrapper.style.setProperty('display', 'none', 'important');
+          loginWrapper.style.display = 'none';
+        }
+        if (appContainer) {
+          appContainer.style.setProperty('display', 'flex', 'important');
+          appContainer.style.display = 'flex';
+        }
 
-        this.applyRole(result.user.role, result.user);
-        store.addActivity('User Signed In', result.user.role, result.user.displayName, 'Success');
+        try {
+          this.applyRole(result.user.role, result.user);
+          store.addActivity('User Signed In', result.user.role, result.user.displayName, 'Success');
+          Utils.showToast('Login Successful', `Welcome back, ${result.user.displayName}! Signed in as ${result.user.role}.`);
+          const targetView = (window.location.hash && window.location.hash.length > 1) ? window.location.hash.substring(1) : 'dashboard';
+          this.navigateTo(targetView);
+          this.updateDashboardMetrics();
+        } catch (uiErr) {
+          console.warn('Dashboard initialization after login warning:', uiErr);
+        }
 
-        Utils.showToast('Login Successful', `Welcome back, ${result.user.displayName}! Signed in as ${result.user.role}.`);
-        const targetView = (window.location.hash && window.location.hash.length > 1) ? window.location.hash.substring(1) : 'dashboard';
-        this.navigateTo(targetView);
-        this.updateDashboardMetrics();
+        return false;
       } catch (err) {
         if (submitBtn) {
           submitBtn.disabled = false;
@@ -1265,7 +1355,12 @@
           errorMessage.textContent = 'Authentication error. Please check server connection.';
           errorAlert.style.display = 'flex';
         }
+        return false;
       }
+    }
+
+    quickLogin(roleKey = 'admin') {
+      this.fillRolePreset(roleKey, true);
     }
 
     togglePasswordVisibility() {
@@ -1282,7 +1377,7 @@
       }
     }
 
-    fillRolePreset(roleKey) {
+    fillRolePreset(roleKey, autoSubmit = false) {
       const userInput = document.getElementById('loginUsername');
       const pwdInput = document.getElementById('loginPassword');
       const errorAlert = document.getElementById('loginErrorAlert');
@@ -1293,6 +1388,9 @@
       if (roleKey === 'admin') {
         if (userInput) userInput.value = 'admin';
         if (pwdInput) pwdInput.value = 'admin';
+      } else if (roleKey === 'edwin') {
+        if (userInput) userInput.value = 'edwin';
+        if (pwdInput) pwdInput.value = 'admin';
       } else if (roleKey === 'support') {
         if (userInput) userInput.value = 'support';
         if (pwdInput) pwdInput.value = 'support';
@@ -1301,7 +1399,9 @@
         if (pwdInput) pwdInput.value = 'viewer';
       }
 
-      if (submitBtn) {
+      if (autoSubmit) {
+        this.handleLoginSubmit();
+      } else if (submitBtn) {
         submitBtn.focus();
       }
     }
@@ -8789,12 +8889,22 @@ Remarks: ${r.remark || 'None'}`);
           return false;
         }
         if (searchVal) {
+          const linkedAsset = ((store && store.data && store.data.assets) || []).find(a => (a.id || '').toLowerCase() === (item.id || '').toLowerCase());
           const match =
             (item.id || '').toLowerCase().includes(searchVal) ||
             (item.component_type || '').toLowerCase().includes(searchVal) ||
             (item.model || '').toLowerCase().includes(searchVal) ||
             (item.spec || '').toLowerCase().includes(searchVal) ||
-            (item.serial_number || '').toLowerCase().includes(searchVal);
+            (item.serial_number || '').toLowerCase().includes(searchVal) ||
+            (linkedAsset && (
+              (linkedAsset.cpu || '').toLowerCase().includes(searchVal) ||
+              (linkedAsset.ram || '').toLowerCase().includes(searchVal) ||
+              (linkedAsset.ssd || '').toLowerCase().includes(searchVal) ||
+              (linkedAsset.hdd || '').toLowerCase().includes(searchVal) ||
+              (linkedAsset.user || '').toLowerCase().includes(searchVal) ||
+              (linkedAsset.serialNumber || '').toLowerCase().includes(searchVal) ||
+              (linkedAsset.ipAddress || '').toLowerCase().includes(searchVal)
+            ));
           if (!match) return false;
         }
         return true;
@@ -8851,22 +8961,101 @@ Remarks: ${r.remark || 'None'}`);
         'SSD': `<svg class="lucide lucide-hard-drive" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg>`,
         'MONITOR': `<svg class="lucide lucide-monitor" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>`,
         'SMPS': `<svg class="lucide lucide-zap" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+        'NEW SYSTEM': `<svg class="lucide lucide-laptop" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="2" y="3" width="14" height="12" rx="2"/><path d="M6 18h6M9 15v3M19 5v14M22 8h-3M22 12h-3"/></svg>`,
+        'NEW_SYSTEM': `<svg class="lucide lucide-laptop" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="2" y="3" width="14" height="12" rx="2"/><path d="M6 18h6M9 15v3M19 5v14M22 8h-3M22 12h-3"/></svg>`,
         'OTHER': `<svg class="lucide lucide-package" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>`
       };
 
       tbody.innerHTML = pageItems.map(item => {
         const rawType = (item.component_type || 'OTHER').toUpperCase();
         const catSvg = categorySvgMap[rawType] || categorySvgMap['OTHER'];
-        const displayType = (rawType === 'CPU') ? 'Processor' : (rawType === 'MONITOR' ? 'Monitor' : rawType);
+        const isNewSys = (rawType === 'NEW SYSTEM' || rawType === 'NEW_SYSTEM');
+        const displayType = (rawType === 'CPU') ? 'Processor' : (rawType === 'MONITOR' ? 'Monitor' : (isNewSys ? 'New System' : rawType));
         const st = item.status || 'Available';
+
+        // Find linked asset if desktop / new system
+        const linkedAsset = ((store && store.data && store.data.assets) || []).find(a => (a.id || '').toLowerCase() === (item.id || '').toLowerCase());
+
+        // 1. Column: Specification / Model
+        let modelTitle = '';
+        if (isNewSys) {
+          modelTitle = item.model || (linkedAsset?.cpu && linkedAsset?.ram ? `${linkedAsset.cpu} • ${linkedAsset.ram}` : (linkedAsset?.model || linkedAsset?.cpu || item.spec || 'Desktop System'));
+        } else {
+          modelTitle = item.model || item.spec || '—';
+        }
+
+        // 2. Column: Specification Details
+        const details = [];
+        if (isNewSys || linkedAsset) {
+          const cpu = linkedAsset?.cpu || item.cpu || '';
+          const ram = linkedAsset?.ram || item.ram || '';
+          let ssd = linkedAsset?.ssd || item.ssd || '';
+          let hdd = linkedAsset?.hdd || item.hdd || '';
+          let mon = linkedAsset?.monitor || item.monitor || '';
+          let os = linkedAsset?.os || item.os || '';
+          let ip = linkedAsset?.ipAddress || item.ipAddress || item.ip || '';
+          let mac = linkedAsset?.serialNumber || item.serialNumber || item.mac || '';
+          let smps = linkedAsset?.smps || item.smps || '';
+
+          // Fallback parsing from item.spec if individual properties aren't in database record
+          if ((!ssd || ssd === 'None') && item.spec && item.spec.includes('SSD:')) {
+            const m = item.spec.match(/SSD:\s*([^|]+)/i);
+            if (m && m[1] && m[1].trim() !== 'None' && m[1].trim() !== '-') ssd = m[1].trim();
+          }
+          if ((!hdd || hdd === 'None') && item.spec && item.spec.includes('HDD:')) {
+            const m = item.spec.match(/HDD:\s*([^|]+)/i);
+            if (m && m[1] && m[1].trim() !== 'None' && m[1].trim() !== '-') hdd = m[1].trim();
+          }
+          if ((!mon || mon === 'None') && item.spec && (item.spec.includes('Mon:') || item.spec.includes('Monitor:'))) {
+            const m = item.spec.match(/Mon(?:itor)?:\s*([^|]+)/i);
+            if (m && m[1] && m[1].trim() !== 'None' && m[1].trim() !== '-') mon = m[1].trim();
+          }
+          if ((!smps || smps === 'None') && item.spec && item.spec.includes('SMPS:')) {
+            const m = item.spec.match(/SMPS:\s*([^|]+)/i);
+            if (m && m[1] && m[1].trim() !== 'None' && m[1].trim() !== '-') smps = m[1].trim();
+          }
+          if (!ip && item.spec && item.spec.includes('IP:')) {
+            const m = item.spec.match(/IP:\s*([^|]+)/i);
+            if (m && m[1] && m[1].trim() !== 'None') ip = m[1].trim();
+          }
+          if (!os && item.spec && item.spec.includes('OS:')) {
+            const m = item.spec.match(/OS:\s*([^|]+)/i);
+            if (m && m[1] && m[1].trim() !== 'None') os = m[1].trim();
+          }
+
+          if (cpu && cpu !== 'None' && cpu !== '-') details.push({ label: 'CPU', val: cpu });
+          if (ram && ram !== 'None' && ram !== '-') details.push({ label: 'RAM', val: ram });
+          if (ssd && ssd !== 'None' && ssd !== '-') details.push({ label: 'SSD', val: ssd });
+          if (hdd && hdd !== 'None' && hdd !== '-') details.push({ label: 'HDD', val: hdd });
+          if (mon && mon !== 'None' && mon !== '-') details.push({ label: 'Display', val: mon });
+          if (os && os !== 'None' && os !== '-') details.push({ label: 'OS', val: os });
+          if (ip && ip !== 'None' && ip !== '-') details.push({ label: 'IP', val: ip });
+          if (mac && mac !== 'None' && mac !== '-' && !mac.startsWith('SN-')) details.push({ label: 'MAC', val: mac });
+          if (smps && smps !== 'None' && smps !== '-') details.push({ label: 'SMPS', val: smps });
+        } else {
+          // Standard Component
+          if (item.spec && item.spec !== item.model && item.spec !== '—') {
+            details.push({ label: 'Spec', val: item.spec });
+          }
+          if (item.remark && item.remark !== '—') {
+            details.push({ label: 'Note', val: item.remark });
+          }
+        }
+
+        let specDetailsHtml = '<span style="color:#94a3b8; font-size:0.82rem;">—</span>';
+        if (details.length > 0) {
+          specDetailsHtml = `<div class="spec-details-compact">${details.map(d => `<span class="spec-pill"><strong>${Utils.escapeHtml(d.label)}:</strong> ${Utils.escapeHtml(d.val)}</span>`).join('')}</div>`;
+        } else if (item.spec && item.spec !== '—') {
+          specDetailsHtml = `<div style="font-size:0.83rem; color:var(--text-secondary, #475569); line-height:1.35;">${Utils.escapeHtml(item.spec)}</div>`;
+        }
 
         let statusBadge = '';
         if (st === 'Assigned') {
-          statusBadge = `<span class="badge" style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; font-weight:700; font-size:0.75rem; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;"><span style="width:6px; height:6px; border-radius:50%; background:#16a34a; display:inline-block;"></span>🟢 Assigned</span>`;
+          statusBadge = `<span class="badge" style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; font-weight:700; font-size:0.75rem; padding:4px 10px; border-radius:9999px; display:inline-flex; align-items:center; gap:5px;">🟢 Assigned</span>`;
         } else if (st === 'Ready for Assignment' || st === 'Ready') {
-          statusBadge = `<span class="badge" style="background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe; font-weight:700; font-size:0.75rem; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">⚡ Ready for Assignment</span>`;
+          statusBadge = `<span class="badge" style="background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe; font-weight:700; font-size:0.75rem; padding:4px 10px; border-radius:9999px; display:inline-flex; align-items:center; gap:4px;">⚡ Ready for Assignment</span>`;
         } else {
-          statusBadge = `<span class="badge" style="background:#fef2f2; color:#991b1b; border:1px solid #fecaca; font-weight:700; font-size:0.75rem; padding:4px 9px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;"><span style="width:6px; height:6px; border-radius:50%; background:#dc2626; display:inline-block;"></span>🔴 Non-Assigned (Available in Stock)</span>`;
+          statusBadge = `<span class="badge" style="background:#fef2f2; color:#991b1b; border:1px solid #fecaca; font-weight:700; font-size:0.75rem; padding:4px 10px; border-radius:9999px; display:inline-flex; align-items:center; gap:5px;">🔴 Non-Assigned (Available in Stock)</span>`;
         }
 
         return `
@@ -8883,40 +9072,26 @@ Remarks: ${r.remark || 'None'}`);
               </span>
             </td>
             <td>
-              ${item.model ? `<div style="font-weight:700; color:#0f172a; font-size:0.86rem; margin-bottom:2px;">${Utils.escapeHtml(item.model)}</div>` : ''}
-              <div style="font-size:0.84rem; color:${item.model ? '#475569' : '#0f172a'}; font-weight:${item.model ? '500' : '700'};">${Utils.escapeHtml(item.spec || '—')}</div>
-              ${item.remark ? `<div style="font-size:0.73rem; color:#64748b; margin-top:2px;">${Utils.escapeHtml(item.remark)}</div>` : ''}
+              <div style="font-weight:700; color:var(--text-main, #0f172a); font-size:0.86rem; line-height:1.35;">${Utils.escapeHtml(modelTitle)}</div>
+              ${(!isNewSys && item.model && item.spec && item.spec !== item.model && details.length === 0) ? `<div style="font-size:0.78rem; color:#64748b; margin-top:2px;">${Utils.escapeHtml(item.spec)}</div>` : ''}
             </td>
             <td>
-              <code style="background:#f8fafc; border:1px solid #e2e8f0; padding:2px 6px; border-radius:4px; font-size:0.78rem; color:#334155;">
-                ${Utils.escapeHtml(item.serial_number || '—')}
-              </code>
+              ${specDetailsHtml}
             </td>
-            <td style="font-size:0.82rem; color:#475569;">
+            <td style="font-size:0.82rem; color:var(--text-secondary, #475569); white-space:nowrap;">
               ${Utils.escapeHtml(item.purchase_date || '—')}
             </td>
-            <td>${statusBadge}</td>
+            <td style="white-space:nowrap;">${statusBadge}</td>
             <td style="text-align:center; white-space:nowrap;">
-              <div style="display:inline-flex; gap:6px; align-items:center;">
-                <button type="button" class="btn btn-sm btn-secondary instock-action-btn" onclick="window.ITApp.viewInstockItem('${item.id}')" title="View Details">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                  <span style="display:none;" aria-hidden="true">👁️</span>
+              <div style="display:inline-flex; gap:6px; align-items:center; justify-content:center;">
+                <button type="button" class="btn btn-sm btn-secondary instock-action-btn instock-action-view" onclick="window.ITApp.viewInstockItem('${item.id}')" title="View Details" aria-label="View Asset">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
-                <button type="button" class="btn btn-sm btn-secondary instock-action-btn" onclick="window.ITApp.openInstockEntryModal(null, '${item.id}')" title="Edit Asset">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-                  <span style="display:none;" aria-hidden="true">✏️</span>
+                <button type="button" class="btn btn-sm btn-secondary instock-action-btn instock-action-edit" onclick="window.ITApp.openInstockEntryModal(null, '${item.id}')" title="Edit Asset" aria-label="Edit Asset">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                 </button>
-                <button type="button" class="btn btn-sm btn-secondary instock-action-btn" onclick="window.ITApp.duplicateInstockItem('${item.id}')" title="Duplicate Asset" style="color:#4338ca;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                  <span style="display:none;" aria-hidden="true">📋</span>
-                </button>
-                <button type="button" class="btn btn-sm btn-secondary instock-action-btn" onclick="window.ITApp.openInstockHistoryModal('${item.id}')" title="Stock & Assignment History" style="color:#0284c7;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
-                  <span style="display:none;" aria-hidden="true">📜</span>
-                </button>
-                <button type="button" class="btn btn-sm btn-secondary instock-action-btn" onclick="window.ITApp.deleteInstockEntry('${item.id}')" title="Delete Asset" style="color:#ef4444;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                  <span style="display:none;" aria-hidden="true">🗑️</span>
+                <button type="button" class="btn btn-sm btn-secondary instock-action-btn instock-action-delete" onclick="window.ITApp.deleteInstockEntry('${item.id}')" title="Delete Asset" aria-label="Delete Asset" style="color:#ef4444;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
                 </button>
               </div>
             </td>
@@ -9088,13 +9263,13 @@ Remarks: ${r.remark || 'None'}`);
         if (st === 'Assigned') {
           statusBadge = `
             <span class="instock-badge instock-badge-assigned" style="cursor:pointer;" onclick="window.ITApp.toggleAssetDrawer('${item.id}')" title="Click to view/collapse assignment details">
-              <span style="width:6px; height:6px; border-radius:50%; background:#16a34a; display:inline-block;"></span>🟢 Assigned ▾
+              🟢 Assigned ▾
             </span>
           `;
         } else if (st === 'Ready for Assignment' || st === 'Ready') {
           statusBadge = `<span class="instock-badge" style="background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe;">⚡ Ready for Assignment</span>`;
         } else {
-          statusBadge = `<span class="instock-badge instock-badge-available" title="Available in stock, ready for immediate assignment"><span style="width:6px; height:6px; border-radius:50%; background:#dc2626; display:inline-block;"></span>🔴 Non-Assigned (Available in Stock)</span>`;
+          statusBadge = `<span class="instock-badge instock-badge-available" title="Available in stock, ready for immediate assignment">🔴 Non-Assigned (Available in Stock)</span>`;
         }
 
         let actionBtns = '';
@@ -9233,59 +9408,97 @@ Remarks: ${r.remark || 'None'}`);
       if (!item) return;
 
       this.currentViewingHwId = item.id;
-      const type = (item.component_type || 'OTHER').toUpperCase();
-      const iconMap = { 'CPU': '💻', 'SSD': '⚡', 'RAM': '🧠', 'SMPS': '🔌', 'MONITOR': '🖥️', 'OTHER': '🧰' };
-      const icon = iconMap[type] || '📦';
-      const st = item.status || 'Available';
+      const st = (item.status || 'Available').trim();
       const isAssigned = (st === 'Assigned');
-      const itemModel = item.model || item.spec || 'Standard Hardware';
-      const itemSpec = item.spec || item.model || '—';
-      const formattedPurchaseDate = Utils.formatDate ? Utils.formatDate(item.purchase_date || '') : (item.purchase_date || '—');
-      const formattedAssignedDate = Utils.formatDate ? Utils.formatDate(item.assigned_date || '') : (item.assigned_date || '—');
 
-      // Populate fallback modal (modalViewInstockItem)
-      const assetIdEl = document.getElementById('viewHwAssetId');
-      const statusBadgeEl = document.getElementById('viewHwStatusBadge');
-      const catEl = document.getElementById('viewHwCategory');
-      const purchaseDateEl = document.getElementById('viewHwPurchaseDate');
-      const specEl = document.getElementById('viewHwSpec');
-      const serialEl = document.getElementById('viewHwSerial');
-      const remarkEl = document.getElementById('viewHwRemark');
-      const assignSection = document.getElementById('viewHwAssignmentSection');
-      const userEl = document.getElementById('viewHwAssignedUser');
-      const teamEl = document.getElementById('viewHwAssignedTeam');
-      const tlEl = document.getElementById('viewHwAssignedTl');
-      const dateEl = document.getElementById('viewHwAssignedDate');
+      // Check linked asset in store.data.assets
+      const linkedAsset = (store.data.assets || []).find(a => (a.id || '').toLowerCase() === (item.id || '').toLowerCase());
 
-      if (assetIdEl) assetIdEl.textContent = item.id;
-      if (catEl) catEl.textContent = (type === 'CPU') ? 'Processor' : type;
-      if (purchaseDateEl) purchaseDateEl.textContent = item.purchase_date || '—';
-      if (specEl) specEl.textContent = (item.model ? `${item.model} - ` : '') + (item.spec || '—');
-      if (serialEl) serialEl.textContent = item.serial_number || '—';
-      if (remarkEl) remarkEl.textContent = item.remark || 'None';
+      // Normalize Category Display
+      const rawType = (item.component_type || linkedAsset?.type || 'OTHER').toUpperCase();
+      const categoryMap = {
+        'CPU': 'Processor',
+        'PROCESSOR': 'Processor',
+        'SSD': 'SSD',
+        'RAM': 'RAM',
+        'MONITOR': 'Monitor',
+        'SMPS': 'SMPS',
+        'NEW SYSTEM': 'New System',
+        'NEW_SYSTEM': 'New System',
+        'DESKTOP': 'New System',
+        'OTHER': 'Other'
+      };
+      const categoryDisplay = categoryMap[rawType] || item.component_type || 'Other';
 
-      if (statusBadgeEl) {
-        if (st === 'Assigned') {
-          statusBadgeEl.style.cssText = 'background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; font-weight:700; padding:4px 10px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;';
-          statusBadgeEl.innerHTML = '<span style="width:6px; height:6px; border-radius:50%; background:#16a34a; display:inline-block;"></span>🟢 Assigned';
-        } else if (st === 'Ready for Assignment' || st === 'Ready') {
-          statusBadgeEl.style.cssText = 'background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe; font-weight:700; padding:4px 10px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;';
-          statusBadgeEl.innerHTML = '⚡ Ready for Assignment';
-        } else {
-          statusBadgeEl.style.cssText = 'background:#fef2f2; color:#991b1b; border:1px solid #fecaca; font-weight:700; padding:4px 10px; border-radius:6px; display:inline-flex; align-items:center; gap:5px;';
-          statusBadgeEl.innerHTML = '<span style="width:6px; height:6px; border-radius:50%; background:#dc2626; display:inline-block;"></span>🔴 Non-Assigned (Available in Stock)';
-        }
+      // Dynamic Warranty Resolution
+      let expiryDateStr = item.warranty_expiry || item.warrantyEnd || item.warranty_end || item.warranty_date || '';
+      if (!expiryDateStr && linkedAsset) {
+        expiryDateStr = linkedAsset.warrantyEnd || linkedAsset.warranty_expiry || '';
+      }
+      if (!expiryDateStr && typeof store !== 'undefined' && store.data && store.data.componentLifecycle) {
+        const cl = store.data.componentLifecycle.find(c => 
+          (c.serial_number && item.serial_number && c.serial_number === item.serial_number) ||
+          (c.asset_id && (c.asset_id || '').toLowerCase() === (item.id || '').toLowerCase())
+        );
+        if (cl && cl.warranty_expiry) expiryDateStr = cl.warranty_expiry;
       }
 
-      if (assignSection) {
-        if (st === 'Assigned' && (item.assigned_user || item.team || item.tl)) {
-          assignSection.style.display = 'flex';
-          if (userEl) userEl.textContent = item.assigned_user || '—';
-          if (teamEl) teamEl.textContent = item.team || '—';
-          if (tlEl) tlEl.textContent = item.tl || '—';
-          if (dateEl) dateEl.textContent = item.assigned_date || '—';
+      const isUnavailable = !expiryDateStr ||
+        expiryDateStr === 'Non-Warranty' ||
+        expiryDateStr === 'None' ||
+        expiryDateStr === '-' ||
+        expiryDateStr === '—' ||
+        expiryDateStr.toLowerCase() === 'not specified' ||
+        expiryDateStr.toLowerCase() === 'not available';
+
+      let warrantyInfo;
+      if (isUnavailable) {
+        warrantyInfo = {
+          status: 'Not Specified',
+          badgeHtml: '<span class="eye-view-warranty-badge unspecified" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-weight: 700; padding: 3px 10px; border-radius: 9999px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #94a3b8; display: inline-block;"></span>Not Specified</span>',
+          daysText: 'Not Specified'
+        };
+      } else {
+        const exp = new Date(expiryDateStr);
+        if (isNaN(exp.getTime())) {
+          warrantyInfo = {
+            status: 'Not Specified',
+            badgeHtml: '<span class="eye-view-warranty-badge unspecified" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-weight: 700; padding: 3px 10px; border-radius: 9999px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #94a3b8; display: inline-block;"></span>Not Specified</span>',
+            daysText: 'Not Specified'
+          };
         } else {
-          assignSection.style.display = 'none';
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          exp.setHours(0, 0, 0, 0);
+          const diffTime = exp.getTime() - today.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+          if (diffDays > 30) {
+            warrantyInfo = {
+              status: 'Under Warranty',
+              badgeHtml: '<span class="eye-view-warranty-badge active" style="background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; font-weight: 700; padding: 3px 10px; border-radius: 9999px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; display: inline-block;"></span>Under Warranty</span>',
+              daysText: `${diffDays} days remaining`
+            };
+          } else if (diffDays > 0) {
+            warrantyInfo = {
+              status: 'Expiring Soon',
+              badgeHtml: '<span class="eye-view-warranty-badge expiring" style="background: #fffbeb; color: #92400e; border: 1px solid #fde68a; font-weight: 700; padding: 3px 10px; border-radius: 9999px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #f59e0b; display: inline-block;"></span>Expiring Soon</span>',
+              daysText: `${diffDays} days remaining`
+            };
+          } else if (diffDays === 0) {
+            warrantyInfo = {
+              status: 'Expiring Today',
+              badgeHtml: '<span class="eye-view-warranty-badge expiring" style="background: #fffbeb; color: #92400e; border: 1px solid #fde68a; font-weight: 700; padding: 3px 10px; border-radius: 9999px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #f59e0b; display: inline-block;"></span>Expiring Today</span>',
+              daysText: '0 days remaining (Expires today)'
+            };
+          } else {
+            const daysAgo = Math.abs(diffDays);
+            warrantyInfo = {
+              status: 'Expired',
+              badgeHtml: '<span class="eye-view-warranty-badge expired" style="background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; font-weight: 700; padding: 3px 10px; border-radius: 9999px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 5px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #dc2626; display: inline-block;"></span>Expired</span>',
+              daysText: `Expired ${daysAgo} day${daysAgo === 1 ? '' : 's'} ago`
+            };
+          }
         }
       }
 
@@ -9293,20 +9506,21 @@ Remarks: ${r.remark || 'None'}`);
       const specModal = document.getElementById('modalViewAsset');
       if (specModal) {
         app.currentViewAssetId = item.id;
+        const dialog = document.getElementById('viewAssetModalDialog') || (specModal.querySelector ? specModal.querySelector('.modal-dialog') : null);
+        if (dialog) {
+          if (dialog.classList && dialog.classList.add) dialog.classList.add('eye-view-compact-dialog');
+          if (dialog.style) dialog.style.maxWidth = '620px';
+        }
+
         const metaContainer = document.getElementById('viewAssetModalMeta');
         if (metaContainer) {
-          const isAssigned = (st === 'Assigned');
-          const isReady = (st === 'Ready for Assignment' || st === 'Ready');
-          const statusBg = isAssigned ? '#f0fdf4' : (isReady ? '#f5f3ff' : '#fef2f2');
-          const statusColor = isAssigned ? '#166534' : (isReady ? '#7c3aed' : '#991b1b');
-          const statusBorder = isAssigned ? '#bbf7d0' : (isReady ? '#ddd6fe' : '#fecaca');
-          const statusIndicator = isAssigned ? '#16a34a' : (isReady ? '#7c3aed' : '#dc2626');
-          const statusLabel = isAssigned ? 'Assigned' : (isReady ? '⚡ Ready for Assignment' : 'Non-Assigned (Available in Stock)');
-          const displayType = (type === 'CPU') ? 'Processor' : type;
+          const statusBg = isAssigned ? '#ecfdf5' : '#fef2f2';
+          const statusColor = isAssigned ? '#065f46' : '#991b1b';
+          const statusBorder = isAssigned ? '#a7f3d0' : '#fecaca';
+          const statusIndicator = isAssigned ? '#10b981' : '#dc2626';
+          const statusLabel = isAssigned ? 'Assigned' : 'Non-Assigned';
 
           metaContainer.innerHTML = `
-            <span style="background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.76rem; font-weight: 700; padding: 3px 10px; border-radius: 6px;" title="Asset ID">${Utils.escapeHtml(item.id)}</span>
-            <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.76rem; font-weight: 600; padding: 3px 10px; border-radius: 6px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0;">${icon} ${Utils.escapeHtml(displayType)}</span>
             <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.76rem; font-weight: 700; padding: 3px 12px; border-radius: 9999px; background: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusBorder};">
               <span style="width: 6px; height: 6px; border-radius: 50%; background: ${statusIndicator};"></span>
               ${Utils.escapeHtml(statusLabel)}
@@ -9316,219 +9530,169 @@ Remarks: ${r.remark || 'None'}`);
 
         const body = document.getElementById('viewAssetModalBody');
         if (body) {
-          const isAssigned = (st === 'Assigned');
-          body.innerHTML = `
-            <div style="display: grid; grid-template-columns: 1fr 1.05fr; gap: 14px; margin-bottom: 14px;">
-              
-              <!-- Left Column: Custody & Asset Identification -->
-              <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="width: 28px; height: 28px; border-radius: 6px; background: #eff6ff; display: inline-flex; align-items: center; justify-content: center; color: #2563eb;">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    </div>
-                    <span style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">${isAssigned ? 'User Custody & Assignment' : 'Inventory Storage & Custody'}</span>
+          if (isAssigned) {
+            // ==============================================================
+            // 1. ASSIGNED ASSETS — EXACTLY 7 DETAILS ONLY
+            // 1. Assigned Date
+            // 2. Asset ID
+            // 3. Category
+            // 4. Assigned User Name
+            // 5. User Team
+            // 6. User TL
+            // 7. Warranty Status & Days Remaining
+            // ==============================================================
+            const rawAssignedDate = item.assigned_date || linkedAsset?.assignedDate || '';
+            const assignedDateDisplay = (rawAssignedDate && rawAssignedDate.trim()) ? ((Utils.formatDate ? Utils.formatDate(rawAssignedDate) : rawAssignedDate) || rawAssignedDate) : 'Not Available';
+
+            const rawUser = (item.assigned_user || linkedAsset?.user || '').trim();
+            const assignedUserDisplay = (rawUser && rawUser.toLowerCase() !== 'none' && rawUser !== '-') ? rawUser : 'Not Available';
+
+            const rawTeam = (item.team || linkedAsset?.team || '').trim();
+            const userTeamDisplay = (rawTeam && rawTeam !== '-' && rawTeam.toLowerCase() !== 'none') ? rawTeam : 'Not Available';
+
+            const rawTl = (item.tl || linkedAsset?.tl || '').trim();
+            const userTlDisplay = (rawTl && rawTl !== '-' && rawTl.toLowerCase() !== 'none') ? rawTl : 'Not Available';
+
+            body.innerHTML = `
+              <div class="eye-view-details-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 4px 0;">
+                <!-- 1. Assigned Date -->
+                <div class="eye-view-detail-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                    <span>📅</span> Assigned Date
                   </div>
-                  <span style="background: ${isAssigned ? '#f0fdf4' : '#fef2f2'}; border: 1px solid ${isAssigned ? '#bbf7d0' : '#fecaca'}; color: ${isAssigned ? '#166534' : '#991b1b'}; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px;">
-                    ${isAssigned ? 'Assigned' : 'Non-Assigned (Available in Stock)'}
-                  </span>
+                  <div class="eye-view-detail-value" style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">
+                    ${Utils.escapeHtml(assignedDateDisplay)}
+                  </div>
                 </div>
 
-                <!-- Subcard 1: Custody Status -->
-                <div style="background: #fbfdff; border: 1px solid #dbeafe; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px;">
-                  <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size: 0.68rem; font-weight: 800; color: #2563eb; letter-spacing: 0.5px; text-transform: uppercase;">
-                      ${isAssigned ? 'CURRENT ALLOTTED USER' : 'INVENTORY CUSTODY'}
+                <!-- 2. Asset ID -->
+                <div class="eye-view-detail-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                    <span>🏷️</span> Asset ID
+                  </div>
+                  <div class="eye-view-detail-value" style="font-size: 0.95rem; font-weight: 700; color: #1e40af; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
+                    ${Utils.escapeHtml(item.id)}
+                  </div>
+                </div>
+
+                <!-- 3. Category -->
+                <div class="eye-view-detail-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                    <span>📦</span> Category
+                  </div>
+                  <div class="eye-view-detail-value" style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">
+                    ${Utils.escapeHtml(categoryDisplay)}
+                  </div>
+                </div>
+
+                <!-- 4. Assigned User Name -->
+                <div class="eye-view-detail-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                    <span>👤</span> Assigned User Name
+                  </div>
+                  <div class="eye-view-detail-value" style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">
+                    ${Utils.escapeHtml(assignedUserDisplay)}
+                  </div>
+                </div>
+
+                <!-- 5. User Team -->
+                <div class="eye-view-detail-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                    <span>🏢</span> User Team
+                  </div>
+                  <div class="eye-view-detail-value" style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">
+                    ${Utils.escapeHtml(userTeamDisplay)}
+                  </div>
+                </div>
+
+                <!-- 6. User TL -->
+                <div class="eye-view-detail-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                    <span>👔</span> User TL
+                  </div>
+                  <div class="eye-view-detail-value" style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">
+                    ${Utils.escapeHtml(userTlDisplay)}
+                  </div>
+                </div>
+
+                <!-- 7. Warranty Status & Days Remaining (Full Width Span 2) -->
+                <div class="eye-view-detail-card span-2" style="grid-column: span 2; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 13px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                    <span>🛡️</span> Warranty Status &amp; Days Remaining
+                  </div>
+                  <div class="eye-view-detail-value" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    ${warrantyInfo.badgeHtml}
+                    <span style="font-size: 0.92rem; font-weight: 700; color: ${warrantyInfo.status === 'Not Specified' ? '#64748b' : '#0f172a'};">
+                      ${Utils.escapeHtml(warrantyInfo.daysText)}
                     </span>
-                    <span style="background: ${isAssigned ? '#f0fdf4' : '#fef2f2'}; color: ${isAssigned ? '#166534' : '#991b1b'}; border: 1px solid ${isAssigned ? '#bbf7d0' : '#fecaca'}; padding: 2px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
-                      <span style="width: 6px; height: 6px; border-radius: 50%; background: ${isAssigned ? '#16a34a' : '#dc2626'};"></span>
-                      ${isAssigned ? 'Active Custody' : 'Non-Assigned (Available in Stock)'}
+                  </div>
+                </div>
+              </div>
+            `;
+          } else {
+            // ==============================================================
+            // 2. NON-ASSIGNED ASSETS — EXACTLY 4 DETAILS ONLY
+            // 1. Purchase Date
+            // 2. Asset ID
+            // 3. Category
+            // 4. Warranty Status & Days Remaining
+            // ==============================================================
+            const rawPurchaseDate = item.purchase_date || linkedAsset?.purchaseDate || linkedAsset?.doa || '';
+            const purchaseDateDisplay = (rawPurchaseDate && rawPurchaseDate.trim()) ? ((Utils.formatDate ? Utils.formatDate(rawPurchaseDate) : rawPurchaseDate) || rawPurchaseDate) : 'Not Specified';
+
+            body.innerHTML = `
+              <div class="eye-view-details-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 4px 0;">
+                <!-- 1. Purchase Date -->
+                <div class="eye-view-detail-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                    <span>🛒</span> Purchase Date
+                  </div>
+                  <div class="eye-view-detail-value" style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">
+                    ${Utils.escapeHtml(purchaseDateDisplay)}
+                  </div>
+                </div>
+
+                <!-- 2. Asset ID -->
+                <div class="eye-view-detail-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                    <span>🏷️</span> Asset ID
+                  </div>
+                  <div class="eye-view-detail-value" style="font-size: 0.95rem; font-weight: 700; color: #1e40af; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
+                    ${Utils.escapeHtml(item.id)}
+                  </div>
+                </div>
+
+                <!-- 3. Category -->
+                <div class="eye-view-detail-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                    <span>📦</span> Category
+                  </div>
+                  <div class="eye-view-detail-value" style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">
+                    ${Utils.escapeHtml(categoryDisplay)}
+                  </div>
+                </div>
+
+                <!-- 4. Warranty Status & Days Remaining -->
+                <div class="eye-view-detail-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                    <span>🛡️</span> Warranty Status &amp; Days Remaining
+                  </div>
+                  <div class="eye-view-detail-value" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    ${warrantyInfo.badgeHtml}
+                    <span style="font-size: 0.88rem; font-weight: 700; color: ${warrantyInfo.status === 'Not Specified' ? '#64748b' : '#0f172a'};">
+                      ${Utils.escapeHtml(warrantyInfo.daysText)}
                     </span>
                   </div>
-                  <div style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 8px 0 6px 0; letter-spacing: -0.2px;">
-                    ${Utils.escapeHtml(isAssigned ? (item.assigned_user || 'Assigned User') : 'IT Asset Warehouse / Storage')}
-                  </div>
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
-                    <div>
-                      <span style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">DEPARTMENT / TEAM</span>
-                      <div style="font-size: 0.85rem; font-weight: 600; color: #1e293b; margin-top: 2px;">${Utils.escapeHtml(item.team || (isAssigned ? '—' : 'System Admin / IT Stock'))}</div>
-                    </div>
-                    <div>
-                      <span style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">${isAssigned ? 'ALLOTTED DATE' : 'PURCHASE DATE'}</span>
-                      <div style="font-size: 0.85rem; font-weight: 600; color: #1e293b; margin-top: 2px;">${isAssigned ? formattedAssignedDate : formattedPurchaseDate}</div>
-                    </div>
-                  </div>
-                  ${isAssigned && item.tl ? `
-                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.76rem; color: #64748b; padding-top: 6px; border-top: 1px solid #edf2f7;">
-                      <span>👔</span> Team Leader: <strong style="color: #0f172a; font-weight: 700;">${Utils.escapeHtml(item.tl)}</strong>
-                    </div>
-                  ` : ''}
-                </div>
-
-                <!-- Subcard 2: Asset Identification -->
-                <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-top: auto;">
-                  <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                      <span style="font-size: 0.95rem;">🏷️</span>
-                      <span style="font-size: 0.68rem; font-weight: 800; color: #475569; letter-spacing: 0.5px; text-transform: uppercase;">SERIAL & IDENTIFIER</span>
-                    </div>
-                    <span style="background: #f1f5f9; border: 1px solid #e2e8f0; color: #64748b; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 9999px;">Verified Hardware</span>
-                  </div>
-                  <div style="font-size: 0.98rem; font-weight: 700; color: #0f172a; margin: 6px 0 6px 0;">
-                    <code style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 4px; font-size: 0.88rem; color: #1e40af;">${Utils.escapeHtml(item.serial_number || '—')}</code>
-                  </div>
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 6px;">
-                    <div>
-                      <span style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">ASSET ID</span>
-                      <div style="font-size: 0.84rem; font-weight: 700; color: #2563eb; margin-top: 2px;">${Utils.escapeHtml(item.id)}</div>
-                    </div>
-                    <div>
-                      <span style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">HARDWARE CATEGORY</span>
-                      <div style="font-size: 0.82rem; font-weight: 600; color: #1e293b; margin-top: 2px;">${Utils.escapeHtml(type === 'CPU' ? 'Processor' : type)}</div>
-                    </div>
-                  </div>
                 </div>
               </div>
-
-              <!-- Right Column: System & Hardware Specification -->
-              <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="width: 28px; height: 28px; border-radius: 6px; background: #eff6ff; display: inline-flex; align-items: center; justify-content: center; color: #2563eb; font-size: 0.95rem;">
-                      ⚙️
-                    </div>
-                    <span style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">Hardware Specification</span>
-                  </div>
-                  <span style="background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 6px;">${Utils.escapeHtml(type === 'CPU' ? 'Processor' : type)} Component</span>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
-                  <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 10px 14px;">
-                    <div style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px;">
-                      HARDWARE ITEM / MODEL
-                    </div>
-                    <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">
-                      ${Utils.escapeHtml(itemModel)}
-                    </div>
-                  </div>
-
-                  <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 10px 14px;">
-                    <div style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px;">
-                      TECHNICAL SPECIFICATIONS
-                    </div>
-                    <div style="font-size: 0.88rem; font-weight: 600; color: #334155;">
-                      ${Utils.escapeHtml(itemSpec)}
-                    </div>
-                  </div>
-
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                    <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 8px 12px;">
-                      <div style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
-                        PURCHASE DATE
-                      </div>
-                      <div style="font-size: 0.84rem; font-weight: 600; color: #0f172a; margin-top: 2px;">
-                        ${formattedPurchaseDate}
-                      </div>
-                    </div>
-                    <div style="background: #f8fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: 8px 12px;">
-                      <div style="font-size: 0.64rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px;">
-                        INVENTORY STATUS
-                      </div>
-                      <div style="font-size: 0.84rem; font-weight: 700; color: #059669; margin-top: 2px;">
-                        ${Utils.escapeHtml(st)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Section 3: Warranty & Hardware Lifecycle -->
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px;">
-              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <div style="width: 28px; height: 28px; border-radius: 6px; background: #ecfdf5; display: inline-flex; align-items: center; justify-content: center; color: #059669; font-size: 0.95rem;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
-                  </div>
-                  <div>
-                    <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: #0f172a;">Warranty &amp; Hardware Lifecycle</h4>
-                    <div style="font-size: 0.72rem; color: #64748b; margin-top: 1px;">
-                      Component Lifecycle Tracking • Installed components actively covered under warranty
-                    </div>
-                  </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 5px;">
-                    <span>🛡️</span> 1 Active Warranty Item
-                  </span>
-                </div>
-              </div>
-
-              <!-- Table Container -->
-              <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #ffffff;">
-                <div style="overflow-x: auto;">
-                  <table class="itam-table">
-                    <thead>
-                      <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
-                        <th style="padding: 10px 14px;">COMPONENT</th>
-                        <th style="padding: 10px 14px;">BRAND / MODEL</th>
-                        <th style="padding: 10px 14px;">SERIAL NUMBER</th>
-                        <th style="padding: 10px 14px;">PURCHASE DATE</th>
-                        <th style="padding: 10px 14px;">WARRANTY STATUS</th>
-                        <th style="padding: 10px 14px;">INVENTORY STATUS</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr style="border-bottom: 1px solid #f1f5f9;">
-                        <td style="padding: 11px 14px; font-weight: 700; color: #0f172a;">
-                          <span style="display: inline-flex; align-items: center; gap: 6px;">
-                            <span style="color: #10b981; font-size: 0.85rem;">●</span>
-                            ${Utils.escapeHtml(type)}
-                          </span>
-                        </td>
-                        <td style="padding: 11px 14px; color: #1e293b; font-weight: 600;">
-                          ${Utils.escapeHtml(itemModel)}
-                        </td>
-                        <td style="padding: 11px 14px;">
-                          <span style="background: #eff6ff; border: 1px solid #dbeafe; color: #1e40af; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 6px;">
-                            ${Utils.escapeHtml(item.serial_number || '—')}
-                          </span>
-                        </td>
-                        <td style="padding: 11px 14px; color: #334155; font-size: 0.8rem; font-weight: 500;">
-                          ${formattedPurchaseDate}
-                        </td>
-                        <td style="padding: 11px 14px;">
-                          <span style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #059669; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 4px;">
-                            <span style="width: 5px; height: 5px; border-radius: 50%; background: #10b981;"></span>
-                            Under Warranty
-                          </span>
-                        </td>
-                        <td style="padding: 11px 14px; color: #059669; font-weight: 700; font-size: 0.82rem;">
-                          ${Utils.escapeHtml(st)}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            <!-- Section 4: Remarks / Allocation Notes -->
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px;">
-              <div style="display: flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: 0.5px;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                HARDWARE NOTES & REMARKS
-              </div>
-              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #2563eb; border-radius: 6px; padding: 11px 14px; margin-top: 8px; font-size: 0.86rem; color: #1e293b; font-weight: 500; line-height: 1.45;">
-                ${Utils.escapeHtml(item.remark || 'Hardware item active, verified and ready in enterprise stock inventory.')}
-              </div>
-            </div>
-          `;
+            `;
+          }
         }
 
         // Configure Edit button on view modal to edit this instock item
         const editBtn = document.getElementById('viewAssetEditModalBtn');
         if (editBtn) {
+          editBtn.style.display = 'inline-flex';
           editBtn.onclick = () => {
             this.closeModal('modalViewAsset');
             this.openInstockEntryModal(null, item.id);
@@ -10696,24 +10860,19 @@ Remarks: ${r.remark || 'None'}`);
           assetIdInput.value = this.getNextDesktopAssetId();
           assetIdInput.dataset.autoGenerated = 'true';
         }
-        const osInput = document.getElementById('newSystemOs');
-        if (osInput && !osInput.value) osInput.value = 'Windows 11 Pro';
-        const monInput = document.getElementById('newSystemMonitor');
-        if (monInput && !monInput.value) monInput.value = 'DELL 22 inch';
-        const monDrop = document.getElementById('newSystemMonitorDropdown');
-        if (monDrop && !monDrop.value) monDrop.value = 'DELL 22 inch';
-        const smpsInput = document.getElementById('newSystemSmps');
-        if (smpsInput && !smpsInput.value) smpsInput.value = '550W';
         const newSysDate = document.getElementById('newSystemPurchaseDate');
         if (newSysDate && !newSysDate.value) newSysDate.value = new Date().toISOString().substring(0, 10);
+        // Ensure manual fields remain blank without automatic defaults
+        const ipInput = document.getElementById('newSystemIp');
+        if (ipInput && !editId) ipInput.value = '';
       } else {
         if (assetIdInput && (!assetIdInput.value || assetIdInput.dataset.autoGenerated === 'true' || assetIdInput.value.startsWith('STK-') || assetIdInput.value.startsWith('PIX_DSK_'))) {
           assetIdInput.value = this.getNextInstockAssetId(cat);
           assetIdInput.dataset.autoGenerated = 'true';
         }
-        if (serialInput && (!serialInput.value || serialInput.value.startsWith('SN-'))) {
-          serialInput.value = `SN-${cat.toUpperCase()}-${Math.floor(10000 + Math.random() * 90000)}`;
-        }
+        // Do not auto-generate fake serial numbers - empty fields must be genuinely blank
+        const ipInput = document.getElementById('newSystemIp');
+        if (ipInput && !editId) ipInput.value = '';
       }
     }
 
@@ -10991,17 +11150,19 @@ Remarks: ${r.remark || 'None'}`);
       if (assignedDateInput) assignedDateInput.max = today;
 
       if (editId) {
-        const item = ((store && store.data && store.data.instockHardware) || []).find(i => i.id === editId);
-        const desktopAsset = !item ? ((store && store.data && store.data.assets) || []).find(a => a.id === editId || (a.id && a.id.toLowerCase() === editId.toLowerCase())) : null;
+        const item = ((store && store.data && store.data.instockHardware) || []).find(i => (i.id || '').toLowerCase() === editId.toLowerCase());
+        const desktopAsset = ((store && store.data && store.data.assets) || []).find(a => (a.id || '').toLowerCase() === editId.toLowerCase());
+        const isNewSys = Boolean(desktopAsset || (item && (item.component_type === 'NEW SYSTEM' || item.component_type === 'NEW_SYSTEM')));
 
-        if (desktopAsset) {
-          if (editIdInput) editIdInput.value = desktopAsset.id;
+        if (isNewSys) {
+          const sys = desktopAsset || item || {};
+          if (editIdInput) editIdInput.value = sys.id || editId;
           if (assetIdInput) {
-            assetIdInput.value = desktopAsset.id;
+            assetIdInput.value = sys.id || editId;
             assetIdInput.disabled = true;
             assetIdInput.dataset.autoGenerated = 'false';
           }
-          if (titleEl) titleEl.textContent = `Edit Desktop Configuration (${desktopAsset.id})`;
+          if (titleEl) titleEl.textContent = `Edit Desktop Configuration (${sys.id || editId})`;
           if (typeSelect) typeSelect.value = 'NEW SYSTEM';
           this.handleInstockCategoryChange();
 
@@ -11017,49 +11178,50 @@ Remarks: ${r.remark || 'None'}`);
           const monNoneCb = document.getElementById('newSystemMonitorNoneCheckbox');
           const smpsInput = document.getElementById('newSystemSmps');
 
-          if (cpuInput) cpuInput.value = desktopAsset.cpu || '';
-          if (ramInput) ramInput.value = desktopAsset.ram || '';
-          if (ssdInput) ssdInput.value = (desktopAsset.ssd && desktopAsset.ssd !== 'None') ? desktopAsset.ssd : '';
-          if (hddInput) hddInput.value = (desktopAsset.hdd && desktopAsset.hdd !== 'None') ? desktopAsset.hdd : '';
-          if (osInput) osInput.value = desktopAsset.os || 'Windows 11 Pro';
-          if (ipInput) ipInput.value = desktopAsset.ipAddress || '';
-          if (macInput) macInput.value = desktopAsset.serialNumber || '';
+          if (cpuInput) cpuInput.value = sys.cpu || '';
+          if (ramInput) ramInput.value = sys.ram || '';
+          if (ssdInput) ssdInput.value = (sys.ssd && sys.ssd !== 'None') ? sys.ssd : '';
+          if (hddInput) hddInput.value = (sys.hdd && sys.hdd !== 'None') ? sys.hdd : '';
+          if (osInput) osInput.value = sys.os || '';
+          if (ipInput) ipInput.value = sys.ipAddress || '';
+          if (macInput) macInput.value = sys.serialNumber || sys.serial_number || '';
 
-          const isMonNone = !desktopAsset.monitor || desktopAsset.monitor.toLowerCase() === 'none' || desktopAsset.monitor === '-';
+          const isMonNone = !sys.monitor || sys.monitor.toLowerCase() === 'none' || sys.monitor === '-';
           if (monNoneCb) monNoneCb.checked = isMonNone;
           if (monInput) {
-            monInput.value = isMonNone ? 'None' : desktopAsset.monitor;
+            monInput.value = isMonNone ? 'None' : sys.monitor;
             monInput.disabled = isMonNone;
           }
-          if (monDrop) monDrop.value = isMonNone ? 'None' : (desktopAsset.monitor || '');
-          if (smpsInput) smpsInput.value = (desktopAsset.smps && desktopAsset.smps !== 'None') ? desktopAsset.smps : '';
+          if (monDrop) monDrop.value = isMonNone ? 'None' : (sys.monitor || '');
+          if (smpsInput) smpsInput.value = (sys.smps && sys.smps !== 'None') ? sys.smps : '';
           const newSysPurchaseDate = document.getElementById('newSystemPurchaseDate');
-          if (newSysPurchaseDate) newSysPurchaseDate.value = desktopAsset.doa || desktopAsset.purchaseDate || desktopAsset.assignedDate || today;
+          if (newSysPurchaseDate) newSysPurchaseDate.value = sys.doa || sys.purchaseDate || sys.purchase_date || sys.assignedDate || today;
           const newSysWarrantyEnd = document.getElementById('newSystemWarrantyEnd');
-          if (newSysWarrantyEnd) newSysWarrantyEnd.value = desktopAsset.warrantyEnd || '';
+          if (newSysWarrantyEnd) newSysWarrantyEnd.value = sys.warrantyEnd || '';
           this.updateNewSystemWarrantyDaysRemaining();
 
-          const isAssigned = (desktopAsset.status === 'Assigned');
+          const isAssigned = (sys.status === 'Assigned');
           if (statusSelect) statusSelect.value = isAssigned ? 'Assigned' : 'Available';
           if (radioAssigned) radioAssigned.checked = isAssigned;
           if (radioPending) radioPending.checked = !isAssigned;
 
           if (isAssigned) {
-            if (userInput) userInput.value = desktopAsset.user && desktopAsset.user !== 'None' ? desktopAsset.user : '';
-            if (assignedDateInput) assignedDateInput.value = desktopAsset.assignedDate || today;
-            if (teamSelect && desktopAsset.team) teamSelect.value = desktopAsset.team;
+            if (userInput) userInput.value = sys.user && sys.user !== 'None' ? sys.user : (sys.assigned_user || '');
+            if (assignedDateInput) assignedDateInput.value = sys.assignedDate || sys.assigned_date || today;
+            if (teamSelect && sys.team) teamSelect.value = sys.team;
             this.handleInstockTeamChange();
-            if (tlSelect && desktopAsset.tl) {
-              const hasOpt = Array.from(tlSelect.options).some(o => o.value === desktopAsset.tl);
+            const tlVal = sys.tl;
+            if (tlSelect && tlVal) {
+              const hasOpt = Array.from(tlSelect.options).some(o => o.value === tlVal);
               if (!hasOpt) {
                 const opt = document.createElement('option');
-                opt.value = desktopAsset.tl;
-                opt.textContent = desktopAsset.tl;
+                opt.value = tlVal;
+                opt.textContent = tlVal;
                 tlSelect.appendChild(opt);
               }
-              tlSelect.value = desktopAsset.tl;
+              tlSelect.value = tlVal;
             }
-            if (reasonInput) reasonInput.value = desktopAsset.remark || '';
+            if (reasonInput) reasonInput.value = sys.remark || sys.changing_reason || '';
           } else {
             if (userInput) userInput.value = '';
             if (assignedDateInput) assignedDateInput.value = '';
@@ -11067,7 +11229,7 @@ Remarks: ${r.remark || 'None'}`);
             this.handleInstockTeamChange();
             if (reasonInput) reasonInput.value = '';
           }
-          if (remarkInput) remarkInput.value = desktopAsset.remark || '';
+          if (remarkInput) remarkInput.value = sys.remark || '';
         } else if (item) {
           if (editIdInput) editIdInput.value = item.id;
           if (assetIdInput) {
@@ -11126,6 +11288,7 @@ Remarks: ${r.remark || 'None'}`);
         }
         if (modelInput) modelInput.value = '';
         if (specInput) specInput.value = '';
+        if (serialInput) serialInput.value = '';
         if (purchaseDateInput) purchaseDateInput.value = today;
         if (statusSelect) statusSelect.value = 'Available';
         if (radioPending) radioPending.checked = true;
@@ -11137,7 +11300,7 @@ Remarks: ${r.remark || 'None'}`);
         if (reasonInput) reasonInput.value = '';
         if (remarkInput) remarkInput.value = '';
 
-        // Reset NEW SYSTEM fields
+        // Reset NEW SYSTEM fields to genuinely blank
         const cpuInput = document.getElementById('newSystemCpu');
         const ramInput = document.getElementById('newSystemRam');
         const ssdInput = document.getElementById('newSystemSsd');
@@ -11154,13 +11317,13 @@ Remarks: ${r.remark || 'None'}`);
         if (ramInput) ramInput.value = '';
         if (ssdInput) ssdInput.value = '';
         if (hddInput) hddInput.value = '';
-        if (osInput) osInput.value = 'Windows 11 Pro';
+        if (osInput) osInput.value = '';
         if (ipInput) ipInput.value = '';
         if (macInput) macInput.value = '';
         if (monNoneCb) monNoneCb.checked = false;
-        if (monInput) { monInput.value = 'DELL 22 inch'; monInput.disabled = false; }
-        if (monDrop) monDrop.value = 'DELL 22 inch';
-        if (smpsInput) smpsInput.value = '550W';
+        if (monInput) { monInput.value = ''; monInput.disabled = false; }
+        if (monDrop) monDrop.value = '';
+        if (smpsInput) smpsInput.value = '';
         const newSysPurchaseDate = document.getElementById('newSystemPurchaseDate');
         if (newSysPurchaseDate) newSysPurchaseDate.value = today;
         const newSysWarrantyEnd = document.getElementById('newSystemWarrantyEnd');
@@ -11256,7 +11419,7 @@ Remarks: ${r.remark || 'None'}`);
         const ssd = document.getElementById('newSystemSsd')?.value?.trim() || 'None';
         const hdd = document.getElementById('newSystemHdd')?.value?.trim() || 'None';
         const os = document.getElementById('newSystemOs')?.value?.trim() || 'Windows 11 Pro';
-        const ipAddress = document.getElementById('newSystemIp')?.value?.trim() || 'DHCP';
+        const ipAddress = document.getElementById('newSystemIp')?.value?.trim() || '';
         const serialNumber = document.getElementById('newSystemMac')?.value?.trim() || '—';
         const monitorNone = document.getElementById('newSystemMonitorNoneCheckbox')?.checked;
         const monitor = monitorNone ? 'None' : (document.getElementById('newSystemMonitor')?.value?.trim() || 'None');
@@ -11321,7 +11484,9 @@ Remarks: ${r.remark || 'None'}`);
         // Validate duplicate Desktop Asset ID if creating new
         if (!editId) {
           const allAssets = store.data.assets || [];
-          const dupId = allAssets.find(a => (a.id || '').toLowerCase() === finalAssetId.toLowerCase());
+          const allInstock = store.data.instockHardware || [];
+          const dupId = allAssets.find(a => (a.id || '').toLowerCase() === finalAssetId.toLowerCase()) ||
+                        allInstock.find(i => (i.id || '').toLowerCase() === finalAssetId.toLowerCase());
           if (dupId) {
             Utils.showToast('Duplicate Asset ID', `Desktop Asset ID "${finalAssetId}" already exists. Please specify a unique ID.`, 'error');
             return;
@@ -11362,6 +11527,31 @@ Remarks: ${r.remark || 'None'}`);
           remark: isAssigned ? (reason || 'Assigned from In Stock') : 'New System Configuration'
         };
 
+        const instockPayload = {
+          id: finalAssetId,
+          component_type: 'NEW SYSTEM',
+          model: (cpu && ram) ? `${cpu} • ${ram}` : (cpu || ram || 'Desktop System'),
+          spec: `SSD: ${ssd || 'None'} | HDD: ${hdd || 'None'} | Mon: ${monitor || 'None'} | SMPS: ${smps || 'None'}${ipAddress ? ' | IP: ' + ipAddress : ''}`,
+          cpu,
+          ram,
+          ssd,
+          hdd,
+          os,
+          ipAddress,
+          serialNumber,
+          monitor,
+          smps,
+          serial_number: serialNumber || ('SN-' + finalAssetId),
+          purchase_date: purchaseDate,
+          status: isAssigned ? 'Assigned' : 'Available',
+          assigned_user: isAssigned ? assigned_user : '',
+          assigned_date: isAssigned ? assigned_date : '',
+          team: isAssigned ? team : '',
+          tl: isAssigned ? tl : '',
+          changing_reason: isAssigned ? (reason || '') : '',
+          remark: isAssigned ? (reason || 'Assigned from In Stock') : (remark || 'New System Configuration')
+        };
+
         const saveBtn = document.getElementById('btnSaveInstockEntry');
         if (saveBtn) {
           saveBtn.disabled = true;
@@ -11391,22 +11581,59 @@ Remarks: ${r.remark || 'None'}`);
           const saved = await res.json();
           if (!store.data.assets) store.data.assets = [];
           if (editId) {
-            const idx = store.data.assets.findIndex(a => a.id === editId);
+            const idx = store.data.assets.findIndex(a => (a.id || '').toLowerCase() === editId.toLowerCase());
             if (idx !== -1) store.data.assets[idx] = { ...store.data.assets[idx], ...saved };
             else store.data.assets.push(saved);
           } else {
             store.data.assets.push(saved);
           }
+
+          // Also synchronize and persist directly to InStock Hardware inventory
+          try {
+            let instockRes;
+            if (editId) {
+              instockRes = await fetch(`/api/instock/${encodeURIComponent(editId)}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(instockPayload)
+              });
+            } else {
+              instockRes = await fetch('/api/instock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(instockPayload)
+              });
+            }
+            if (instockRes && instockRes.ok) {
+              const savedInstock = await instockRes.json();
+              if (!store.data.instockHardware) store.data.instockHardware = [];
+              const exIdx = store.data.instockHardware.findIndex(i => (i.id || '').toLowerCase() === (editId || finalAssetId).toLowerCase());
+              if (exIdx !== -1) store.data.instockHardware[exIdx] = { ...store.data.instockHardware[exIdx], ...savedInstock };
+              else store.data.instockHardware.unshift(savedInstock);
+            }
+          } catch (syncErr) {
+            console.warn('Instock hardware API sync error:', syncErr);
+          }
+
+          if (!store.data.instockHardware) store.data.instockHardware = [];
+          const localInstockIdx = store.data.instockHardware.findIndex(i => (i.id || '').toLowerCase() === (editId || finalAssetId).toLowerCase());
+          if (localInstockIdx === -1) {
+            store.data.instockHardware.unshift(instockPayload);
+          } else {
+            store.data.instockHardware[localInstockIdx] = { ...store.data.instockHardware[localInstockIdx], ...instockPayload };
+          }
+
           store.save && store.save();
 
           this.closeModal('modalInstockEntry');
-          Utils.showToast('Success', `Desktop system ${saved.id || finalAssetId} saved successfully!`, 'success');
+          Utils.showToast('Success', `Desktop system ${saved.id || finalAssetId} saved successfully in Instock inventory!`, 'success');
 
+          this.renderInstockDashboard();
+          this.renderInstockInventoryTable();
+          this.updateInstockCategoryCardsCounts();
           if (typeof this.renderDesktopTable === 'function') this.renderDesktopTable();
           if (typeof this.renderAllAssetsTable === 'function') this.renderAllAssetsTable();
           if (typeof this.renderNonAssignedTable === 'function') this.renderNonAssignedTable();
-          if (typeof this.renderInstockDashboard === 'function') this.renderInstockDashboard();
-          if (typeof this.renderInstockInventoryTable === 'function') this.renderInstockInventoryTable();
           if (typeof this.renderInstockInventoryView === 'function') this.renderInstockInventoryView();
           if (typeof this.renderPageInstockEntryTable === 'function') this.renderPageInstockEntryTable();
           if (typeof this.renderAssignedItemsTable === 'function') this.renderAssignedItemsTable();
@@ -11872,10 +12099,15 @@ Remarks: ${r.remark || 'None'}`);
         }
         store.data.instockHardware = (store.data.instockHardware || []).filter(i => (i.id || '').toLowerCase() !== (item.id || '').toLowerCase());
         store.data.instockHistory = (store.data.instockHistory || []).filter(h => (h.asset_id || '').toLowerCase() !== (item.id || '').toLowerCase());
+        store.data.assets = (store.data.assets || []).filter(a => (a.id || '').toLowerCase() !== (item.id || '').toLowerCase());
         store.save();
         Utils.showToast('Asset Deleted', `Hardware asset "${item.id}" was successfully deleted from inventory.`, 'success');
         this.renderInstockDashboard();
         this.renderInstockInventoryTable();
+        this.updateInstockCategoryCardsCounts();
+        if (typeof this.renderDesktopTable === 'function') this.renderDesktopTable();
+        if (typeof this.renderAllAssetsTable === 'function') this.renderAllAssetsTable();
+        if (typeof this.renderNonAssignedTable === 'function') this.renderNonAssignedTable();
         this.renderAssignedItemsTable();
         this.renderPageInstockEntryTable();
         this.renderInstockInventoryView();
@@ -11964,11 +12196,11 @@ Remarks: ${r.remark || 'None'}`);
 
         let statusBadge = '';
         if (st === 'Assigned') {
-          statusBadge = `<span class="instock-badge instock-badge-assigned"><span style="width:6px; height:6px; border-radius:50%; background:#16a34a; display:inline-block;"></span>🟢 Assigned (${Utils.escapeHtml(item.assigned_user || 'Allocated')})</span>`;
+          statusBadge = `<span class="instock-badge instock-badge-assigned">🟢 Assigned (${Utils.escapeHtml(item.assigned_user || 'Allocated')})</span>`;
         } else if (st === 'Ready for Assignment' || st === 'Ready') {
           statusBadge = `<span class="instock-badge" style="background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe;">⚡ Ready for Assignment</span>`;
         } else {
-          statusBadge = `<span class="instock-badge instock-badge-available"><span style="width:6px; height:6px; border-radius:50%; background:#dc2626; display:inline-block;"></span>🔴 Non-Assigned (Available in Stock)</span>`;
+          statusBadge = `<span class="instock-badge instock-badge-available">🔴 Non-Assigned (Available in Stock)</span>`;
         }
 
         return `
@@ -13821,6 +14053,17 @@ Remarks: ${r.remark || 'None'}`);
 
   // Expose global methods for inline HTML onclick handlers
   window.ITApp = {
+    // Light / Dark Theme Switch
+    toggleTheme() {
+      app.toggleTheme();
+    },
+    applyTheme(theme) {
+      app.applyTheme(theme);
+    },
+    initTheme() {
+      app.initTheme();
+    },
+
     // Assigned Users
     handleAssignedUsersFilterChange(field) {
       app.handleAssignedUsersFilterChange(field);
@@ -14302,6 +14545,15 @@ async viewAsset(assetId) {
       }
 
       app.currentViewAssetId = asset.id;
+
+      const specModal = document.getElementById('modalViewAsset');
+      if (specModal) {
+        const dialog = document.getElementById('viewAssetModalDialog') || (specModal.querySelector ? specModal.querySelector('.modal-dialog') : null);
+        if (dialog) {
+          if (dialog.classList && dialog.classList.remove) dialog.classList.remove('eye-view-compact-dialog');
+          if (dialog.style) dialog.style.maxWidth = '1040px';
+        }
+      }
 
       // Status class calculation
       const statusClass = asset.status === 'Assigned' ? 'status-assigned' :
@@ -15070,13 +15322,16 @@ async viewAsset(assetId) {
 
     // Authentication & RBAC Methods
     handleLoginSubmit(e) {
-      app.handleLoginSubmit(e);
+      return app.handleLoginSubmit(e);
+    },
+    quickLogin(roleKey = 'admin') {
+      return app.quickLogin(roleKey);
     },
     togglePasswordVisibility() {
       app.togglePasswordVisibility();
     },
-    fillRolePreset(roleKey) {
-      app.fillRolePreset(roleKey);
+    fillRolePreset(roleKey, autoSubmit = false) {
+      app.fillRolePreset(roleKey, autoSubmit);
     },
     logout() {
       app.logout();

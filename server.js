@@ -515,6 +515,9 @@ const server = http.createServer(async (req, res) => {
             return sendJson(res, 400, { error: `Cannot delete asset "${id}" because it is currently assigned to ${target.assigned_user || 'a user'}. Please return or unassign it first.` });
           }
           db.deleteInstockHardware(id);
+          try {
+            if (typeof db.deleteAsset === 'function') db.deleteAsset(id);
+          } catch (e) {}
           return sendJson(res, 200, { success: true });
         }
       }
