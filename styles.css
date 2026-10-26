@@ -5459,6 +5459,22 @@ body.dark-theme {
   background-color: #0b0f19;
 }
 
+[data-theme="dark"] .sidebar,
+body.dark-theme .sidebar {
+  background-color: var(--sidebar-bg, #090d16) !important;
+  border-right-color: var(--sidebar-border, #334155) !important;
+}
+
+[data-theme="dark"] .sidebar-header,
+body.dark-theme .sidebar-header {
+  border-bottom-color: var(--sidebar-border, #334155) !important;
+}
+
+[data-theme="dark"] .sidebar-footer,
+body.dark-theme .sidebar-footer {
+  border-top-color: var(--sidebar-border, #334155) !important;
+}
+
 [data-theme="dark"] .main-content,
 [data-theme="dark"] .app-main,
 [data-theme="dark"] .content-area,

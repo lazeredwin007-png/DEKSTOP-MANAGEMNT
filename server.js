@@ -500,7 +500,7 @@ const server = http.createServer(async (req, res) => {
           const body = await parseJsonBody(req);
           if (body.serial_number) {
             const allItems = db.getInstockHardware() || [];
-            const dupSerial = allItems.find(i => i.id !== id && (i.serial_number || '').toLowerCase() === body.serial_number.trim().toLowerCase());
+            const dupSerial = allItems.find(i => (i.id || '').toLowerCase() !== (id || '').toLowerCase() && (i.serial_number || '').trim().toLowerCase() === body.serial_number.trim().toLowerCase());
             if (dupSerial) {
               return sendJson(res, 409, { error: `Duplicate Serial Number: Serial number "${body.serial_number}" is already registered on asset ${dupSerial.id}.` });
             }

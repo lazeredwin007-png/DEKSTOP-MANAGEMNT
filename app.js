@@ -1141,32 +1141,41 @@
     initTheme() {
       let savedTheme = 'light';
       try {
-        savedTheme = localStorage.getItem('it_asset_theme') || document.documentElement.getAttribute('data-theme') || 'light';
+        savedTheme = (typeof localStorage !== 'undefined' && localStorage.getItem('it_asset_theme')) || 
+                     (typeof document !== 'undefined' && document.documentElement ? document.documentElement.getAttribute('data-theme') : null) || 
+                     'light';
       } catch (e) {
-        savedTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        savedTheme = (typeof document !== 'undefined' && document.documentElement ? document.documentElement.getAttribute('data-theme') : null) || 'light';
       }
       this.applyTheme(savedTheme, false);
 
-      const toggleBtn = document.getElementById('themeToggleBtn');
-      if (toggleBtn && !toggleBtn._themeBound) {
-        toggleBtn._themeBound = true;
-        toggleBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          this.toggleTheme();
-        });
+      const toggleBtn = typeof document !== 'undefined' ? document.getElementById('themeToggleBtn') : null;
+      if (toggleBtn) {
+        // Clear inline onclick if present to avoid dual-triggering
+        if (typeof toggleBtn.removeAttribute === 'function') toggleBtn.removeAttribute('onclick');
+        if (!toggleBtn._themeBound) {
+          toggleBtn._themeBound = true;
+          toggleBtn.addEventListener('click', (e) => {
+            if (e && e.preventDefault) e.preventDefault();
+            this.toggleTheme();
+          });
+        }
       }
     }
 
     toggleTheme() {
-      const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      const doc = typeof document !== 'undefined' ? document.documentElement : null;
+      const currentTheme = (doc ? doc.getAttribute('data-theme') : null) || 'light';
       const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
       this.applyTheme(newTheme, true);
     }
 
     applyTheme(theme, showToast = false) {
       const isDark = theme === 'dark';
-      document.documentElement.setAttribute('data-theme', theme);
-      if (document.body) {
+      if (typeof document !== 'undefined' && document.documentElement) {
+        document.documentElement.setAttribute('data-theme', theme);
+      }
+      if (typeof document !== 'undefined' && document.body && document.body.classList) {
         if (isDark) {
           document.body.classList.add('dark-theme');
         } else {
@@ -1174,7 +1183,9 @@
         }
       }
       try {
-        localStorage.setItem('it_asset_theme', theme);
+        if (typeof localStorage !== 'undefined' && localStorage.setItem) {
+          localStorage.setItem('it_asset_theme', theme);
+        }
       } catch (err) {
         console.warn('LocalStorage error:', err);
       }
@@ -1194,7 +1205,7 @@
       if (darkIcon) darkIcon.style.display = isDark ? 'none' : 'inline-flex';
       if (lightIcon) lightIcon.style.display = isDark ? 'inline-flex' : 'none';
       if (btn) {
-        btn.setAttribute('aria-checked', isDark ? 'true' : 'false');
+        if (typeof btn.setAttribute === 'function') btn.setAttribute('aria-checked', isDark ? 'true' : 'false');
         btn.title = isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
       }
     }
@@ -8527,20 +8538,23 @@ Remarks: ${r.remark || 'None'}`);
     renderInstockDashboard() {
       const items = this.getInstockItems();
       const total = items.length;
-      const availableCount = items.filter(i => (i.status || 'Available') === 'Available').length;
+      const assignedCount = items.filter(i => (i.status || '') === 'Assigned').length;
+      const nonAssignedCount = total - assignedCount;
+      const availableCount = nonAssignedCount;
       const readyCount = items.filter(i => (i.status === 'Ready for Assignment' || i.status === 'Ready')).length;
-      const assignedCount = items.filter(i => i.status === 'Assigned').length;
       const maintenanceCount = items.filter(i => i.status === 'Under Maintenance').length;
 
       // Update summary cards with live database counts
       const totalEl = document.getElementById('instockTotalCount');
       const availEl = document.getElementById('instockAvailableCount');
+      const nonAssignedEl = document.getElementById('instockNonAssignedCount');
       const readyEl = document.getElementById('instockReadyCount');
       const assignedEl = document.getElementById('instockAssignedCount');
       const maintEl = document.getElementById('instockMaintenanceCount');
 
       if (totalEl) totalEl.textContent = total;
-      if (availEl) availEl.textContent = availableCount;
+      if (availEl) availEl.textContent = nonAssignedCount;
+      if (nonAssignedEl) nonAssignedEl.textContent = nonAssignedCount;
       if (readyEl) readyEl.textContent = readyCount;
       if (assignedEl) assignedEl.textContent = assignedCount;
       if (maintEl) maintEl.textContent = maintenanceCount;
@@ -9071,7 +9085,7 @@ Remarks: ${r.remark || 'None'}`);
                 <span>${Utils.escapeHtml(displayType)}</span>
               </span>
             </td>
-            <td>
+            <td style="display:none;" class="col-spec-model">
               <div style="font-weight:700; color:var(--text-main, #0f172a); font-size:0.86rem; line-height:1.35;">${Utils.escapeHtml(modelTitle)}</div>
               ${(!isNewSys && item.model && item.spec && item.spec !== item.model && details.length === 0) ? `<div style="font-size:0.78rem; color:#64748b; margin-top:2px;">${Utils.escapeHtml(item.spec)}</div>` : ''}
             </td>
@@ -9627,6 +9641,22 @@ Remarks: ${r.remark || 'None'}`);
                     </span>
                   </div>
                 </div>
+
+                ${(() => {
+                  const rawReason = (item.changing_reason || item.reason || '').trim();
+                  if (!rawReason || rawReason === '-' || rawReason === '—') return '';
+                  return `
+                    <!-- 8. Hardware Replaced Reason -->
+                    <div class="eye-view-detail-card span-2" style="grid-column: span 2; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 13px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                      <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                        <span>🔧</span> Hardware Replaced Reason
+                      </div>
+                      <div class="eye-view-detail-value" style="font-size: 0.92rem; font-weight: 600; color: #0f172a;">
+                        ${Utils.escapeHtml(rawReason)}
+                      </div>
+                    </div>
+                  `;
+                })()}
               </div>
             `;
           } else {
@@ -9684,6 +9714,22 @@ Remarks: ${r.remark || 'None'}`);
                     </span>
                   </div>
                 </div>
+
+                ${(() => {
+                  const rawReason = (item.changing_reason || item.reason || '').trim();
+                  if (!rawReason || rawReason === '-' || rawReason === '—') return '';
+                  return `
+                    <!-- Hardware Replaced Reason -->
+                    <div class="eye-view-detail-card span-2" style="grid-column: span 2; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 13px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                      <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                        <span>🔧</span> Hardware Replaced Reason
+                      </div>
+                      <div class="eye-view-detail-value" style="font-size: 0.92rem; font-weight: 600; color: #0f172a;">
+                        ${Utils.escapeHtml(rawReason)}
+                      </div>
+                    </div>
+                  `;
+                })()}
               </div>
             `;
           }
@@ -11100,6 +11146,201 @@ Remarks: ${r.remark || 'None'}`);
       }
     }
 
+    calculateWarrantyEndDate(purchaseDateStr, extensionStr = 'None') {
+      if (!purchaseDateStr) return '';
+      const parts = purchaseDateStr.split('-');
+      if (parts.length !== 3) return '';
+      const y = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10);
+      const d = parseInt(parts[2], 10);
+      if (isNaN(y) || isNaN(m) || isNaN(d)) return '';
+      let extYears = 0;
+      if (typeof extensionStr === 'string') {
+        const match = extensionStr.match(/(\d+)/);
+        if (match) extYears = parseInt(match[1], 10);
+      } else if (typeof extensionStr === 'number') {
+        extYears = extensionStr;
+      }
+      // Standard 1-year warranty + extension
+      const totalYears = 1 + extYears;
+      const targetDate = new Date(y + totalYears, m - 1, d);
+      const resY = targetDate.getFullYear();
+      const resM = String(targetDate.getMonth() + 1).padStart(2, '0');
+      const resD = String(targetDate.getDate()).padStart(2, '0');
+      return `${resY}-${resM}-${resD}`;
+    }
+
+    handleExtendWarrantyChange(section = 'standard') {
+      if (section === 'newSystem') {
+        const purchaseInput = document.getElementById('newSystemPurchaseDate');
+        const extSelect = document.getElementById('newSystemExtendWarranty');
+        const warrantyInput = document.getElementById('newSystemWarrantyEnd');
+        const pDate = purchaseInput?.value || new Date().toISOString().substring(0, 10);
+        const ext = extSelect?.value || 'None';
+        const newEnd = this.calculateWarrantyEndDate(pDate, ext);
+        if (warrantyInput) warrantyInput.value = newEnd;
+        this.updateNewSystemWarrantyDaysRemaining();
+      } else {
+        const purchaseInput = document.getElementById('instockPurchaseDate');
+        const extSelect = document.getElementById('instockExtendWarranty');
+        const warrantyInput = document.getElementById('instockWarrantyEnd');
+        const pDate = purchaseInput?.value || new Date().toISOString().substring(0, 10);
+        const ext = extSelect?.value || 'None';
+        const newEnd = this.calculateWarrantyEndDate(pDate, ext);
+        if (warrantyInput) warrantyInput.value = newEnd;
+        this.updateStandardWarrantyDaysRemaining();
+      }
+    }
+
+    handleStandardPurchaseDateChange() {
+      const purchaseInput = document.getElementById('instockPurchaseDate');
+      const extSelect = document.getElementById('instockExtendWarranty');
+      const warrantyInput = document.getElementById('instockWarrantyEnd');
+      const pDate = purchaseInput?.value || '';
+      if (pDate) {
+        const ext = extSelect?.value || 'None';
+        const newEnd = this.calculateWarrantyEndDate(pDate, ext);
+        if (warrantyInput) warrantyInput.value = newEnd;
+      }
+      this.updateStandardWarrantyDaysRemaining();
+    }
+
+    handleNewSystemPurchaseDateChange() {
+      const purchaseInput = document.getElementById('newSystemPurchaseDate');
+      const extSelect = document.getElementById('newSystemExtendWarranty');
+      const warrantyInput = document.getElementById('newSystemWarrantyEnd');
+      const pDate = purchaseInput?.value || '';
+      if (pDate) {
+        const ext = extSelect?.value || 'None';
+        const newEnd = this.calculateWarrantyEndDate(pDate, ext);
+        if (warrantyInput) warrantyInput.value = newEnd;
+      }
+      this.updateNewSystemWarrantyDaysRemaining();
+    }
+
+    updateStandardWarrantyDaysRemaining() {
+      const warrantyInput = document.getElementById('instockWarrantyEnd');
+      const boxEl = document.getElementById('instockWarrantyDaysBox');
+      const textEl = document.getElementById('instockWarrantyDaysText');
+      const iconEl = document.getElementById('instockWarrantyDaysIcon');
+      if (!textEl) return;
+
+      const val = warrantyInput ? warrantyInput.value.trim() : '';
+      if (!val) {
+        textEl.textContent = 'No Warranty Date';
+        if (iconEl) iconEl.textContent = '⏳';
+        if (boxEl) {
+          boxEl.style.background = '#f8fafc';
+          boxEl.style.borderColor = '#cbd5e1';
+          boxEl.style.color = '#64748b';
+        }
+        return;
+      }
+
+      const exp = new Date(val);
+      if (isNaN(exp.getTime())) {
+        textEl.textContent = 'Invalid Date';
+        if (iconEl) iconEl.textContent = '⚠️';
+        if (boxEl) {
+          boxEl.style.background = '#fef2f2';
+          boxEl.style.borderColor = '#fecaca';
+          boxEl.style.color = '#dc2626';
+        }
+        return;
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      exp.setHours(0, 0, 0, 0);
+      const diffTime = exp.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays > 0) {
+        textEl.textContent = `${diffDays} Days Remaining`;
+        if (iconEl) iconEl.textContent = diffDays <= 30 ? '⚠️' : '🛡️';
+        if (boxEl) {
+          if (diffDays <= 30) {
+            boxEl.style.background = '#fffbeb';
+            boxEl.style.borderColor = '#fde68a';
+            boxEl.style.color = '#b45309';
+          } else {
+            boxEl.style.background = '#f0fdf4';
+            boxEl.style.borderColor = '#bbf7d0';
+            boxEl.style.color = '#16a34a';
+          }
+        }
+      } else if (diffDays === 0) {
+        textEl.textContent = 'Expires Today';
+        if (iconEl) iconEl.textContent = '⚠️';
+        if (boxEl) {
+          boxEl.style.background = '#fffbeb';
+          boxEl.style.borderColor = '#fde68a';
+          boxEl.style.color = '#b45309';
+        }
+      } else {
+        const ago = Math.abs(diffDays);
+        textEl.textContent = `Expired (${ago} day${ago === 1 ? '' : 's'} ago)`;
+        if (iconEl) iconEl.textContent = '❌';
+        if (boxEl) {
+          boxEl.style.background = '#fef2f2';
+          boxEl.style.borderColor = '#fecaca';
+          boxEl.style.color = '#dc2626';
+        }
+      }
+    }
+
+    populateSystemAssetDatalist() {
+      const datalist = document.getElementById('instockSystemAssetDatalist');
+      if (!datalist) return;
+      const allAssets = (store && store.data && store.data.assets) || [];
+      const instockList = (store && store.data && store.data.instockHardware) || [];
+      
+      const systems = [];
+      const seen = new Set();
+      
+      allAssets.forEach(a => {
+        if (!a || !a.id) return;
+        const type = (a.type || '').toLowerCase();
+        if (type === 'desktop' || type === 'laptop' || a.id.startsWith('PIX_DSK') || a.id.startsWith('PIX_LAP') || a.id.startsWith('AST-DSK') || a.id.startsWith('AST-LPT')) {
+          const key = a.id.toLowerCase();
+          if (!seen.has(key)) {
+            seen.add(key);
+            systems.push({ id: a.id, type: a.type || 'System', user: a.user || '' });
+          }
+        }
+      });
+
+      instockList.forEach(i => {
+        if (!i || !i.id) return;
+        const type = (i.component_type || '').toLowerCase();
+        if (type === 'new system' || type === 'new_system' || i.id.startsWith('PIX_DSK') || i.id.startsWith('PIX_LAP')) {
+          const key = i.id.toLowerCase();
+          if (!seen.has(key)) {
+            seen.add(key);
+            systems.push({ id: i.id, type: 'Desktop', user: i.assigned_user || '' });
+          }
+        }
+      });
+
+      datalist.innerHTML = systems.map(s => {
+        const userLabel = s.user && s.user !== 'None' ? ` (${s.user})` : ' (Available)';
+        return `<option value="${Utils.escapeHtml(s.id)}">${Utils.escapeHtml(s.id)} - ${Utils.escapeHtml(s.type)}${Utils.escapeHtml(userLabel)}</option>`;
+      }).join('');
+    }
+
+    handleInstockUserSelect(userName) {
+      if (!userName) return;
+      const cleanUser = userName.trim().toLowerCase();
+      const allAssets = (store && store.data && store.data.assets) || [];
+      const match = allAssets.find(a => (a.user || '').trim().toLowerCase() === cleanUser && (a.type === 'Desktop' || a.type === 'Laptop'));
+      if (match) {
+        const sysAssetInput = document.getElementById('instockSystemAssetId');
+        if (sysAssetInput && !sysAssetInput.value) {
+          sysAssetInput.value = match.id;
+        }
+      }
+    }
+
     async handleNewSystemSubmit(event) {
       return this.handleInstockFormSubmit(event);
     }
@@ -11132,7 +11373,8 @@ Remarks: ${r.remark || 'None'}`);
         saveBtn.innerHTML = '💾 Save Stock Entry';
       }
 
-      // Populate User Datalist for searchable dropdown
+      // Populate System Asset ID datalist and User Datalist
+      this.populateSystemAssetDatalist();
       const userDatalist = document.getElementById('instockAllUsersDatalist');
       if (userDatalist) {
         const userSet = new Set();
@@ -11196,9 +11438,18 @@ Remarks: ${r.remark || 'None'}`);
           if (smpsInput) smpsInput.value = (sys.smps && sys.smps !== 'None') ? sys.smps : '';
           const newSysPurchaseDate = document.getElementById('newSystemPurchaseDate');
           if (newSysPurchaseDate) newSysPurchaseDate.value = sys.doa || sys.purchaseDate || sys.purchase_date || sys.assignedDate || today;
+          
+          const newSysExtend = document.getElementById('newSystemExtendWarranty');
+          if (newSysExtend) newSysExtend.value = sys.warranty_extension || sys.warrantyExtension || 'None';
           const newSysWarrantyEnd = document.getElementById('newSystemWarrantyEnd');
-          if (newSysWarrantyEnd) newSysWarrantyEnd.value = sys.warrantyEnd || '';
+          if (newSysWarrantyEnd) {
+            const rawEnd = sys.warrantyEnd || sys.warranty_expiry || '';
+            newSysWarrantyEnd.value = rawEnd || this.calculateWarrantyEndDate(newSysPurchaseDate?.value || today, newSysExtend?.value || 'None');
+          }
           this.updateNewSystemWarrantyDaysRemaining();
+
+          const sysAssetInput = document.getElementById('instockSystemAssetId');
+          if (sysAssetInput) sysAssetInput.value = sys.id || editId;
 
           const isAssigned = (sys.status === 'Assigned');
           if (statusSelect) statusSelect.value = isAssigned ? 'Assigned' : 'Available';
@@ -11221,7 +11472,7 @@ Remarks: ${r.remark || 'None'}`);
               }
               tlSelect.value = tlVal;
             }
-            if (reasonInput) reasonInput.value = sys.remark || sys.changing_reason || '';
+            if (reasonInput) reasonInput.value = sys.changing_reason || sys.remark || '';
           } else {
             if (userInput) userInput.value = '';
             if (assignedDateInput) assignedDateInput.value = '';
@@ -11244,6 +11495,18 @@ Remarks: ${r.remark || 'None'}`);
           if (specInput) specInput.value = item.spec || item.model || '';
           if (serialInput) serialInput.value = item.serial_number || '';
           if (purchaseDateInput) purchaseDateInput.value = item.purchase_date || '';
+
+          const stdExtend = document.getElementById('instockExtendWarranty');
+          if (stdExtend) stdExtend.value = item.warranty_extension || item.warrantyExtension || 'None';
+          const stdWarrantyEnd = document.getElementById('instockWarrantyEnd');
+          if (stdWarrantyEnd) {
+            const rawEnd = item.warranty_expiry || item.warrantyEnd || '';
+            stdWarrantyEnd.value = rawEnd || this.calculateWarrantyEndDate(purchaseDateInput?.value || today, stdExtend?.value || 'None');
+          }
+          this.updateStandardWarrantyDaysRemaining();
+
+          const sysAssetInput = document.getElementById('instockSystemAssetId');
+          if (sysAssetInput) sysAssetInput.value = item.system_asset_id || item.systemAssetId || '';
 
           const isAssigned = (item.status === 'Assigned');
           if (statusSelect) {
@@ -11290,6 +11553,16 @@ Remarks: ${r.remark || 'None'}`);
         if (specInput) specInput.value = '';
         if (serialInput) serialInput.value = '';
         if (purchaseDateInput) purchaseDateInput.value = today;
+
+        const stdExtend = document.getElementById('instockExtendWarranty');
+        if (stdExtend) stdExtend.value = 'None';
+        const stdWarrantyEnd = document.getElementById('instockWarrantyEnd');
+        if (stdWarrantyEnd) stdWarrantyEnd.value = this.calculateWarrantyEndDate(today, 'None');
+        this.updateStandardWarrantyDaysRemaining();
+
+        const sysAssetInput = document.getElementById('instockSystemAssetId');
+        if (sysAssetInput) sysAssetInput.value = '';
+
         if (statusSelect) statusSelect.value = 'Available';
         if (radioPending) radioPending.checked = true;
         if (radioAssigned) radioAssigned.checked = false;
@@ -11326,8 +11599,10 @@ Remarks: ${r.remark || 'None'}`);
         if (smpsInput) smpsInput.value = '';
         const newSysPurchaseDate = document.getElementById('newSystemPurchaseDate');
         if (newSysPurchaseDate) newSysPurchaseDate.value = today;
+        const newSysExtend = document.getElementById('newSystemExtendWarranty');
+        if (newSysExtend) newSysExtend.value = 'None';
         const newSysWarrantyEnd = document.getElementById('newSystemWarrantyEnd');
-        if (newSysWarrantyEnd) newSysWarrantyEnd.value = '';
+        if (newSysWarrantyEnd) newSysWarrantyEnd.value = this.calculateWarrantyEndDate(today, 'None');
         this.updateNewSystemWarrantyDaysRemaining();
 
         this.handleInstockCategoryChange();
@@ -11425,7 +11700,11 @@ Remarks: ${r.remark || 'None'}`);
         const monitor = monitorNone ? 'None' : (document.getElementById('newSystemMonitor')?.value?.trim() || 'None');
         const smps = document.getElementById('newSystemSmps')?.value?.trim() || 'None';
         const purchaseDate = document.getElementById('newSystemPurchaseDate')?.value || today;
-        const warrantyEnd = document.getElementById('newSystemWarrantyEnd')?.value?.trim() || '';
+        const warranty_extension = document.getElementById('newSystemExtendWarranty')?.value || 'None';
+        let warrantyEnd = document.getElementById('newSystemWarrantyEnd')?.value?.trim() || '';
+        if (!warrantyEnd && purchaseDate) {
+          warrantyEnd = this.calculateWarrantyEndDate(purchaseDate, warranty_extension);
+        }
 
         const finalAssetId = customAssetId || this.getNextDesktopAssetId();
 
@@ -11517,6 +11796,7 @@ Remarks: ${r.remark || 'None'}`);
           doa: purchaseDate,
           purchaseDate,
           ...(warrantyEnd ? { warrantyEnd } : {}),
+          warrantyExtension: warranty_extension,
           status: isAssigned ? 'Assigned' : 'Non-Assigned',
           condition: 'Brand New',
           location: isAssigned ? 'Office' : 'In Stock',
@@ -11543,12 +11823,15 @@ Remarks: ${r.remark || 'None'}`);
           smps,
           serial_number: serialNumber || ('SN-' + finalAssetId),
           purchase_date: purchaseDate,
+          warranty_expiry: warrantyEnd,
+          warranty_extension,
+          system_asset_id: finalAssetId,
           status: isAssigned ? 'Assigned' : 'Available',
           assigned_user: isAssigned ? assigned_user : '',
           assigned_date: isAssigned ? assigned_date : '',
           team: isAssigned ? team : '',
           tl: isAssigned ? tl : '',
-          changing_reason: isAssigned ? (reason || '') : '',
+          changing_reason: isAssigned ? (reason || '') : (existingItem.changing_reason || reason || ''),
           remark: isAssigned ? (reason || 'Assigned from In Stock') : (remark || 'New System Configuration')
         };
 
@@ -11578,7 +11861,7 @@ Remarks: ${r.remark || 'None'}`);
             const errData = await res.json().catch(() => ({}));
             throw new Error(errData.error || `Server returned ${res.status}`);
           }
-          const saved = await res.json();
+          const saved = (await res.json()) || payload;
           if (!store.data.assets) store.data.assets = [];
           if (editId) {
             const idx = store.data.assets.findIndex(a => (a.id || '').toLowerCase() === editId.toLowerCase());
@@ -11745,6 +12028,13 @@ Remarks: ${r.remark || 'None'}`);
       });
       if (!confirmed) return;
 
+      const warranty_extension = document.getElementById('instockExtendWarranty')?.value || 'None';
+      let warranty_expiry = document.getElementById('instockWarrantyEnd')?.value?.trim() || '';
+      if (!warranty_expiry && purchase_date) {
+        warranty_expiry = this.calculateWarrantyEndDate(purchase_date, warranty_extension);
+      }
+      const system_asset_id = isAssigned ? (document.getElementById('instockSystemAssetId')?.value?.trim() || existingItem.system_asset_id || '') : '';
+
       const payload = {
         id: finalAssetId,
         component_type,
@@ -11757,7 +12047,10 @@ Remarks: ${r.remark || 'None'}`);
         assigned_date: isAssigned ? (assigned_date || purchase_date) : '',
         team: isAssigned ? team : '',
         tl: isAssigned ? tl : '',
-        changing_reason: isAssigned ? reason : '',
+        system_asset_id,
+        changing_reason: isAssigned ? reason : (existingItem.changing_reason || reason || ''),
+        warranty_expiry,
+        warranty_extension,
         remark
       };
 
@@ -11781,7 +12074,7 @@ Remarks: ${r.remark || 'None'}`);
           const updated = await res.json();
           const idx = (store.data.instockHardware || []).findIndex(i => i.id === editId);
           if (idx !== -1) {
-            store.data.instockHardware[idx] = updated;
+            store.data.instockHardware[idx] = { ...store.data.instockHardware[idx], ...updated, ...payload };
           }
 
           // If changed from Assigned to Non-Assigned, update client allocation store to preserve past history
@@ -15495,6 +15788,24 @@ async viewAsset(assetId) {
     },
     updateNewSystemWarrantyDaysRemaining() {
       app.updateNewSystemWarrantyDaysRemaining();
+    },
+    calculateWarrantyEndDate(purchaseDateStr, extensionStr) {
+      return app.calculateWarrantyEndDate(purchaseDateStr, extensionStr);
+    },
+    handleExtendWarrantyChange(section) {
+      app.handleExtendWarrantyChange(section);
+    },
+    handleStandardPurchaseDateChange() {
+      app.handleStandardPurchaseDateChange();
+    },
+    handleNewSystemPurchaseDateChange() {
+      app.handleNewSystemPurchaseDateChange();
+    },
+    updateStandardWarrantyDaysRemaining() {
+      app.updateStandardWarrantyDaysRemaining();
+    },
+    populateSystemAssetDatalist() {
+      app.populateSystemAssetDatalist();
     },
     handleNewSystemSubmit(event) {
       return app.handleNewSystemSubmit(event);

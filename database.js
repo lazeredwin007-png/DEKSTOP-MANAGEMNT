@@ -769,6 +769,12 @@ class DatabaseService {
       this.db.exec("ALTER TABLE instock_hardware ADD COLUMN warranty_expiry TEXT DEFAULT ''");
     } catch (e) {}
     try {
+      this.db.exec("ALTER TABLE instock_hardware ADD COLUMN system_asset_id TEXT DEFAULT ''");
+    } catch (e) {}
+    try {
+      this.db.exec("ALTER TABLE instock_hardware ADD COLUMN warranty_extension TEXT DEFAULT 'None'");
+    } catch (e) {}
+    try {
       this.db.exec("ALTER TABLE requirements ADD COLUMN asset_assignment_status TEXT DEFAULT 'Non-Assigned / Awaiting Allocation'");
     } catch (e) {}
     try {
@@ -2132,10 +2138,19 @@ class DatabaseService {
       try {
         this.db.exec("ALTER TABLE instock_hardware ADD COLUMN warranty_expiry TEXT DEFAULT ''");
       } catch (e) {}
+      try {
+        this.db.exec("ALTER TABLE instock_hardware ADD COLUMN changing_reason TEXT DEFAULT ''");
+      } catch (e) {}
+      try {
+        this.db.exec("ALTER TABLE instock_hardware ADD COLUMN system_asset_id TEXT DEFAULT ''");
+      } catch (e) {}
+      try {
+        this.db.exec("ALTER TABLE instock_hardware ADD COLUMN warranty_extension TEXT DEFAULT 'None'");
+      } catch (e) {}
 
       const stmt = this.db.prepare(`
-        INSERT OR REPLACE INTO instock_hardware (id, component_type, model, spec, serial_number, purchase_date, status, assigned_user, assigned_date, team, tl, remark, created_at, warranty_expiry)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT OR REPLACE INTO instock_hardware (id, component_type, model, spec, serial_number, purchase_date, status, assigned_user, assigned_date, team, tl, remark, created_at, warranty_expiry, changing_reason, system_asset_id, warranty_extension)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       stmt.run(
         id,
@@ -2151,7 +2166,10 @@ class DatabaseService {
         item.tl || '',
         item.remark || '',
         item.created_at || now,
-        item.warranty_expiry || item.warrantyEnd || item.warranty_end || ''
+        item.warranty_expiry || item.warrantyEnd || item.warranty_end || '',
+        item.changing_reason || item.reason || '',
+        item.system_asset_id || item.systemAssetId || '',
+        item.warranty_extension || item.warrantyExtension || 'None'
       );
 
       // Record Purchase / Stock In event in instock_history
@@ -2220,7 +2238,11 @@ class DatabaseService {
       team: item.team || '',
       tl: item.tl || '',
       remark: item.remark || '',
-      created_at: item.created_at || now
+      created_at: item.created_at || now,
+      warranty_expiry: item.warranty_expiry || item.warrantyEnd || item.warranty_end || '',
+      changing_reason: item.changing_reason || item.reason || '',
+      system_asset_id: item.system_asset_id || item.systemAssetId || '',
+      warranty_extension: item.warranty_extension || item.warrantyExtension || 'None'
     };
     if (!this.memoryData.instockHardware) this.memoryData.instockHardware = [];
     this.memoryData.instockHardware.unshift(newRecord);
@@ -2239,13 +2261,32 @@ class DatabaseService {
       try {
         this.db.exec("ALTER TABLE instock_hardware ADD COLUMN warranty_expiry TEXT DEFAULT ''");
       } catch (e) {}
+      try {
+        this.db.exec("ALTER TABLE instock_hardware ADD COLUMN changing_reason TEXT DEFAULT ''");
+      } catch (e) {}
+      try {
+        this.db.exec("ALTER TABLE instock_hardware ADD COLUMN system_asset_id TEXT DEFAULT ''");
+      } catch (e) {}
+      try {
+        this.db.exec("ALTER TABLE instock_hardware ADD COLUMN warranty_extension TEXT DEFAULT 'None'");
+      } catch (e) {}
 
-      const oldItem = this.db.prepare('SELECT * FROM instock_hardware WHERE id = ?').get(id);
+      const oldItem = this.db.prepare('SELECT * FROM instock_hardware WHERE id = ? COLLATE NOCASE').get(id);
       if (!oldItem) {
         return this.insertInstockHardware({ id, ...updates });
       }
 
-      const fields = ['component_type', 'model', 'spec', 'serial_number', 'purchase_date', 'status', 'assigned_user', 'assigned_date', 'team', 'tl', 'remark', 'warranty_expiry'];
+      const realId = oldItem.id;
+      if (updates.changing_reason === undefined && updates.reason !== undefined) updates.changing_reason = updates.reason;
+      if (updates.warrantyEnd && !updates.warranty_expiry) updates.warranty_expiry = updates.warrantyEnd;
+      if (updates.systemAssetId && !updates.system_asset_id) updates.system_asset_id = updates.systemAssetId;
+      if (updates.warrantyExtension && !updates.warranty_extension) updates.warranty_extension = updates.warrantyExtension;
+
+      const fields = [
+        'component_type', 'model', 'spec', 'serial_number', 'purchase_date',
+        'status', 'assigned_user', 'assigned_date', 'team', 'tl', 'remark',
+        'warranty_expiry', 'changing_reason', 'system_asset_id', 'warranty_extension'
+      ];
       const setClauses = [];
       const values = [];
       for (const f of fields) {
@@ -2255,7 +2296,7 @@ class DatabaseService {
         }
       }
       if (setClauses.length > 0) {
-        values.push(id);
+        values.push(realId);
         this.db.prepare(`UPDATE instock_hardware SET ${setClauses.join(', ')} WHERE id = ?`).run(...values);
       }
 
@@ -2358,7 +2399,7 @@ class DatabaseService {
         }
       }
 
-      return this.db.prepare('SELECT * FROM instock_hardware WHERE id = ?').get(id);
+      return this.db.prepare('SELECT * FROM instock_hardware WHERE id = ? COLLATE NOCASE').get(realId || id);
     }
 
     if (!this.memoryData.instockHardware) return null;
