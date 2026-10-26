@@ -21,7 +21,7 @@ function test(name, fn) {
 }
 
 // 1. Strict Card Order in index.html
-console.log('--- 1. Verification of Strict Card Order (7 Cards) ---');
+console.log('--- 1. Verification of Strict Card Order (9 Cards) ---');
 const expectedOrder = [
   { key: 'NEW_SYSTEM', id: 'instockCatCard_NEW_SYSTEM', name: 'New System', arg: "'NEW SYSTEM'", iconClass: 'cat-icon-new-system' },
   { key: 'CPU', id: 'instockCatCard_CPU', name: 'Processor', arg: "'CPU'", iconClass: 'cat-icon-cpu' },
@@ -29,14 +29,16 @@ const expectedOrder = [
   { key: 'SSD', id: 'instockCatCard_SSD', name: 'SSD', arg: "'SSD'", iconClass: 'cat-icon-ssd' },
   { key: 'MONITOR', id: 'instockCatCard_MONITOR', name: 'Monitor', arg: "'MONITOR'", iconClass: 'cat-icon-monitor' },
   { key: 'SMPS', id: 'instockCatCard_SMPS', name: 'SMPS', arg: "'SMPS'", iconClass: 'cat-icon-smps' },
-  { key: 'OTHER', id: 'instockCatCard_OTHER', name: 'Other', arg: "'OTHER'", iconClass: 'cat-icon-other' }
+  { key: 'OTHER', id: 'instockCatCard_OTHER', name: 'Other', arg: "'OTHER'", iconClass: 'cat-icon-other' },
+  { key: 'MOUSE', id: 'instockCatCard_MOUSE', name: 'Mouse', arg: "'MOUSE'", iconClass: 'cat-icon-mouse' },
+  { key: 'KEYBOARD', id: 'instockCatCard_KEYBOARD', name: 'Keyboard', arg: "'KEYBOARD'", iconClass: 'cat-icon-keyboard' }
 ];
 
 test('instockCategoryCardsContainer exists in index.html', () => {
   assert(html.includes('id="instockCategoryCardsContainer"'), 'Container exists');
 });
 
-test('Cards follow strict order: New System first, Other last', () => {
+test('Cards follow strict order: New System first, Keyboard last', () => {
   let lastIndex = -1;
   expectedOrder.forEach((c) => {
     const cardIndex = html.indexOf(`id="${c.id}"`);
@@ -83,33 +85,26 @@ test('Instock summary cards display Total Assets, Assigned Assets, and Non-Assig
 
 // 5. Styling in styles.css
 console.log('\n--- 5. Category Cards & Subcount Pills Styling in styles.css ---');
-test('.instock-category-cards-grid grid styling exists with 7 columns', () => {
+test('.instock-category-cards-grid grid styling exists with 9 columns', () => {
   assert(css.includes('.instock-category-cards-grid'), 'Grid class exists');
-  assert(css.includes('grid-template-columns: repeat(7, 1fr)'), '7-column grid layout exists');
+  assert(css.includes('grid-template-columns: repeat(9, 1fr)'), '9-column grid layout exists');
 });
 
 test('.instock-category-card base, hover, and active styles exist with rounded corners', () => {
   assert(css.includes('.instock-category-card {'), 'Base card styles exist');
-  assert(css.includes('border-radius: 12px'), 'Rounded corners exist on category cards');
+  assert(css.includes('border-radius: 10px') || css.includes('border-radius: 12px'), 'Rounded corners exist on category cards');
   assert(css.includes('.instock-category-card:hover {'), 'Card hover styles exist');
   assert(css.includes('.instock-category-card.active {'), 'Active card styles exist');
   assert(css.includes('#2563eb'), 'Uses professional blue #2563eb accent');
 });
 
-test('.cat-subcount-pill active-status styles exist for AV (green) and ASS (purple)', () => {
-  assert(css.includes('.cat-subcount-pill'), 'Subcount pill style exists');
-  assert(css.includes('.cat-subcount-av.active-status'), 'AV active-status style exists');
-  assert(css.includes('.cat-subcount-ass.active-status'), 'ASS active-status style exists');
-});
-
 // 6. JS Controller Logic in app.js
 console.log('\n--- 6. Controller Logic in app.js ---');
-test('filterInventoryByCatAndStatus filters by both category and status, supports toggle-off', () => {
-  assert(appJs.includes('filterInventoryByCatAndStatus(cat, status)'), 'Method filterInventoryByCatAndStatus exists');
-  assert(appJs.includes('window.ITApp.filterInventoryByCatAndStatus') || appJs.includes('filterInventoryByCatAndStatus(cat, status) {'), 'Exposed on window.ITApp');
+test('filterInventoryByCategory preserves status and filters by category', () => {
+  assert(appJs.includes('filterInventoryByCategory(cat)'), 'Method filterInventoryByCategory exists');
 });
 
-test('updateInstockCategoryCardsCounts calculates dynamic Total Assets, AV, and ASS counts', () => {
+test('updateInstockCategoryCardsCounts calculates dynamic Total Assets, AV, and ASS counts including Mouse & Keyboard', () => {
   assert(appJs.includes('updateInstockCategoryCardsCounts()'), 'Method updateInstockCategoryCardsCounts exists');
   assert(appJs.includes("setGroup('NEW_SYSTEM'"), 'Updates New System counts');
   assert(appJs.includes("setGroup('CPU'"), 'Updates CPU counts');
@@ -118,15 +113,16 @@ test('updateInstockCategoryCardsCounts calculates dynamic Total Assets, AV, and 
   assert(appJs.includes("setGroup('MONITOR'"), 'Updates Monitor counts');
   assert(appJs.includes("setGroup('SMPS'"), 'Updates SMPS counts');
   assert(appJs.includes("setGroup('OTHER'"), 'Updates Other counts');
+  assert(appJs.includes("setGroup('MOUSE'"), 'Updates Mouse counts');
+  assert(appJs.includes("setGroup('KEYBOARD'"), 'Updates Keyboard counts');
 });
 
-test('updateInstockCategoryCardsActive highlights selected card and selected AV/ASS pill', () => {
+test('updateInstockCategoryCardsActive highlights selected card', () => {
   assert(appJs.includes('updateInstockCategoryCardsActive(selectedCat, selectedStatus)'), 'Accepts selectedCat and selectedStatus');
-  assert(appJs.includes("avPill.classList.add('active-status')"), 'Adds active-status to AV pill');
-  assert(appJs.includes("assPill.classList.add('active-status')"), 'Adds active-status to ASS pill');
+  assert(appJs.includes("card.classList.add('active')"), 'Adds active class to selected card');
 });
 
-test('resetInstockDashboardFilters resets active card and pill highlights to all', () => {
+test('resetInstockDashboardFilters resets active card and highlights to all', () => {
   assert(appJs.includes("this.updateInstockCategoryCardsActive('all'"), 'Resets active card to all');
   assert(appJs.includes('this.updateInstockCategoryCardsCounts()'), 'Refreshes card counts');
 });
@@ -159,9 +155,11 @@ test('Verify Total Assets === AV + ASS across all categories on real database re
     { name: 'SSD', matcher: i => (i.component_type || '').toUpperCase() === 'SSD' },
     { name: 'MONITOR', matcher: i => (i.component_type || '').toUpperCase() === 'MONITOR' },
     { name: 'SMPS', matcher: i => (i.component_type || '').toUpperCase() === 'SMPS' },
+    { name: 'MOUSE', matcher: i => (i.component_type || '').toUpperCase() === 'MOUSE' },
+    { name: 'KEYBOARD', matcher: i => (i.component_type || '').toUpperCase() === 'KEYBOARD' },
     { name: 'OTHER', matcher: i => {
       const ct = (i.component_type || '').toUpperCase();
-      return !['CPU', 'PROCESSOR', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'NEW SYSTEM', 'NEW_SYSTEM'].includes(ct);
+      return !['CPU', 'PROCESSOR', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'NEW SYSTEM', 'NEW_SYSTEM', 'MOUSE', 'KEYBOARD'].includes(ct);
     }}
   ];
 

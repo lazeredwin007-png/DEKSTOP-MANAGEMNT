@@ -8586,13 +8586,25 @@ Remarks: ${r.remark || 'None'}`);
     updateInstockCategoryCardsCounts() {
       const items = this.getInstockItems();
       const total = items.length;
+      const statSelect = document.getElementById('instockInventoryStatusFilter');
+      const activeStatus = (statSelect?.value || 'all').trim();
+
+      let statLabel = 'Total Assets:';
+      if (activeStatus === 'Assigned') {
+        statLabel = 'Assigned:';
+      } else if (activeStatus === 'Available' || activeStatus === 'Non-Assigned') {
+        statLabel = 'Non-Assigned:';
+      }
 
       const getCountsFor = (matcher) => {
         const catItems = items.filter(matcher);
         const catTotal = catItems.length;
         const catAss = catItems.filter(i => (i.status || '') === 'Assigned').length;
         const catAv = catTotal - catAss;
-        return { total: catTotal, av: catAv, ass: catAss };
+        let displayed = catTotal;
+        if (activeStatus === 'Assigned') displayed = catAss;
+        else if (activeStatus === 'Available' || activeStatus === 'Non-Assigned') displayed = catAv;
+        return { total: catTotal, av: catAv, ass: catAss, displayed };
       };
 
       const newSys = getCountsFor(i => {
@@ -8609,22 +8621,30 @@ Remarks: ${r.remark || 'None'}`);
       const ssd = getCountsFor(i => (i.component_type || '').toUpperCase() === 'SSD');
       const monitor = getCountsFor(i => (i.component_type || '').toUpperCase() === 'MONITOR');
       const smps = getCountsFor(i => (i.component_type || '').toUpperCase() === 'SMPS');
+      const mouse = getCountsFor(i => (i.component_type || '').toUpperCase() === 'MOUSE');
+      const keyboard = getCountsFor(i => (i.component_type || '').toUpperCase() === 'KEYBOARD');
 
       const other = getCountsFor(i => {
         const ct = (i.component_type || '').toUpperCase();
-        return !['CPU', 'PROCESSOR', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'NEW SYSTEM', 'NEW_SYSTEM'].includes(ct);
+        return !['CPU', 'PROCESSOR', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'NEW SYSTEM', 'NEW_SYSTEM', 'MOUSE', 'KEYBOARD'].includes(ct);
       });
 
-      const setGroup = (key, data) => {
+      const setGroup = (key, cardId, data) => {
         const totalEl = document.getElementById(`instockCatCount_${key}_total`);
         const badgeEl = document.getElementById(`instockCatCount_${key}`);
         const avEl = document.getElementById(`instockCatCount_${key}_av`);
         const assEl = document.getElementById(`instockCatCount_${key}_ass`);
+        const card = document.getElementById(cardId);
 
-        if (totalEl) totalEl.textContent = data.total;
+        if (totalEl) totalEl.textContent = data.displayed;
         if (badgeEl) badgeEl.textContent = data.total;
         if (avEl) avEl.textContent = data.av;
         if (assEl) assEl.textContent = data.ass;
+
+        if (card) {
+          const labelEl = card.querySelector('.cat-stat-label');
+          if (labelEl) labelEl.textContent = statLabel;
+        }
       };
 
       const setVal = (id, val) => {
@@ -8633,13 +8653,15 @@ Remarks: ${r.remark || 'None'}`);
       };
 
       setVal('instockCatCount_all', total);
-      setGroup('NEW_SYSTEM', newSys);
-      setGroup('CPU', cpu);
-      setGroup('RAM', ram);
-      setGroup('SSD', ssd);
-      setGroup('MONITOR', monitor);
-      setGroup('SMPS', smps);
-      setGroup('OTHER', other);
+      setGroup('NEW_SYSTEM', 'instockCatCard_NEW_SYSTEM', newSys);
+      setGroup('CPU', 'instockCatCard_CPU', cpu);
+      setGroup('RAM', 'instockCatCard_RAM', ram);
+      setGroup('SSD', 'instockCatCard_SSD', ssd);
+      setGroup('MONITOR', 'instockCatCard_MONITOR', monitor);
+      setGroup('SMPS', 'instockCatCard_SMPS', smps);
+      setGroup('OTHER', 'instockCatCard_OTHER', other);
+      setGroup('MOUSE', 'instockCatCard_MOUSE', mouse);
+      setGroup('KEYBOARD', 'instockCatCard_KEYBOARD', keyboard);
     }
 
     updateInstockCategoryCardsActive(selectedCat, selectedStatus) {
@@ -8657,7 +8679,9 @@ Remarks: ${r.remark || 'None'}`);
         'SSD': 'instockCatCard_SSD',
         'MONITOR': 'instockCatCard_MONITOR',
         'SMPS': 'instockCatCard_SMPS',
-        'OTHER': 'instockCatCard_OTHER'
+        'OTHER': 'instockCatCard_OTHER',
+        'MOUSE': 'instockCatCard_MOUSE',
+        'KEYBOARD': 'instockCatCard_KEYBOARD'
       };
 
       let normKey = 'all';
@@ -8668,6 +8692,8 @@ Remarks: ${r.remark || 'None'}`);
       else if (u === 'MONITOR') normKey = 'MONITOR';
       else if (u === 'SMPS') normKey = 'SMPS';
       else if (u === 'OTHER') normKey = 'OTHER';
+      else if (u === 'MOUSE') normKey = 'MOUSE';
+      else if (u === 'KEYBOARD') normKey = 'KEYBOARD';
       else if (u === 'NEW SYSTEM' || u === 'NEW_SYSTEM' || u === 'NEWSYSTEM') normKey = 'NEW SYSTEM';
       else normKey = 'all';
 
@@ -8690,7 +8716,9 @@ Remarks: ${r.remark || 'None'}`);
         { code: 'SSD', match: 'SSD' },
         { code: 'MONITOR', match: 'MONITOR' },
         { code: 'SMPS', match: 'SMPS' },
-        { code: 'OTHER', match: 'OTHER' }
+        { code: 'OTHER', match: 'OTHER' },
+        { code: 'MOUSE', match: 'MOUSE' },
+        { code: 'KEYBOARD', match: 'KEYBOARD' }
       ];
 
       catKeys.forEach(({ code, match }) => {
@@ -8715,7 +8743,7 @@ Remarks: ${r.remark || 'None'}`);
       });
 
       // Maintain legacy active-cat class on catCard... if present
-      ['CPU', 'SSD', 'RAM', 'SMPS', 'MONITOR', 'OTHER'].forEach(c => {
+      ['CPU', 'SSD', 'RAM', 'SMPS', 'MONITOR', 'OTHER', 'MOUSE', 'KEYBOARD'].forEach(c => {
         const legacyCard = document.getElementById(`catCard${c}`);
         if (legacyCard) {
           if (normKey === c) legacyCard.classList.add('active-cat');
@@ -8731,7 +8759,7 @@ Remarks: ${r.remark || 'None'}`);
       const items = this.getInstockItems();
 
       // Start with standard category definitions and add any distinct categories from actual inventory data
-      const categorySet = new Set(['CPU', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'OTHER', 'NEW SYSTEM']);
+      const categorySet = new Set(['NEW SYSTEM', 'CPU', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'OTHER', 'MOUSE', 'KEYBOARD']);
       items.forEach(i => {
         if (i.component_type && i.component_type.trim()) {
           categorySet.add(i.component_type.trim().toUpperCase());
@@ -8745,20 +8773,20 @@ Remarks: ${r.remark || 'None'}`);
         'MONITOR': '🖥️',
         'SMPS': '🔌',
         'OTHER': '🧰',
-        'NEW SYSTEM': '🖥️'
+        'NEW SYSTEM': '🖥️',
+        'MOUSE': '🖱️',
+        'KEYBOARD': '⌨️'
       };
 
-      // Specified order: All Categories, New System, Processor, RAM, SSD, Monitor, SMPS, Other
-      const standardOrder = ['NEW SYSTEM', 'CPU', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'OTHER'];
+      // Specified order: All Categories, New System, Processor, RAM, SSD, Monitor, SMPS, Other, Mouse, Keyboard
+      const standardOrder = ['NEW SYSTEM', 'CPU', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'OTHER', 'MOUSE', 'KEYBOARD'];
       const extraCategories = Array.from(categorySet).filter(c => !standardOrder.includes(c)).sort();
       const allCategories = [...standardOrder.filter(c => categorySet.has(c)), ...extraCategories];
 
-      // Base category option compatibility: <option value="all">All Categories</option>
-      // Test compatibility: 📁 All Categories, 💻 CPU, 🧠 RAM, ⚡ SSD, 🖥️ Monitor, 🔌 SMPS, 🧰 Other
       let optionsHtml = '<option value="all">📁 All Categories</option>';
       allCategories.forEach(cat => {
         const icon = iconMap[cat] || '📦';
-        const label = (cat === 'CPU') ? 'Processor' : (cat === 'MONITOR' ? 'Monitor' : (cat === 'NEW SYSTEM' ? 'New System' : cat));
+        const label = (cat === 'CPU') ? 'Processor' : (cat === 'MONITOR' ? 'Monitor' : (cat === 'NEW SYSTEM' ? 'New System' : (cat === 'MOUSE' ? 'Mouse' : (cat === 'KEYBOARD' ? 'Keyboard' : cat))));
         optionsHtml += `<option value="${Utils.escapeHtml(cat)}">${icon} ${Utils.escapeHtml(label)}</option>`;
       });
 
@@ -8787,6 +8815,7 @@ Remarks: ${r.remark || 'None'}`);
 
       const catSelect = document.getElementById('instockInventoryCategoryFilter');
       const statSelect = document.getElementById('instockInventoryStatusFilter');
+      const currentStat = (statSelect?.value || 'all').trim();
 
       // Toggle feature: if clicking currently active category, toggle off to 'all'
       if (catSelect && catSelect.value.toUpperCase() === catVal.toUpperCase() && catVal !== 'all') {
@@ -8796,11 +8825,9 @@ Remarks: ${r.remark || 'None'}`);
       if (catSelect) {
         catSelect.value = catVal;
       }
-      if (statSelect) {
-        statSelect.value = 'all';
-      }
 
-      this.updateInstockCategoryCardsActive(catVal, 'all');
+      // Combine category filter with active status filter
+      this.updateInstockCategoryCardsActive(catVal, currentStat);
 
       if (this.instockPagination) {
         this.instockPagination.currentPage = 1;
@@ -8878,7 +8905,7 @@ Remarks: ${r.remark || 'None'}`);
           } else if (target === 'NEW SYSTEM' || target === 'NEW_SYSTEM') {
             if (itemType !== 'NEW SYSTEM' && itemType !== 'NEW_SYSTEM') return false;
           } else if (target === 'OTHER') {
-            const known = ['CPU', 'PROCESSOR', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'NEW SYSTEM', 'NEW_SYSTEM'];
+            const known = ['CPU', 'PROCESSOR', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'NEW SYSTEM', 'NEW_SYSTEM', 'MOUSE', 'KEYBOARD'];
             if (known.includes(itemType)) return false;
           } else if (itemType !== target) {
             return false;
@@ -8977,6 +9004,8 @@ Remarks: ${r.remark || 'None'}`);
         'SMPS': `<svg class="lucide lucide-zap" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
         'NEW SYSTEM': `<svg class="lucide lucide-laptop" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="2" y="3" width="14" height="12" rx="2"/><path d="M6 18h6M9 15v3M19 5v14M22 8h-3M22 12h-3"/></svg>`,
         'NEW_SYSTEM': `<svg class="lucide lucide-laptop" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="2" y="3" width="14" height="12" rx="2"/><path d="M6 18h6M9 15v3M19 5v14M22 8h-3M22 12h-3"/></svg>`,
+        'MOUSE': `<svg class="lucide lucide-mouse" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="5" y="2" width="14" height="20" rx="7"/><path d="M12 6v4"/></svg>`,
+        'KEYBOARD': `<svg class="lucide lucide-keyboard" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h.001"/><path d="M10 8h.001"/><path d="M14 8h.001"/><path d="M18 8h.001"/><path d="M8 12h.001"/><path d="M12 12h.001"/><path d="M16 12h.001"/><path d="M7 16h10"/></svg>`,
         'OTHER': `<svg class="lucide lucide-package" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>`
       };
 
@@ -8984,21 +9013,13 @@ Remarks: ${r.remark || 'None'}`);
         const rawType = (item.component_type || 'OTHER').toUpperCase();
         const catSvg = categorySvgMap[rawType] || categorySvgMap['OTHER'];
         const isNewSys = (rawType === 'NEW SYSTEM' || rawType === 'NEW_SYSTEM');
-        const displayType = (rawType === 'CPU') ? 'Processor' : (rawType === 'MONITOR' ? 'Monitor' : (isNewSys ? 'New System' : rawType));
+        const displayType = (rawType === 'CPU') ? 'Processor' : (rawType === 'MONITOR' ? 'Monitor' : (rawType === 'MOUSE' ? 'Mouse' : (rawType === 'KEYBOARD' ? 'Keyboard' : (isNewSys ? 'New System' : rawType))));
         const st = item.status || 'Available';
 
         // Find linked asset if desktop / new system
         const linkedAsset = ((store && store.data && store.data.assets) || []).find(a => (a.id || '').toLowerCase() === (item.id || '').toLowerCase());
 
-        // 1. Column: Specification / Model
-        let modelTitle = '';
-        if (isNewSys) {
-          modelTitle = item.model || (linkedAsset?.cpu && linkedAsset?.ram ? `${linkedAsset.cpu} • ${linkedAsset.ram}` : (linkedAsset?.model || linkedAsset?.cpu || item.spec || 'Desktop System'));
-        } else {
-          modelTitle = item.model || item.spec || '—';
-        }
-
-        // 2. Column: Specification Details
+        // Column: Specification Details
         const details = [];
         if (isNewSys || linkedAsset) {
           const cpu = linkedAsset?.cpu || item.cpu || '';
@@ -9020,7 +9041,7 @@ Remarks: ${r.remark || 'None'}`);
             const m = item.spec.match(/HDD:\s*([^|]+)/i);
             if (m && m[1] && m[1].trim() !== 'None' && m[1].trim() !== '-') hdd = m[1].trim();
           }
-          if ((!mon || mon === 'None') && item.spec && (item.spec.includes('Mon:') || item.spec.includes('Monitor:'))) {
+          if ((!mon || mon === 'None') && (item.spec.includes('Mon:') || item.spec.includes('Monitor:'))) {
             const m = item.spec.match(/Mon(?:itor)?:\s*([^|]+)/i);
             if (m && m[1] && m[1].trim() !== 'None' && m[1].trim() !== '-') mon = m[1].trim();
           }
@@ -9085,15 +9106,14 @@ Remarks: ${r.remark || 'None'}`);
                 <span>${Utils.escapeHtml(displayType)}</span>
               </span>
             </td>
-            <td style="display:none;" class="col-spec-model">
-              <div style="font-weight:700; color:var(--text-main, #0f172a); font-size:0.86rem; line-height:1.35;">${Utils.escapeHtml(modelTitle)}</div>
-              ${(!isNewSys && item.model && item.spec && item.spec !== item.model && details.length === 0) ? `<div style="font-size:0.78rem; color:#64748b; margin-top:2px;">${Utils.escapeHtml(item.spec)}</div>` : ''}
-            </td>
             <td>
               ${specDetailsHtml}
             </td>
             <td style="font-size:0.82rem; color:var(--text-secondary, #475569); white-space:nowrap;">
               ${Utils.escapeHtml(item.purchase_date || '—')}
+            </td>
+            <td style="font-size:0.82rem; color:var(--text-secondary, #475569); white-space:nowrap;">
+              ${st === 'Assigned' ? Utils.escapeHtml(item.assigned_date || linkedAsset?.assignedDate || '—') : '—'}
             </td>
             <td style="white-space:nowrap;">${statusBadge}</td>
             <td style="text-align:center; white-space:nowrap;">
@@ -9523,7 +9543,7 @@ Remarks: ${r.remark || 'None'}`);
         const dialog = document.getElementById('viewAssetModalDialog') || (specModal.querySelector ? specModal.querySelector('.modal-dialog') : null);
         if (dialog) {
           if (dialog.classList && dialog.classList.add) dialog.classList.add('eye-view-compact-dialog');
-          if (dialog.style) dialog.style.maxWidth = '620px';
+          if (dialog.style) dialog.style.maxWidth = '680px';
         }
 
         const metaContainer = document.getElementById('viewAssetModalMeta');
@@ -9542,19 +9562,116 @@ Remarks: ${r.remark || 'None'}`);
           `;
         }
 
+        // 1. Hardware Asset Specification summary
+        let hwSpecSummary = item.spec || item.model || '';
+        if (!hwSpecSummary && linkedAsset) {
+          hwSpecSummary = linkedAsset.model || linkedAsset.cpu || '';
+        }
+        if (!hwSpecSummary || hwSpecSummary === '—') {
+          hwSpecSummary = categoryDisplay;
+        }
+
+        // Helper for valid values
+        const isValidVal = (v) => {
+          if (!v) return false;
+          const s = String(v).trim().toLowerCase();
+          return s !== '' && s !== 'none' && s !== '-' && s !== '—' && s !== 'n/a' && s !== 'null' && s !== 'undefined' && s !== 'not specified' && s !== 'not available';
+        };
+
+        // 2. Hardware configuration extraction for Specification Details
+        const isNewSys = (rawType === 'NEW SYSTEM' || rawType === 'NEW_SYSTEM');
+        let cpuVal = linkedAsset?.cpu || item.cpu || '';
+        let ramVal = linkedAsset?.ram || item.ram || '';
+        let hddVal = linkedAsset?.hdd || item.hdd || '';
+        let ssdVal = linkedAsset?.ssd || item.ssd || '';
+        let monitorVal = linkedAsset?.monitor || item.monitor || '';
+        let osVal = linkedAsset?.os || item.os || '';
+        let macVal = linkedAsset?.macAddress || item.macAddress || (linkedAsset?.serialNumber && !linkedAsset?.serialNumber.startsWith('SN-') ? linkedAsset?.serialNumber : '') || item.mac || '';
+        let ipVal = linkedAsset?.ipAddress || item.ipAddress || item.ip || '';
+        let smpsVal = linkedAsset?.smps || item.smps || '';
+
+        if (item.spec) {
+          if ((!ssdVal || ssdVal === 'None') && item.spec.includes('SSD:')) {
+            const m = item.spec.match(/SSD:\s*([^|]+)/i);
+            if (m && m[1]) ssdVal = m[1].trim();
+          }
+          if ((!hddVal || hddVal === 'None') && item.spec.includes('HDD:')) {
+            const m = item.spec.match(/HDD:\s*([^|]+)/i);
+            if (m && m[1]) hddVal = m[1].trim();
+          }
+          if ((!monitorVal || monitorVal === 'None') && (item.spec.includes('Mon:') || item.spec.includes('Monitor:'))) {
+            const m = item.spec.match(/Mon(?:itor)?:\s*([^|]+)/i);
+            if (m && m[1]) monitorVal = m[1].trim();
+          }
+          if ((!smpsVal || smpsVal === 'None') && item.spec.includes('SMPS:')) {
+            const m = item.spec.match(/SMPS:\s*([^|]+)/i);
+            if (m && m[1]) smpsVal = m[1].trim();
+          }
+          if (!ipVal && item.spec.includes('IP:')) {
+            const m = item.spec.match(/IP:\s*([^|]+)/i);
+            if (m && m[1]) ipVal = m[1].trim();
+          }
+          if (!osVal && item.spec.includes('OS:')) {
+            const m = item.spec.match(/OS:\s*([^|]+)/i);
+            if (m && m[1]) osVal = m[1].trim();
+          }
+          if (!cpuVal && item.spec.includes('CPU:')) {
+            const m = item.spec.match(/CPU:\s*([^|]+)/i);
+            if (m && m[1]) cpuVal = m[1].trim();
+          }
+          if (!ramVal && item.spec.includes('RAM:')) {
+            const m = item.spec.match(/RAM:\s*([^|]+)/i);
+            if (m && m[1]) ramVal = m[1].trim();
+          }
+        }
+
+        if (isNewSys && item.model) {
+          if (!cpuVal) {
+            const m = item.model.match(/(Intel[^\u2022|]+|AMD[^\u2022|]+|Apple[^\u2022|]+|Core[^\u2022|]+|Ryzen[^\u2022|]+)/i);
+            if (m) cpuVal = m[1].trim();
+          }
+          if (!ramVal) {
+            const m = item.model.match(/(\d+\s*GB\s*(?:DDR\d|Unified)?)/i);
+            if (m) ramVal = m[1].trim();
+          }
+        }
+
+        if (rawType === 'CPU' || rawType === 'PROCESSOR') {
+          if (!cpuVal) cpuVal = item.spec || item.model || '';
+        } else if (rawType === 'RAM') {
+          if (!ramVal) ramVal = item.spec || item.model || '';
+        } else if (rawType === 'SSD') {
+          if (!ssdVal) ssdVal = item.spec || item.model || '';
+        } else if (rawType === 'MONITOR') {
+          if (!monitorVal) monitorVal = item.spec || item.model || '';
+        } else if (rawType === 'SMPS') {
+          if (!smpsVal) smpsVal = item.spec || item.model || '';
+        }
+
+        const specConfigItems = [];
+        if (isValidVal(cpuVal)) specConfigItems.push({ label: 'CPU Configuration', value: cpuVal });
+        if (isValidVal(ramVal)) specConfigItems.push({ label: 'RAM', value: ramVal });
+        if (isValidVal(hddVal)) specConfigItems.push({ label: 'HDD', value: hddVal });
+        if (isValidVal(ssdVal)) specConfigItems.push({ label: 'SSD', value: ssdVal });
+        if (isValidVal(monitorVal)) specConfigItems.push({ label: 'Monitor / Display', value: monitorVal });
+        if (isValidVal(osVal)) specConfigItems.push({ label: 'Operating System', value: osVal });
+        if (isValidVal(macVal)) specConfigItems.push({ label: 'MAC Address', value: macVal });
+        if (isValidVal(ipVal)) specConfigItems.push({ label: 'IP Address', value: ipVal });
+        if (isValidVal(smpsVal)) specConfigItems.push({ label: 'SMPS', value: smpsVal });
+        if (rawType === 'MOUSE' && isValidVal(item.spec || item.model)) specConfigItems.push({ label: 'Mouse Model / Spec', value: item.spec || item.model });
+        if (rawType === 'KEYBOARD' && isValidVal(item.spec || item.model)) specConfigItems.push({ label: 'Keyboard Model / Spec', value: item.spec || item.model });
+        if (rawType === 'OTHER') {
+          if (isValidVal(item.model)) specConfigItems.push({ label: 'Model', value: item.model });
+          if (isValidVal(item.spec) && item.spec !== item.model) specConfigItems.push({ label: 'Specification', value: item.spec });
+        }
+        const rawReason = (item.changing_reason || item.reason || '').trim();
+        if (isValidVal(rawReason)) {
+          specConfigItems.push({ label: 'Hardware Replaced Reason', value: rawReason, span2: true });
+        }
+
         const body = document.getElementById('viewAssetModalBody');
         if (body) {
           if (isAssigned) {
-            // ==============================================================
-            // 1. ASSIGNED ASSETS — EXACTLY 7 DETAILS ONLY
-            // 1. Assigned Date
-            // 2. Asset ID
-            // 3. Category
-            // 4. Assigned User Name
-            // 5. User Team
-            // 6. User TL
-            // 7. Warranty Status & Days Remaining
-            // ==============================================================
             const rawAssignedDate = item.assigned_date || linkedAsset?.assignedDate || '';
             const assignedDateDisplay = (rawAssignedDate && rawAssignedDate.trim()) ? ((Utils.formatDate ? Utils.formatDate(rawAssignedDate) : rawAssignedDate) || rawAssignedDate) : 'Not Available';
 
@@ -9565,171 +9682,175 @@ Remarks: ${r.remark || 'None'}`);
             const userTeamDisplay = (rawTeam && rawTeam !== '-' && rawTeam.toLowerCase() !== 'none') ? rawTeam : 'Not Available';
 
             const rawTl = (item.tl || linkedAsset?.tl || '').trim();
-            const userTlDisplay = (rawTl && rawTl !== '-' && rawTl.toLowerCase() !== 'none') ? rawTl : 'Not Available';
+            const userTlDisplay = (rawTl && rawTl !== '-' && rawTl.toLowerCase() !== 'none') ? rawTl : '';
+
+            let employeeIdDisplay = (item.employee_id || item.employeeId || linkedAsset?.employeeId || '').trim();
+            if (!employeeIdDisplay && rawUser && store.data && store.data.users) {
+              const uLower = rawUser.toLowerCase();
+              const matchedUser = store.data.users.find(u => 
+                (u.name && u.name.trim().toLowerCase() === uLower) ||
+                (u.assetId && (u.assetId || '').trim().toLowerCase() === (item.id || '').toLowerCase())
+              );
+              if (matchedUser) {
+                employeeIdDisplay = matchedUser.id || matchedUser.employeeId || matchedUser.empId || '';
+              }
+            }
 
             body.innerHTML = `
-              <div class="eye-view-details-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 4px 0;">
-                <!-- 1. Assigned Date -->
-                <div class="eye-view-detail-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                    <span>📅</span> Assigned Date
+              <div class="eye-view-sections" style="display:flex; flex-direction:column; gap:14px; padding:2px 0;">
+                <!-- SECTION 1: Hardware Asset Specification -->
+                <div class="eye-view-section-box" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:15px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                  <div class="eye-view-section-title" style="font-size:0.82rem; font-weight:800; color:#1e293b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; background:#eff6ff; color:#2563eb; font-size:0.8rem;">📦</span>
+                    Hardware Asset Specification
                   </div>
-                  <div class="eye-view-detail-value" style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">
-                    ${Utils.escapeHtml(assignedDateDisplay)}
-                  </div>
-                </div>
-
-                <!-- 2. Asset ID -->
-                <div class="eye-view-detail-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                    <span>🏷️</span> Asset ID
-                  </div>
-                  <div class="eye-view-detail-value" style="font-size: 0.95rem; font-weight: 700; color: #1e40af; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
-                    ${Utils.escapeHtml(item.id)}
-                  </div>
-                </div>
-
-                <!-- 3. Category -->
-                <div class="eye-view-detail-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                    <span>📦</span> Category
-                  </div>
-                  <div class="eye-view-detail-value" style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">
-                    ${Utils.escapeHtml(categoryDisplay)}
-                  </div>
-                </div>
-
-                <!-- 4. Assigned User Name -->
-                <div class="eye-view-detail-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                    <span>👤</span> Assigned User Name
-                  </div>
-                  <div class="eye-view-detail-value" style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">
-                    ${Utils.escapeHtml(assignedUserDisplay)}
-                  </div>
-                </div>
-
-                <!-- 5. User Team -->
-                <div class="eye-view-detail-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                    <span>🏢</span> User Team
-                  </div>
-                  <div class="eye-view-detail-value" style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">
-                    ${Utils.escapeHtml(userTeamDisplay)}
-                  </div>
-                </div>
-
-                <!-- 6. User TL -->
-                <div class="eye-view-detail-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                    <span>👔</span> User TL
-                  </div>
-                  <div class="eye-view-detail-value" style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">
-                    ${Utils.escapeHtml(userTlDisplay)}
-                  </div>
-                </div>
-
-                <!-- 7. Warranty Status & Days Remaining (Full Width Span 2) -->
-                <div class="eye-view-detail-card span-2" style="grid-column: span 2; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 13px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                    <span>🛡️</span> Warranty Status &amp; Days Remaining
-                  </div>
-                  <div class="eye-view-detail-value" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    ${warrantyInfo.badgeHtml}
-                    <span style="font-size: 0.92rem; font-weight: 700; color: ${warrantyInfo.status === 'Not Specified' ? '#64748b' : '#0f172a'};">
-                      ${Utils.escapeHtml(warrantyInfo.daysText)}
-                    </span>
-                  </div>
-                </div>
-
-                ${(() => {
-                  const rawReason = (item.changing_reason || item.reason || '').trim();
-                  if (!rawReason || rawReason === '-' || rawReason === '—') return '';
-                  return `
-                    <!-- 8. Hardware Replaced Reason -->
-                    <div class="eye-view-detail-card span-2" style="grid-column: span 2; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 13px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                      <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                        <span>🔧</span> Hardware Replaced Reason
-                      </div>
-                      <div class="eye-view-detail-value" style="font-size: 0.92rem; font-weight: 600; color: #0f172a;">
-                        ${Utils.escapeHtml(rawReason)}
-                      </div>
+                  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;">
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                      <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Asset ID</span>
+                      <strong class="font-mono" style="font-size:0.95rem; color:#1e40af;">${Utils.escapeHtml(item.id)}</strong>
                     </div>
-                  `;
-                })()}
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                      <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Category</span>
+                      <strong style="font-size:0.95rem; color:#0f172a;">${Utils.escapeHtml(categoryDisplay)}</strong>
+                    </div>
+                    <div style="grid-column:span 2; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                      <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Hardware Specifications</span>
+                      <div style="font-size:0.9rem; font-weight:600; color:#0f172a; line-height:1.4;">${Utils.escapeHtml(hwSpecSummary)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SECTION 2: Assigned -->
+                <div class="eye-view-section-box" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:15px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                  <div class="eye-view-section-title" style="font-size:0.82rem; font-weight:800; color:#065f46; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; background:#ecfdf5; color:#059669; font-size:0.8rem;">👤</span>
+                    Assigned
+                  </div>
+                  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;">
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                      <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Assigned User Name</span>
+                      <strong style="font-size:0.92rem; color:#0f172a;">${Utils.escapeHtml(assignedUserDisplay)}</strong>
+                    </div>
+                    ${employeeIdDisplay ? `
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                      <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Employee ID</span>
+                      <strong class="font-mono" style="font-size:0.92rem; color:#0f172a;">${Utils.escapeHtml(employeeIdDisplay)}</strong>
+                    </div>
+                    ` : ''}
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                      <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">User Team / Department</span>
+                      <strong style="font-size:0.92rem; color:#0f172a;">${Utils.escapeHtml(userTeamDisplay)}</strong>
+                    </div>
+                    ${userTlDisplay ? `
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                      <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">User TL</span>
+                      <strong style="font-size:0.92rem; color:#0f172a;">${Utils.escapeHtml(userTlDisplay)}</strong>
+                    </div>
+                    ` : ''}
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                      <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Assigned Date</span>
+                      <strong style="font-size:0.92rem; color:#0f172a;">${Utils.escapeHtml(assignedDateDisplay)}</strong>
+                    </div>
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                      <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Current Assignment Status</span>
+                      <span class="badge" style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; font-weight:700; font-size:0.75rem; padding:3px 10px; border-radius:9999px;">🟢 Assigned</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SECTION 3: Specification Details -->
+                <div class="eye-view-section-box" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:15px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                  <div class="eye-view-section-title" style="font-size:0.82rem; font-weight:800; color:#1e293b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; background:#f1f5f9; color:#475569; font-size:0.8rem;">⚙️</span>
+                    Specification Details
+                  </div>
+                  ${specConfigItems.length > 0 ? `
+                  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:9px;">
+                    ${specConfigItems.map(cfg => `
+                      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; ${cfg.span2 ? 'grid-column:span 2;' : ''}">
+                        <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:2px;">${Utils.escapeHtml(cfg.label)}</span>
+                        <div style="font-size:0.88rem; font-weight:600; color:#0f172a;">${Utils.escapeHtml(cfg.value)}</div>
+                      </div>
+                    `).join('')}
+                  </div>
+                  ` : `
+                  <div style="font-size:0.85rem; color:#64748b; font-style:italic;">No additional configuration recorded.</div>
+                  `}
+                </div>
               </div>
             `;
           } else {
-            // ==============================================================
-            // 2. NON-ASSIGNED ASSETS — EXACTLY 4 DETAILS ONLY
-            // 1. Purchase Date
-            // 2. Asset ID
-            // 3. Category
-            // 4. Warranty Status & Days Remaining
-            // ==============================================================
             const rawPurchaseDate = item.purchase_date || linkedAsset?.purchaseDate || linkedAsset?.doa || '';
             const purchaseDateDisplay = (rawPurchaseDate && rawPurchaseDate.trim()) ? ((Utils.formatDate ? Utils.formatDate(rawPurchaseDate) : rawPurchaseDate) || rawPurchaseDate) : 'Not Specified';
 
             body.innerHTML = `
-              <div class="eye-view-details-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 4px 0;">
-                <!-- 1. Purchase Date -->
-                <div class="eye-view-detail-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                    <span>🛒</span> Purchase Date
+              <div class="eye-view-sections" style="display:flex; flex-direction:column; gap:14px; padding:2px 0;">
+                <!-- SECTION 1: Hardware Asset Specification -->
+                <div class="eye-view-section-box" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:15px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                  <div class="eye-view-section-title" style="font-size:0.82rem; font-weight:800; color:#1e293b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; background:#eff6ff; color:#2563eb; font-size:0.8rem;">📦</span>
+                    Hardware Asset Specification
                   </div>
-                  <div class="eye-view-detail-value" style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">
-                    ${Utils.escapeHtml(purchaseDateDisplay)}
-                  </div>
-                </div>
-
-                <!-- 2. Asset ID -->
-                <div class="eye-view-detail-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                    <span>🏷️</span> Asset ID
-                  </div>
-                  <div class="eye-view-detail-value" style="font-size: 0.95rem; font-weight: 700; color: #1e40af; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
-                    ${Utils.escapeHtml(item.id)}
-                  </div>
-                </div>
-
-                <!-- 3. Category -->
-                <div class="eye-view-detail-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                    <span>📦</span> Category
-                  </div>
-                  <div class="eye-view-detail-value" style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">
-                    ${Utils.escapeHtml(categoryDisplay)}
+                  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;">
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                      <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Asset ID</span>
+                      <strong class="font-mono" style="font-size:0.95rem; color:#1e40af;">${Utils.escapeHtml(item.id)}</strong>
+                    </div>
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                      <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Category</span>
+                      <strong style="font-size:0.95rem; color:#0f172a;">${Utils.escapeHtml(categoryDisplay)}</strong>
+                    </div>
+                    <div style="grid-column:span 2; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                      <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Hardware Specifications</span>
+                      <div style="font-size:0.9rem; font-weight:600; color:#0f172a; line-height:1.4;">${Utils.escapeHtml(hwSpecSummary)}</div>
+                    </div>
                   </div>
                 </div>
 
-                <!-- 4. Warranty Status & Days Remaining -->
-                <div class="eye-view-detail-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                  <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                    <span>🛡️</span> Warranty Status &amp; Days Remaining
+                <!-- SECTION 2: Non-Assigned -->
+                <div class="eye-view-section-box" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:15px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                  <div class="eye-view-section-title" style="font-size:0.82rem; font-weight:800; color:#991b1b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; background:#fef2f2; color:#dc2626; font-size:0.8rem;">📦</span>
+                    Non-Assigned
                   </div>
-                  <div class="eye-view-detail-value" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    ${warrantyInfo.badgeHtml}
-                    <span style="font-size: 0.88rem; font-weight: 700; color: ${warrantyInfo.status === 'Not Specified' ? '#64748b' : '#0f172a'};">
-                      ${Utils.escapeHtml(warrantyInfo.daysText)}
-                    </span>
-                  </div>
-                </div>
-
-                ${(() => {
-                  const rawReason = (item.changing_reason || item.reason || '').trim();
-                  if (!rawReason || rawReason === '-' || rawReason === '—') return '';
-                  return `
-                    <!-- Hardware Replaced Reason -->
-                    <div class="eye-view-detail-card span-2" style="grid-column: span 2; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 13px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                      <div class="eye-view-detail-label" style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                        <span>🔧</span> Hardware Replaced Reason
-                      </div>
-                      <div class="eye-view-detail-value" style="font-size: 0.92rem; font-weight: 600; color: #0f172a;">
-                        ${Utils.escapeHtml(rawReason)}
+                  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;">
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                      <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Current Status</span>
+                      <span class="badge" style="background:#fef2f2; color:#991b1b; border:1px solid #fecaca; font-weight:700; font-size:0.75rem; padding:3px 10px; border-radius:9999px;">🔴 Non-Assigned (Available in Stock)</span>
+                    </div>
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                      <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Purchase Date</span>
+                      <strong style="font-size:0.92rem; color:#0f172a;">${Utils.escapeHtml(purchaseDateDisplay)}</strong>
+                    </div>
+                    <div style="grid-column:span 2; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                      <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Warranty Status</span>
+                      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        ${warrantyInfo.badgeHtml}
+                        <span style="font-size:0.88rem; font-weight:700; color:${warrantyInfo.status === 'Not Specified' ? '#64748b' : '#0f172a'};">${Utils.escapeHtml(warrantyInfo.daysText)}</span>
                       </div>
                     </div>
-                  `;
-                })()}
+                  </div>
+                </div>
+
+                <!-- SECTION 3: Specification Details -->
+                <div class="eye-view-section-box" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:15px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                  <div class="eye-view-section-title" style="font-size:0.82rem; font-weight:800; color:#1e293b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                    <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; background:#f1f5f9; color:#475569; font-size:0.8rem;">⚙️</span>
+                    Specification Details
+                  </div>
+                  ${specConfigItems.length > 0 ? `
+                  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:9px;">
+                    ${specConfigItems.map(cfg => `
+                      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; ${cfg.span2 ? 'grid-column:span 2;' : ''}">
+                        <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:2px;">${Utils.escapeHtml(cfg.label)}</span>
+                        <div style="font-size:0.88rem; font-weight:600; color:#0f172a;">${Utils.escapeHtml(cfg.value)}</div>
+                      </div>
+                    `).join('')}
+                  </div>
+                  ` : `
+                  <div style="font-size:0.85rem; color:#64748b; font-style:italic;">No additional configuration recorded.</div>
+                  `}
+                </div>
               </div>
             `;
           }
@@ -9775,6 +9896,10 @@ Remarks: ${r.remark || 'None'}`);
       if (statSelect) {
         statSelect.value = status;
       }
+      if (status === 'all') {
+        const catSelect = document.getElementById('instockInventoryCategoryFilter');
+        if (catSelect) catSelect.value = 'all';
+      }
       if (this.instockPagination) {
         this.instockPagination.currentPage = 1;
       }
@@ -9788,6 +9913,9 @@ Remarks: ${r.remark || 'None'}`);
       } else if (status === 'Under Maintenance') {
         document.querySelector('.instock-summary-card.maintenance')?.classList.add('active-filter');
       }
+      this.updateInstockCategoryCardsCounts();
+      const currentCat = document.getElementById('instockInventoryCategoryFilter')?.value || 'all';
+      this.updateInstockCategoryCardsActive(currentCat, status);
       this.renderInstockInventoryTable();
     }
 
@@ -10851,7 +10979,9 @@ Remarks: ${r.remark || 'None'}`);
         'RAM': 'RAM',
         'SMPS': 'SMPS',
         'MONITOR': 'MON',
-        'OTHER': 'OTH'
+        'OTHER': 'OTH',
+        'MOUSE': 'MOU',
+        'KEYBOARD': 'KBD'
       };
       const code = codeMap[type] || (type.length >= 3 ? type.substring(0, 3) : type);
       const items = (store && store.data && store.data.instockHardware) || [];

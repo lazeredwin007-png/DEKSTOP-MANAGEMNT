@@ -4125,6 +4125,24 @@ a[href="#non-it-assets"],
   outline-offset: 2px;
 }
 
+.instock-summary-card.total.active-filter {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18), 0 10px 15px -3px rgba(37, 99, 235, 0.1);
+}
+
+.instock-summary-card.assigned.active-filter {
+  outline: 3px solid #7c3aed;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.18), 0 10px 15px -3px rgba(124, 58, 237, 0.1);
+}
+
+.instock-summary-card.available.active-filter {
+  outline: 3px solid #16a34a;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.18), 0 10px 15px -3px rgba(22, 163, 74, 0.1);
+}
+
 /* Card 1: Total Assets */
 .instock-summary-card.total {
   background: #ffffff;
@@ -4914,17 +4932,23 @@ a[href="#non-it-assets"],
   }
 }
 
-/* Instock Clickable Category Cards with Click-to-Filter (7 Strictly Ordered Cards) */
+/* Instock Clickable Category Cards with Click-to-Filter (9 Strictly Ordered Cards) */
 .instock-category-cards-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(9, 1fr);
   gap: 12px;
   margin-bottom: 20px;
 }
 
-@media (max-width: 1400px) {
+@media (max-width: 1550px) {
   .instock-category-cards-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@media (max-width: 1200px) {
+  .instock-category-cards-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -5041,6 +5065,16 @@ a[href="#non-it-assets"],
 .instock-category-card .cat-card-icon.cat-icon-other {
   background: #f1f5f9;
   color: #475569;
+}
+
+.instock-category-card .cat-card-icon.cat-icon-mouse {
+  background: #fdf2f8;
+  color: #db2777;
+}
+
+.instock-category-card .cat-card-icon.cat-icon-keyboard {
+  background: #ecfeff;
+  color: #0891b2;
 }
 
 .instock-category-card.active .cat-card-icon {
