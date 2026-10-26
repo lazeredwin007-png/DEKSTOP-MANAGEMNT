@@ -31,3 +31,8 @@ Thumbs.db
 *.tmp
 *.github_original
 /_BACKUP_SAFETY_PRE_RESTORE/
+
+# Database backups and scratch files
+*_BACKUP*.sqlite
+*RESTORE*.sqlite
+scratch/*.js

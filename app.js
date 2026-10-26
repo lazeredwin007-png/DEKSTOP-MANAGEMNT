@@ -8923,14 +8923,16 @@ Remarks: ${r.remark || 'None'}`);
             return false;
           }
         }
-        if (dateFrom && item.purchase_date && item.purchase_date < dateFrom) {
+        const relevantDate = (statVal === 'Assigned')
+          ? (item.assigned_date || linkedAsset?.assignedDate || item.purchase_date || '')
+          : (item.purchase_date || '');
+        if (dateFrom && relevantDate && relevantDate < dateFrom) {
           return false;
         }
-        if (dateTo && item.purchase_date && item.purchase_date > dateTo) {
+        if (dateTo && relevantDate && relevantDate > dateTo) {
           return false;
         }
         if (searchVal) {
-          const linkedAsset = ((store && store.data && store.data.assets) || []).find(a => (a.id || '').toLowerCase() === (item.id || '').toLowerCase());
           const match =
             (item.id || '').toLowerCase().includes(searchVal) ||
             (item.component_type || '').toLowerCase().includes(searchVal) ||
@@ -8949,6 +8951,58 @@ Remarks: ${r.remark || 'None'}`);
           if (!match) return false;
         }
         return true;
+      });
+
+      // Date priority sorting (descending: newest date first)
+      // Non-assigned items: sorted by Purchase Date
+      // Assigned items: sorted by Assigned Date
+      // Total assets / All: sorted by effective date (assigned date for assigned, purchase date for non-assigned)
+      filtered.sort((a, b) => {
+        const aStatus = a.status || 'Available';
+        const bStatus = b.status || 'Available';
+
+        const aLinked = ((store && store.data && store.data.assets) || []).find(x => (x.id || '').toLowerCase() === (a.id || '').toLowerCase());
+        const bLinked = ((store && store.data && store.data.assets) || []).find(x => (x.id || '').toLowerCase() === (b.id || '').toLowerCase());
+
+        let aDate = '';
+        let bDate = '';
+
+        if (statVal === 'Assigned') {
+          // Assigned assets: prioritize assigned date
+          aDate = a.assigned_date || aLinked?.assignedDate || a.purchase_date || '';
+          bDate = b.assigned_date || bLinked?.assignedDate || b.purchase_date || '';
+        } else if (statVal === 'Available' || statVal === 'Non-Assigned') {
+          // Non-assigned assets: prioritize purchase date
+          aDate = a.purchase_date || aLinked?.purchaseDate || '';
+          bDate = b.purchase_date || bLinked?.purchaseDate || '';
+        } else {
+          // Total Assets / All view: prioritize assigned date if assigned, or purchase date if non-assigned
+          aDate = (aStatus === 'Assigned') ? (a.assigned_date || aLinked?.assignedDate || a.purchase_date || '') : (a.purchase_date || aLinked?.purchaseDate || '');
+          bDate = (bStatus === 'Assigned') ? (b.assigned_date || bLinked?.assignedDate || b.purchase_date || '') : (b.purchase_date || bLinked?.purchaseDate || '');
+        }
+
+        const parseDateVal = (d) => {
+          if (!d || d === '—' || d === '-') return 0;
+          const t = new Date(d).getTime();
+          return isNaN(t) ? 0 : t;
+        };
+
+        const aTime = parseDateVal(aDate);
+        const bTime = parseDateVal(bDate);
+
+        if (bTime !== aTime) {
+          return bTime - aTime;
+        }
+
+        // Secondary tie-breaker by purchase date
+        const aPurch = parseDateVal(a.purchase_date || aLinked?.purchaseDate);
+        const bPurch = parseDateVal(b.purchase_date || bLinked?.purchaseDate);
+        if (bPurch !== aPurch) {
+          return bPurch - aPurch;
+        }
+
+        // Final tie-breaker by Asset ID
+        return (b.id || '').localeCompare(a.id || '');
       });
 
       const badge = document.getElementById('instockInventoryCountBadge');
