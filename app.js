@@ -9757,26 +9757,6 @@ Remarks: ${r.remark || 'None'}`);
                     </div>
                   </div>
                 </div>
-
-                <!-- SECTION 3: Specification Details -->
-                <div class="eye-view-section-box" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:15px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
-                  <div class="eye-view-section-title" style="font-size:0.82rem; font-weight:800; color:#1e293b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-                    <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; background:#f1f5f9; color:#475569; font-size:0.8rem;">⚙️</span>
-                    Specification Details
-                  </div>
-                  ${specConfigItems.length > 0 ? `
-                  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:9px;">
-                    ${specConfigItems.map(cfg => `
-                      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; ${cfg.span2 ? 'grid-column:span 2;' : ''}">
-                        <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:2px;">${Utils.escapeHtml(cfg.label)}</span>
-                        <div style="font-size:0.88rem; font-weight:600; color:#0f172a;">${Utils.escapeHtml(cfg.value)}</div>
-                      </div>
-                    `).join('')}
-                  </div>
-                  ` : `
-                  <div style="font-size:0.85rem; color:#64748b; font-style:italic;">No additional configuration recorded.</div>
-                  `}
-                </div>
               </div>
             `;
           } else {
@@ -9831,26 +9811,6 @@ Remarks: ${r.remark || 'None'}`);
                     </div>
                   </div>
                 </div>
-
-                <!-- SECTION 3: Specification Details -->
-                <div class="eye-view-section-box" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:15px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
-                  <div class="eye-view-section-title" style="font-size:0.82rem; font-weight:800; color:#1e293b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-                    <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; background:#f1f5f9; color:#475569; font-size:0.8rem;">⚙️</span>
-                    Specification Details
-                  </div>
-                  ${specConfigItems.length > 0 ? `
-                  <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:9px;">
-                    ${specConfigItems.map(cfg => `
-                      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; ${cfg.span2 ? 'grid-column:span 2;' : ''}">
-                        <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:2px;">${Utils.escapeHtml(cfg.label)}</span>
-                        <div style="font-size:0.88rem; font-weight:600; color:#0f172a;">${Utils.escapeHtml(cfg.value)}</div>
-                      </div>
-                    `).join('')}
-                  </div>
-                  ` : `
-                  <div style="font-size:0.85rem; color:#64748b; font-style:italic;">No additional configuration recorded.</div>
-                  `}
-                </div>
               </div>
             `;
           }
@@ -9866,13 +9826,10 @@ Remarks: ${r.remark || 'None'}`);
           };
         }
 
-        // Configure History button on view modal to view this item's history
+        // Hide View History button per user request
         const histBtn = document.getElementById('viewAssetHistoryModalBtn');
         if (histBtn) {
-          histBtn.onclick = () => {
-            this.closeModal('modalViewAsset');
-            this.openInstockHistoryModal(item.id);
-          };
+          histBtn.style.display = 'none';
         }
 
         this.openModal('modalViewAsset');
