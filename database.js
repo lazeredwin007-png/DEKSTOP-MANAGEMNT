@@ -3127,6 +3127,27 @@ class DatabaseService {
     return this.memoryData.swapLogs;
   }
 
+  insertSwapLog(swap) {
+    if (this.db) {
+      try {
+        const id = swap.id || `SWP-${Math.floor(100 + Math.random() * 900)}`;
+        this.db.prepare(`
+          INSERT INTO swap_logs (id, newUserId, newTeam, newAssetId, oldUserId, oldTeam, oldAssetId, reason, swapDate, remark)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          id, swap.newUserId || '', swap.newTeam || '', swap.newAssetId || '',
+          swap.oldUserId || '', swap.oldTeam || '', swap.oldAssetId || '',
+          swap.reason || '', swap.swapDate || '', swap.remark || ''
+        );
+        return { ...swap, id };
+      } catch (e) {
+        console.error('Error inserting swap log:', e);
+      }
+    }
+    this.memoryData.swapLogs.unshift(swap);
+    return swap;
+  }
+
   getActivityLogs() {
     if (this.db) {
       return this.db.prepare('SELECT * FROM activity_logs ORDER BY id DESC LIMIT 20').all();

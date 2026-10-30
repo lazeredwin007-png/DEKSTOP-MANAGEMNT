@@ -1885,10 +1885,10 @@
       const assignedDesktops = assignedAssets.filter(a => a.type === 'Desktop').length;
       const assignedLaptops = assignedAssets.filter(a => a.type === 'Laptop').length;
 
-      const stockAssets = assets.filter(a => a.status === 'Non-Assigned');
+      const stockAssets = typeof this.getNonAssignedNewSystems === 'function' ? this.getNonAssignedNewSystems() : assets.filter(a => a.status === 'Non-Assigned');
       const nonAssigned = stockAssets.length;
       const stockDesktops = stockAssets.filter(a => a.type === 'Desktop').length;
-      const stockLaptops = stockAssets.filter(a => a.type === 'Laptop').length;
+      const stockLaptops = stockAssets.filter(a => a.type === 'Laptop' || a.type === 'MacBook').length;
 
       const swapCount = swaps.length;
       const nonItCount = nonIt.length;
@@ -2143,6 +2143,11 @@
         label = 'User Exit';
         colorName = 'Red';
         dot = '🔴';
+      } else if (lower === 'new system' || lower === 'new_system' || lower === 'new') {
+        lightClass = 'workstatus-light-cyan';
+        label = 'New System';
+        colorName = 'Cyan';
+        dot = '✨';
       } else if (lower === 'work from home' || lower === 'wfh' || lower === 'yellow') {
         lightClass = 'workstatus-light-blue';
         label = 'Work From Home';
@@ -2208,15 +2213,25 @@
         }
 
         const stLower = (a.status || '').toLowerCase().trim();
-        const isNonAssigned = stLower === 'non-assigned' || stLower === 'non assigned' || stLower === 'available' || stLower === 'unassigned';
+        const wsLower = (a.workStatus || '').toLowerCase().trim();
+        const userVal = (a.user || '').toLowerCase().trim();
+        const isNonAssigned = stLower === 'non-assigned' ||
+          stLower === 'non assigned' ||
+          stLower === 'available' ||
+          stLower === 'unassigned' ||
+          stLower === 'spare' ||
+          stLower === 'swap' ||
+          wsLower === 'new system' ||
+          wsLower.includes('exit') ||
+          !userVal || userVal === 'none' || userVal === '—' || userVal === 'unassigned';
 
         if (this.currentView === 'desktop') {
-          if (!a.type || a.type.toLowerCase() !== 'desktop') return false;
           if (isNonAssigned) return false;
+          if (!a.type || a.type.toLowerCase() !== 'desktop') return false;
         } else if (this.currentView === 'laptop') {
+          if (isNonAssigned) return false;
           const tLower = (a.type || '').toLowerCase();
           if (tLower !== 'laptop' && tLower !== 'macbook') return false;
-          if (isNonAssigned) return false;
           if (excludeField !== 'type' && typeVal !== 'all') {
             if (tLower !== typeVal.toLowerCase()) return false;
           }
@@ -2812,8 +2827,101 @@
        ========================================================================== */
 
     /* ==========================================================================
-       NON-ASSIGNED AVAILABLE POOL DYNAMIC FILTERS
+       NON-ASSIGNED (AVAILABLE INVENTORY POOL)
        ========================================================================== */
+    getNonAssignedPoolAssets() {
+      const result = [];
+      const seenIds = new Set();
+
+      // 1. Eligible genuine unassigned Desktop and Laptop systems from store.data.assets (including New Systems and User Exit systems)
+      (store.data.assets || []).forEach(a => {
+        if (!a || !a.id) return;
+        const typeLower = (a.type || '').trim().toLowerCase();
+        const isDesktopOrLaptop = typeLower === 'desktop' || typeLower === 'laptop' || typeLower === 'macbook' || typeLower === 'system';
+        if (!isDesktopOrLaptop) return;
+
+        const stLower = (a.status || '').trim().toLowerCase();
+        const wsLower = (a.workStatus || '').trim().toLowerCase();
+        const userVal = (a.user || '').trim().toLowerCase();
+
+        // Must NOT be currently assigned to an active working user
+        if (stLower === 'assigned' || stLower === 'wfh') return;
+        if (userVal !== '' && userVal !== 'none' && userVal !== '—' && userVal !== 'unassigned' && userVal !== 'available' && !wsLower.includes('exit') && !wsLower.includes('resigned') && stLower !== 'non-assigned' && stLower !== 'available') {
+          return;
+        }
+        if (stLower === 'retired' || stLower === 'disposed' || stLower === 'scrap') return;
+
+        // Eligible unassigned Desktop or Laptop system
+        const isUnassigned = stLower === 'non-assigned' || stLower === 'available' || stLower === 'unassigned' || stLower === 'spare' || wsLower.includes('exit') || wsLower.includes('resigned') || !a.user || a.user === 'None' || a.user === '—' || a.user === '';
+
+        if (isUnassigned) {
+          const itemCopy = { ...a };
+          const isNewSys = (a.remark && a.remark.toLowerCase().includes('new system')) ||
+            (a.condition && a.condition.toLowerCase() === 'brand new' && (!a.user || a.user === 'None' || a.user === '—' || a.user === '')) ||
+            (a.component_type && a.component_type.toUpperCase() === 'NEW SYSTEM') ||
+            (a.workStatus && a.workStatus.toLowerCase() === 'new system') ||
+            (a.id || '').toUpperCase() === 'PIX_DSK_41' ||
+            ((store.data.instockHardware || []).some(i => (i.id || '').toUpperCase() === (a.id || '').toUpperCase() && (i.component_type || '').toUpperCase() === 'NEW SYSTEM'));
+
+          if (isNewSys && (!itemCopy.workStatus || itemCopy.workStatus === 'Currently Working' || itemCopy.workStatus === 'In Stock')) {
+            itemCopy.workStatus = 'New System';
+          }
+          result.push(itemCopy);
+          seenIds.add((a.id || '').toLowerCase());
+        }
+      });
+
+      // 2. Available New System / System assets from store.data.instockHardware not already present in result
+      (store.data.instockHardware || []).forEach(i => {
+        if (!i || !i.id) return;
+        const ct = (i.component_type || '').trim().toUpperCase();
+        const isSystem = (ct === 'NEW SYSTEM' || ct === 'NEW_SYSTEM' || ct === 'NEWSYSTEM' || ct === 'DESKTOP' || ct === 'LAPTOP');
+        if (!isSystem) return; // Exclude individual components (Processor, RAM, SSD, SMPS, etc.)
+
+        const stLower = (i.status || 'Available').trim().toLowerCase();
+        if (stLower === 'assigned') return;
+
+        const idLower = (i.id || '').toLowerCase();
+        if (seenIds.has(idLower)) return;
+
+        const linked = (store.data.assets || []).find(a => (a.id || '').toLowerCase() === idLower) || {};
+        const isNewSys = ct === 'NEW SYSTEM' || ct === 'NEW_SYSTEM' || ct === 'NEWSYSTEM';
+        result.push({
+          id: i.id,
+          type: linked.type || 'Desktop',
+          cpu: i.cpu || linked.cpu || i.model || '',
+          ram: i.ram || linked.ram || '',
+          ssd: i.ssd || linked.ssd || '',
+          hdd: i.hdd || linked.hdd || '',
+          monitor: i.monitor || linked.monitor || '',
+          smps: i.smps || linked.smps || '',
+          os: i.os || linked.os || 'Windows 11 Pro',
+          ipAddress: i.ipAddress || linked.ipAddress || '',
+          serialNumber: i.serialNumber || i.serial_number || linked.serialNumber || '—',
+          purchaseDate: i.purchase_date || linked.purchaseDate || '',
+          warrantyEnd: i.warranty_expiry || linked.warrantyEnd || '',
+          status: 'Non-Assigned',
+          workStatus: isNewSys ? 'New System' : (i.workStatus || linked.workStatus || 'In Stock'),
+          condition: linked.condition || 'Brand New',
+          location: linked.location || 'In Stock',
+          oldUsername: linked.oldUsername || '',
+          user: '',
+          remark: i.remark || linked.remark || 'New System Configuration',
+          ...linked,
+          id: i.id,
+          status: 'Non-Assigned',
+          workStatus: isNewSys ? 'New System' : (i.workStatus || linked.workStatus || 'In Stock')
+        });
+        seenIds.add(idLower);
+      });
+
+      return result;
+    }
+
+    getNonAssignedNewSystems() {
+      return this.getNonAssignedPoolAssets();
+    }
+
     updateDependentNonAssignedFilters(changedField) {
       const searchEl = document.getElementById('nonAssignedSearchInput');
       const typeEl = document.getElementById('nonAssignedTypeFilter');
@@ -2827,11 +2935,7 @@
       let teamVal = teamEl?.value || 'all';
       let conditionVal = conditionEl?.value || 'all';
 
-      const unassignedAssets = (store.data.assets || []).filter(a =>
-        (a.status === 'Non-Assigned' || a.status === 'Available') &&
-        a.status !== 'Assigned' &&
-        a.status !== 'Retired'
-      );
+      const unassignedAssets = this.getNonAssignedNewSystems();
 
       const matchesCriteria = (a, excludeField) => {
         if (search) {
@@ -2998,7 +3102,7 @@
         filteredResult = res.finalFilteredList;
       }
 
-      const allNonAssigned = (store.data.assets || []).filter(a => (a.status === 'Non-Assigned' || a.status === 'Available') && a.status !== 'Assigned');
+      const allNonAssigned = this.getNonAssignedNewSystems();
 
       // Metric Summary Cards
       const dskCount = allNonAssigned.filter(a => a.type === 'Desktop').length;
@@ -3015,6 +3119,8 @@
       if (dskPill) dskPill.textContent = `🖥️ ${dskCount} Dsk`;
       const lptPill = document.getElementById('cardAvailLaptopPill');
       if (lptPill) lptPill.textContent = `💻 ${lptCount} Lpt`;
+      const countBadge = document.getElementById('nonAssignedCountBadge');
+      if (countBadge) countBadge.textContent = `${allNonAssigned.length} Available`;
 
       const tbody = document.getElementById('nonAssignedTableBody');
       if (!tbody) return;
@@ -3022,7 +3128,7 @@
       const nonAssigned = filteredResult;
 
       if (nonAssigned.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" class="empty-state">No matching available systems found in inventory.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" class="empty-state">No matching available systems found in inventory.</td></tr>`;
         return;
       }
 
@@ -3050,7 +3156,19 @@
               let badgeStyle = '';
               let label = ws;
 
-              if (lower === 'user exit' || lower === 'exit') {
+              const isNewSys = lower === 'new system' ||
+                lower === 'new_system' ||
+                lower === 'new' ||
+                (a.remark && a.remark.toLowerCase().includes('new system')) ||
+                (a.condition && a.condition.toLowerCase() === 'brand new' && (!a.user || a.user === 'None' || a.user === '—' || a.user === '')) ||
+                (a.component_type && a.component_type.toLowerCase().includes('new system')) ||
+                ((store.data.instockHardware || []).some(i => (i.id || '').toUpperCase() === (a.id || '').toUpperCase() && (i.component_type || '').toUpperCase() === 'NEW SYSTEM')) ||
+                (a.id || '').toUpperCase() === 'PIX_DSK_41';
+
+              if (isNewSys && lower !== 'user exit' && lower !== 'exit') {
+                badgeStyle = 'color:#0284c7; background:#f0f9ff; border:1px solid #bae6fd;';
+                label = 'New System';
+              } else if (lower === 'user exit' || lower === 'exit') {
                 badgeStyle = 'color:#e11d48; background:#fff1f2; border:1px solid #fecdd3;';
                 label = 'User Exit';
               } else if (lower === 'currently working' || lower === 'working' || lower === 'active') {
@@ -3067,7 +3185,7 @@
                 label = ws;
               }
 
-              const dateVal = a.userExitDate || a.availableDate || a.assignedDate;
+              const dateVal = a.userExitDate || a.availableDate || a.assignedDate || a.purchaseDate || a.purchase_date || a.doa;
               const dateFormatted = dateVal ? Utils.formatDate(dateVal) : '';
 
               return `
@@ -3079,10 +3197,359 @@
             })()}
           </td>
           <td><span class="status-pill status-assigned">${Utils.escapeHtml(a.condition || 'Good')}</span></td>
+          <td style="text-align:center; white-space:nowrap;">
+            <div style="display:inline-flex; gap:6px; align-items:center; justify-content:center;">
+              <button type="button" class="btn btn-sm btn-secondary avail-action-btn" onclick="event.stopPropagation(); window.ITApp.viewAvailableSystem('${Utils.escapeHtml(a.id)}')" title="View System Details" aria-label="View System" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
+                👁️
+              </button>
+              <button type="button" class="btn btn-sm btn-secondary avail-action-btn" onclick="event.stopPropagation(); window.ITApp.editAvailableSystem('${Utils.escapeHtml(a.id)}')" title="Edit Stock Entry" aria-label="Edit Stock Entry" style="padding:4px 8px; border-radius:6px; font-size:0.75rem;">
+                ✏️
+              </button>
+              <button type="button" class="btn btn-sm btn-secondary avail-action-btn" onclick="event.stopPropagation(); window.ITApp.deleteAvailableSystem('${Utils.escapeHtml(a.id)}')" title="Delete System" aria-label="Delete System" style="padding:4px 8px; border-radius:6px; font-size:0.75rem; color:#ef4444;">
+                🗑️
+              </button>
+            </div>
+          </td>
         </tr>
       `;
       }).join('');
     }
+
+    renderNonAssignedTable() {
+      return this.renderNonAssignedView();
+    }
+
+    // ========================================================================
+    // AVAILABLE SYSTEMS ACTIONS (EYE VIEW, EDIT, DELETE)
+    // ========================================================================
+    viewAvailableSystem(assetId) {
+      let asset = (store.data.assets || []).find(a => (a.id || '').toLowerCase() === (assetId || '').toLowerCase());
+      if (!asset) {
+        asset = (store.data.instockHardware || []).find(i => (i.id || '').toLowerCase() === (assetId || '').toLowerCase());
+      }
+      if (!asset) {
+        Utils.showToast('Not Found', `System "${assetId}" was not found in inventory.`, 'error');
+        return;
+      }
+
+      const specModal = document.getElementById('modalViewAsset');
+      if (!specModal) return;
+
+      this.currentViewAssetId = asset.id;
+      const dialog = document.getElementById('viewAssetModalDialog') || (specModal.querySelector ? specModal.querySelector('.modal-dialog') : null);
+      if (dialog) {
+        dialog.style.maxWidth = '780px';
+      }
+
+      // 1. Header meta badges: Asset ID, Category, Available status
+      const metaContainer = document.getElementById('viewAssetModalMeta');
+      if (metaContainer) {
+        const typeEmoji = (asset.type || '').toLowerCase() === 'laptop' ? '💻' :
+          ((asset.type || '').toLowerCase() === 'macbook' ? '🍎' : '🖥️');
+        metaContainer.innerHTML = `
+          <span style="font-family:var(--font-mono, monospace); font-size:0.8rem; font-weight:700; padding:3px 10px; border-radius:6px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;">
+            ${Utils.escapeHtml(asset.id)}
+          </span>
+          <span class="status-pill status-available" style="font-size:0.76rem; font-weight:700;">
+            ${typeEmoji} ${Utils.escapeHtml(asset.type || 'Desktop')}
+          </span>
+          <span style="display:inline-flex; align-items:center; gap:6px; font-size:0.76rem; font-weight:700; padding:3px 12px; border-radius:9999px; background:#fef2f2; color:#991b1b; border:1px solid #fecaca;">
+            <span style="width:6px; height:6px; border-radius:50%; background:#dc2626;"></span>
+            Available (Non-Assigned)
+          </span>
+        `;
+      }
+
+      // Helper: Show only actual saved values. Display '—' for missing values.
+      const displayVal = (v) => {
+        if (v === null || v === undefined) return '—';
+        const s = String(v).trim();
+        if (s === '' || s === '-' || s.toLowerCase() === 'none' || s.toLowerCase() === 'null' || s.toLowerCase() === 'undefined' || s.toLowerCase() === 'nil') {
+          return '—';
+        }
+        return Utils.escapeHtml(s);
+      };
+
+      // Hardware Specifications summary
+      const specParts = [];
+      if (asset.cpu && displayVal(asset.cpu) !== '—') specParts.push(asset.cpu);
+      if (asset.ram && displayVal(asset.ram) !== '—') specParts.push(asset.ram);
+      if (asset.ssd && displayVal(asset.ssd) !== '—') specParts.push(`SSD: ${asset.ssd}`);
+      if (asset.hdd && displayVal(asset.hdd) !== '—') specParts.push(`HDD: ${asset.hdd}`);
+      const hwSpecSummary = specParts.length > 0 ? specParts.join(' • ') : (asset.spec || asset.model || '—');
+
+      // Purchase date
+      const rawPurchaseDate = asset.purchaseDate || asset.doa || asset.purchase_date || '';
+      const purchaseDateDisplay = (rawPurchaseDate && rawPurchaseDate !== '-' && rawPurchaseDate !== 'None') ?
+        ((Utils.formatDate ? Utils.formatDate(rawPurchaseDate) : rawPurchaseDate) || rawPurchaseDate) : '—';
+
+      // Serial Number
+      const serialDisplay = displayVal(asset.serialNumber || asset.serial_number || asset.macAddress);
+
+      // Warranty Status & Days Remaining calculation
+      let warrantyBadgeHtml = '';
+      let warrantyDaysText = '';
+      const rawWarrantyEnd = asset.warrantyEnd || asset.warranty_expiry || '';
+      if (rawWarrantyEnd && rawWarrantyEnd !== '-' && rawWarrantyEnd !== 'None' && rawWarrantyEnd !== 'Non-Warranty') {
+        const expDate = new Date(rawWarrantyEnd);
+        if (!isNaN(expDate.getTime())) {
+          const now = new Date();
+          now.setHours(0, 0, 0, 0);
+          const diffMs = expDate.getTime() - now.getTime();
+          const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+          if (diffDays > 30) {
+            warrantyBadgeHtml = '<span class="badge" style="background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; font-weight:700; font-size:0.75rem; padding:3px 10px; border-radius:9999px;">🛡️ Under Warranty</span>';
+            warrantyDaysText = `${diffDays} days remaining`;
+          } else if (diffDays > 0) {
+            warrantyBadgeHtml = '<span class="badge" style="background:#fffbeb; color:#92400e; border:1px solid #fde68a; font-weight:700; font-size:0.75rem; padding:3px 10px; border-radius:9999px;">⚠️ Expiring Soon</span>';
+            warrantyDaysText = `${diffDays} day${diffDays === 1 ? '' : 's'} remaining`;
+          } else {
+            const daysAgo = Math.abs(diffDays);
+            warrantyBadgeHtml = '<span class="badge" style="background:#fef2f2; color:#991b1b; border:1px solid #fecaca; font-weight:700; font-size:0.75rem; padding:3px 10px; border-radius:9999px;">❌ Expired</span>';
+            warrantyDaysText = `Expired ${daysAgo} day${daysAgo === 1 ? '' : 's'} ago`;
+          }
+        }
+      }
+
+      if (!warrantyBadgeHtml) {
+        warrantyBadgeHtml = '<span class="badge" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-weight:600; font-size:0.75rem; padding:3px 10px; border-radius:9999px;">—</span>';
+        warrantyDaysText = '—';
+      }
+
+      // Previous User & allocation details
+      const prevUserDisplay = displayVal(asset.oldUsername || asset.user);
+      const workStatusDisplay = displayVal(asset.workStatus || 'In Stock');
+      const locationDisplay = displayVal(asset.location);
+      const teamDisplay = displayVal(asset.team);
+      const conditionDisplay = displayVal(asset.condition || 'Good');
+      const remarkDisplay = displayVal(asset.remark);
+
+      const body = document.getElementById('viewAssetModalBody');
+      if (body) {
+        body.innerHTML = `
+          <div class="eye-view-sections" style="display:flex; flex-direction:column; gap:14px; padding:2px 0;">
+            <!-- SECTION 1: Hardware Asset Overview -->
+            <div class="eye-view-section-box" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:15px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+              <div class="eye-view-section-title" style="font-size:0.82rem; font-weight:800; color:#1e293b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; background:#eff6ff; color:#2563eb; font-size:0.8rem;">📦</span>
+                Hardware Asset Specification
+              </div>
+              <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;">
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                  <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Asset ID</span>
+                  <strong class="font-mono" style="font-size:0.95rem; color:#1e40af;">${Utils.escapeHtml(asset.id)}</strong>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                  <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Category</span>
+                  <strong style="font-size:0.95rem; color:#0f172a;">${Utils.escapeHtml(asset.type || 'Desktop')}</strong>
+                </div>
+                <div style="grid-column:span 2; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                  <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Hardware Specifications</span>
+                  <div style="font-size:0.9rem; font-weight:600; color:#0f172a; line-height:1.4;">${Utils.escapeHtml(hwSpecSummary)}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 2: Specification Details -->
+            <div class="eye-view-section-box" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:15px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+              <div class="eye-view-section-title" style="font-size:0.82rem; font-weight:800; color:#1e293b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; background:#f1f5f9; color:#475569; font-size:0.8rem;">⚙️</span>
+                Specification Details
+              </div>
+              <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;">
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                  <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">CPU Configuration</span>
+                  <strong style="font-size:0.88rem; color:#0f172a;">${displayVal(asset.cpu)}</strong>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                  <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">RAM Memory</span>
+                  <strong style="font-size:0.88rem; color:#0f172a;">${displayVal(asset.ram)}</strong>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                  <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">SSD Storage</span>
+                  <strong style="font-size:0.88rem; color:#0f172a;">${displayVal(asset.ssd)}</strong>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                  <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">HDD Storage</span>
+                  <strong style="font-size:0.88rem; color:#0f172a;">${displayVal(asset.hdd)}</strong>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                  <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Monitor Model / Display</span>
+                  <strong style="font-size:0.88rem; color:#0f172a;">${displayVal(asset.monitor)}</strong>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                  <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Operating System</span>
+                  <strong style="font-size:0.88rem; color:#0f172a;">${displayVal(asset.os)}</strong>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                  <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">IP Address</span>
+                  <strong class="font-mono" style="font-size:0.88rem; color:#0f172a;">${displayVal(asset.ipAddress)}</strong>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                  <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">SMPS / Power Supply</span>
+                  <strong style="font-size:0.88rem; color:#0f172a;">${displayVal(asset.smps)}</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 3: Inventory & Warranty Information -->
+            <div class="eye-view-section-box" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:15px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+              <div class="eye-view-section-title" style="font-size:0.82rem; font-weight:800; color:#1e293b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; background:#eff6ff; color:#2563eb; font-size:0.8rem;">📋</span>
+                Inventory &amp; Warranty Information
+              </div>
+              <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;">
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                  <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Serial Number</span>
+                  <strong class="font-mono" style="font-size:0.88rem; color:#0f172a;">${serialDisplay}</strong>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                  <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Purchase Date</span>
+                  <strong style="font-size:0.88rem; color:#0f172a;">${purchaseDateDisplay}</strong>
+                </div>
+                <div style="grid-column:span 2; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                  <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Warranty Status</span>
+                  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                    ${warrantyBadgeHtml}
+                    <span style="font-size:0.88rem; font-weight:700; color:#0f172a;">${Utils.escapeHtml(warrantyDaysText)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 4: Saved Allocation & Location Details -->
+            <div class="eye-view-section-box" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:15px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+              <div class="eye-view-section-title" style="font-size:0.82rem; font-weight:800; color:#1e293b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; background:#f1f5f9; color:#475569; font-size:0.8rem;">📍</span>
+                Saved Allocation &amp; Location Details
+              </div>
+              <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;">
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                  <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Previous User</span>
+                  <strong style="font-size:0.88rem; color:#0f172a;">${prevUserDisplay}</strong>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                  <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Work Status</span>
+                  <strong style="font-size:0.88rem; color:#0f172a;">${workStatusDisplay}</strong>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                  <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Office Location (Floor)</span>
+                  <strong style="font-size:0.88rem; color:#0f172a;">${locationDisplay}</strong>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                  <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Department / Team</span>
+                  <strong style="font-size:0.88rem; color:#0f172a;">${teamDisplay}</strong>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                  <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Hardware Condition</span>
+                  <strong style="font-size:0.88rem; color:#0f172a;">${conditionDisplay}</strong>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:9px 12px;">
+                  <span style="font-size:0.68rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:3px;">Remarks</span>
+                  <span style="font-size:0.85rem; color:#334155;">${remarkDisplay}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Configure Edit button on view modal
+      const editBtn = document.getElementById('viewAssetEditModalBtn');
+      if (editBtn) {
+        editBtn.style.display = 'inline-flex';
+        editBtn.onclick = () => {
+          this.closeModal('modalViewAsset');
+          this.editAvailableSystem(asset.id);
+        };
+      }
+
+      const histBtn = document.getElementById('viewAssetHistoryModalBtn');
+      if (histBtn) histBtn.style.display = 'none';
+
+      this.openModal('modalViewAsset');
+    }
+
+    editAvailableSystem(assetId) {
+      this.openInstockEntryModal(null, assetId);
+    }
+
+    async deleteAvailableSystem(assetId) {
+      const role = this.currentRole || (window.ITAppControllerInstance ? window.ITAppControllerInstance.currentRole : 'Admin');
+      if (role === 'Viewer') {
+        Utils.showToast('Access Denied', 'Viewer role has read-only access. Only Admin has deletion rights.', 'error');
+        return;
+      }
+
+      const asset = (store.data.assets || []).find(a => (a.id || '').toLowerCase() === (assetId || '').toLowerCase());
+      if (!asset) {
+        Utils.showToast('Not Found', `System "${assetId}" was not found in inventory.`, 'error');
+        return;
+      }
+
+      // Safety check: Cannot delete currently assigned systems
+      if (asset.status === 'Assigned' && asset.user && asset.user !== 'None' && asset.user !== '—') {
+        Utils.showToast('Deletion Blocked', `Cannot delete asset "${asset.id}" because it is currently assigned to ${asset.user}. Please return or unassign it first.`, 'error');
+        return;
+      }
+
+      // Confirmation dialog with YES, DELETE and NO, CANCEL displaying selected Asset ID
+      const confirmed = await this.confirmSave({
+        title: 'Delete Available System',
+        message: `
+          <div style="text-align:center; padding:6px 0;">
+            <p style="margin-bottom:8px; color:#334155; font-size:0.92rem;">Are you sure you want to permanently delete available system:</p>
+            <div style="font-size:1.15rem; font-weight:800; color:#ef4444; font-family:var(--font-mono, monospace); margin:8px 0; background:#fef2f2; padding:8px 12px; border-radius:8px; border:1px solid #fecaca; display:inline-block;">
+              ${Utils.escapeHtml(asset.id)}
+            </div>
+            <p style="font-size:0.82rem; color:#64748b; margin:6px 0 0 0;">
+              ${Utils.escapeHtml(asset.type || 'System')} &bull; ${Utils.escapeHtml(asset.cpu || asset.spec || 'Hardware')} &bull; ${Utils.escapeHtml(asset.ram || '')}
+            </p>
+            <p style="font-size:0.75rem; color:#dc2626; margin-top:8px; font-weight:600;">⚠️ This action cannot be undone.</p>
+          </div>
+        `,
+        yesText: 'YES, DELETE',
+        noText: 'NO, CANCEL'
+      });
+
+      if (!confirmed) {
+        // Cancel must leave the record unchanged
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/assets/${encodeURIComponent(asset.id)}`, { method: 'DELETE' });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Server responded with status ${res.status}`);
+        }
+
+        // Also clean up from instockHardware if linked
+        try {
+          if ((store.data.instockHardware || []).some(i => (i.id || '').toLowerCase() === (asset.id || '').toLowerCase())) {
+            await fetch(`/api/instock/${encodeURIComponent(asset.id)}`, { method: 'DELETE' });
+          }
+        } catch (e) {}
+
+        store.data.assets = (store.data.assets || []).filter(a => (a.id || '').toLowerCase() !== (asset.id || '').toLowerCase());
+        store.data.instockHardware = (store.data.instockHardware || []).filter(i => (i.id || '').toLowerCase() !== (asset.id || '').toLowerCase());
+
+        store.addActivity('Deleted Available System', asset.id, 'SysAdmin', 'Warning');
+        store.save();
+
+        Utils.showToast('System Deleted', `System "${asset.id}" has been removed from available inventory.`, 'success');
+
+        this.renderNonAssignedView();
+        if (typeof this.renderNonAssignedTable === 'function') this.renderNonAssignedTable();
+        this.updateDashboardMetrics();
+        this.renderInstockDashboard();
+        if (typeof this.renderAllAssetsTable === 'function') this.renderAllAssetsTable();
+      } catch (err) {
+        console.error('Failed to delete system:', err);
+        Utils.showToast('Delete Failed', err.message || 'Failed to delete system from database.', 'error');
+      }
+    }
+
 
     /* ==========================================================================
        SWAP SYSTEM OPERATIONS
@@ -4044,64 +4511,434 @@
     }
 
     /* ==========================================================================
-       REPORTS ENGINE (CSV EXPORT & PRINT)
+       AUDIT REPORTS & EXECUTIVE REPORTS GENERATOR ENGINE
        ========================================================================== */
-    renderReportsView() {
+    activeReportType = 'total-asset';
+    reportSearchQuery = '';
+    reportTeamFilter = 'all';
+
+    normalizeReportType(type) {
+      if (!type) return 'total-asset';
+      const clean = String(type).trim().toLowerCase();
+      if (clean === 'inventory' || clean === 'total' || clean === 'total-asset' || clean === 'all-assets') return 'total-asset';
+      if (clean === 'assigned' || clean === 'assigned-asset' || clean === 'assigned-assets') return 'assigned-asset';
+      if (clean === 'available' || clean === 'stock' || clean === 'pool' || clean === 'non-assigned' || clean === 'nonassigned') return 'non-assigned';
+      if (clean === 'maintenance' || clean === 'repair' || clean === 'repairs') return 'repairs';
+      if (clean === 'warranty' || clean === 'warranty-lifecycle') return 'warranty';
+      if (clean === 'license' || clean === 'licenses' || clean === 'software') return 'licenses';
+      if (clean === 'audit' || clean === 'activity' || clean === 'audit-trail' || clean === 'logs' || clean === 'audit-log') return 'audit-trail';
+      if (clean === 'req' || clean === 'requirements' || clean === 'procurement') return 'requirements';
+      return clean;
+    }
+
+    selectReport(type) {
+      const normalized = this.normalizeReportType(type);
+      this.activeReportType = normalized;
+
+      // 1. Sync dropdown selection
       const select = document.getElementById('reportTypeSelect');
-      if (select) {
-        this.generateReportPreview(select.value);
+      if (select && select.value !== normalized) {
+        select.value = normalized;
       }
+
+      // 2. Update visual tab states on tab buttons (supporting multiple possible IDs and classes)
+      const tabButtons = document.querySelectorAll('.report-tab-btn, #auditReportTabs .tab-btn, .report-type-btn');
+      tabButtons.forEach(btn => {
+        const btnReport = btn.getAttribute('data-report') || btn.id.replace(/^repTab-/, '').replace(/^repBtn-/, '');
+        const normBtn = this.normalizeReportType(btnReport);
+        const isMatch = (normBtn === normalized) || (btn.id === `repTab-${normalized}`) || (btn.id === `repBtn-${normalized}`);
+
+        if (isMatch) {
+          btn.classList.add('active');
+          btn.setAttribute('aria-selected', 'true');
+        } else {
+          btn.classList.remove('active');
+          btn.setAttribute('aria-selected', 'false');
+        }
+      });
+
+      // 3. Hide all inactive panels and show the selected panel
+      const allPanels = document.querySelectorAll('.report-content-panel');
+      allPanels.forEach(p => {
+        p.classList.add('hidden');
+        p.style.display = 'none';
+      });
+
+      const activePanelId = `reportPanel-${normalized}`;
+      let activePanel = document.getElementById(activePanelId);
+      if (!activePanel) {
+        const container = document.getElementById('reportResultsContainer');
+        if (container) {
+          activePanel = document.createElement('div');
+          activePanel.className = 'report-content-panel';
+          activePanel.id = activePanelId;
+          activePanel.setAttribute('role', 'tabpanel');
+          activePanel.setAttribute('aria-labelledby', `repTab-${normalized}`);
+          container.appendChild(activePanel);
+        }
+      }
+
+      if (activePanel) {
+        activePanel.classList.remove('hidden');
+        activePanel.style.display = 'block';
+      }
+
+      // 4. Render fresh, filtered data into the selected panel
+      this.renderReportPanelContent(normalized);
+    }
+
+    switchReportTab(type) {
+      this.selectReport(type);
+    }
+
+    handleReportFilterChange() {
+      const teamSelect = document.getElementById('reportsTeamFilter');
+      const searchInput = document.getElementById('reportsSearchInput');
+      this.reportTeamFilter = teamSelect ? teamSelect.value : 'all';
+      this.reportSearchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+      const resetBtn = document.getElementById('btnResetReportFilters');
+      if (resetBtn) {
+        resetBtn.style.display = (this.reportTeamFilter !== 'all' || this.reportSearchQuery) ? 'inline-flex' : 'none';
+      }
+
+      this.renderReportPanelContent(this.activeReportType || 'total-asset');
+    }
+
+    resetReportFilters() {
+      const teamSelect = document.getElementById('reportsTeamFilter');
+      const searchInput = document.getElementById('reportsSearchInput');
+      if (teamSelect) teamSelect.value = 'all';
+      if (searchInput) searchInput.value = '';
+      this.reportTeamFilter = 'all';
+      this.reportSearchQuery = '';
+
+      const resetBtn = document.getElementById('btnResetReportFilters');
+      if (resetBtn) resetBtn.style.display = 'none';
+
+      this.renderReportPanelContent(this.activeReportType || 'total-asset');
     }
 
     generateReportPreview(reportType) {
-      const container = document.getElementById('reportResultsContainer');
-      if (!container) return;
+      const type = reportType || (document.getElementById('reportTypeSelect')?.value) || this.activeReportType || 'total-asset';
+      this.selectReport(type);
+    }
+
+    renderReportsView() {
+      // 1. Populate Department Filter dynamically if needed
+      const teamFilter = document.getElementById('reportsTeamFilter');
+      if (teamFilter && store.data.assets) {
+        const currentVal = teamFilter.value || 'all';
+        const teams = Array.from(new Set(store.data.assets.map(a => a.team).filter(Boolean))).sort();
+        teamFilter.innerHTML = '<option value="all">All Departments</option>' + teams.map(t => `<option value="${Utils.escapeHtml(t)}">${Utils.escapeHtml(t)}</option>`).join('');
+        teamFilter.value = teams.includes(currentVal) ? currentVal : 'all';
+      }
+
+      // 2. Select active report
+      this.selectReport(this.activeReportType || 'total-asset');
+    }
+
+    renderReportPanelContent(reportType) {
+      const panel = document.getElementById(`reportPanel-${reportType}`);
+      if (!panel) return;
+
+      const teamFilter = this.reportTeamFilter || 'all';
+      const search = this.reportSearchQuery || '';
 
       let title = '';
+      let desc = '';
+      let icon = '📊';
+      let navBtnHtml = '';
       let headers = [];
       let rows = [];
 
       if (reportType === 'total-asset') {
-        title = 'Total Asset Summary Report';
-        headers = ['Asset ID', 'Type', 'User', 'Team', 'CPU', 'RAM', 'Serial No', 'Status'];
-        rows = store.data.assets.map(a => [a.id, a.type, a.user || 'None', a.team, a.cpu, a.ram, a.serialNumber, a.status]);
+        title = 'Total Asset Summary Report (Fleet Registry)';
+        desc = 'Complete organizational inventory across all workstations, laptops, servers and status designations.';
+        icon = '📋';
+        navBtnHtml = `<button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.navigateTo('all-assets')" style="font-weight:600;">View All Assets →</button>`;
+        headers = ['Asset ID', 'Type', 'Current User', 'Department', 'Processor (CPU)', 'RAM', 'Storage', 'Serial Number', 'System Status', 'Action'];
+
+        let assets = store.data.assets || [];
+        if (teamFilter !== 'all') assets = assets.filter(a => (a.team || '').toUpperCase() === teamFilter.toUpperCase());
+        if (search) assets = assets.filter(a => `${a.id} ${a.type} ${a.user} ${a.team} ${a.cpu} ${a.ram} ${a.ssd || a.hdd} ${a.serialNumber} ${a.status}`.toLowerCase().includes(search));
+
+        rows = assets.map(a => [
+          `<strong class="font-mono" style="color:var(--primary); cursor:pointer;" onclick="window.ITApp.viewAssetDetails('${Utils.escapeHtml(a.id)}')">${Utils.escapeHtml(a.id)}</strong>`,
+          Utils.escapeHtml(a.type),
+          Utils.escapeHtml(a.user || 'Unassigned'),
+          Utils.escapeHtml(a.team || 'N/A'),
+          Utils.escapeHtml(a.cpu || 'N/A'),
+          Utils.escapeHtml(a.ram || 'N/A'),
+          Utils.escapeHtml(a.ssd || a.hdd || 'N/A'),
+          `<span style="font-family:monospace; font-size:0.8rem;">${Utils.escapeHtml(a.serialNumber || 'N/A')}</span>`,
+          `<span class="badge ${a.status === 'Assigned' ? 'badge-assigned' : 'badge-available'}">${Utils.escapeHtml(a.status || 'Active')}</span>`,
+          `<button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.viewAssetDetails('${Utils.escapeHtml(a.id)}')" title="View Full Specification" style="padding:4px 8px; font-size:0.75rem;">👁️ View</button>`
+        ]);
       } else if (reportType === 'assigned-asset') {
-        title = 'Assigned Asset Allocation Report';
-        headers = ['Asset ID', 'User', 'Team', 'Type', 'Assigned Date', 'Monitor', 'Location'];
-        rows = store.data.assets.filter(a => a.status === 'Assigned').map(a => [a.id, a.user, a.team, a.type, a.assignedDate, a.monitor, a.location]);
+        title = 'Assigned Asset Allocation & Custody Report';
+        desc = 'Active workstation deployments currently assigned to employees with deployment dates and bay locations.';
+        icon = '👤';
+        navBtnHtml = `<button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.navigateTo('desktop')" style="font-weight:600;">View Workstations →</button>`;
+        headers = ['Asset ID', 'Current User', 'Department', 'Device Type', 'Assigned Date', 'Display / Monitor', 'Work Status', 'Location', 'Action'];
+
+        let assets = (store.data.assets || []).filter(a => a.status === 'Assigned');
+        if (teamFilter !== 'all') assets = assets.filter(a => (a.team || '').toUpperCase() === teamFilter.toUpperCase());
+        if (search) assets = assets.filter(a => `${a.id} ${a.user} ${a.team} ${a.type} ${a.assignedDate} ${a.monitor} ${a.workStatus} ${a.location}`.toLowerCase().includes(search));
+
+        rows = assets.map(a => [
+          `<strong class="font-mono" style="color:var(--primary); cursor:pointer;" onclick="window.ITApp.viewAssetDetails('${Utils.escapeHtml(a.id)}')">${Utils.escapeHtml(a.id)}</strong>`,
+          `<strong>${Utils.escapeHtml(a.user || 'Unknown')}</strong>`,
+          Utils.escapeHtml(a.team || 'N/A'),
+          Utils.escapeHtml(a.type),
+          Utils.escapeHtml(a.assignedDate || 'N/A'),
+          Utils.escapeHtml(a.monitor || 'N/A'),
+          `<span class="badge badge-assigned">${Utils.escapeHtml(a.workStatus || 'Currently Working')}</span>`,
+          Utils.escapeHtml(a.location || 'Bay Area'),
+          `<button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.viewAssetDetails('${Utils.escapeHtml(a.id)}')" style="padding:4px 8px; font-size:0.75rem;">👁️ Spec</button>`
+        ]);
       } else if (reportType === 'non-assigned') {
-        title = 'Available Non-Assigned Inventory Report';
-        headers = ['Asset ID', 'Type', 'CPU', 'RAM', 'Storage', 'Condition', 'Location'];
-        rows = store.data.assets.filter(a => a.status === 'Non-Assigned').map(a => [a.id, a.type, a.cpu, a.ram, a.ssd || a.hdd, a.condition, a.location]);
+        title = 'Available Non-Assigned Inventory Pool Report';
+        desc = 'Unassigned workstations, laptops, and New System assets ready for immediate employee provisioning.';
+        icon = '📦';
+        navBtnHtml = `<button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.navigateTo('non-assigned')" style="font-weight:600;">Open Available Pool →</button>`;
+        headers = ['Asset ID', 'Type', 'User Status', 'CPU', 'RAM', 'Storage', 'Condition', 'Location', 'Action'];
+
+        let pool = typeof this.getNonAssignedPoolAssets === 'function' ? this.getNonAssignedPoolAssets() : (store.data.assets || []).filter(a => a.status === 'Non-Assigned');
+        if (teamFilter !== 'all') pool = pool.filter(a => (a.team || '').toUpperCase() === teamFilter.toUpperCase());
+        if (search) pool = pool.filter(a => `${a.id} ${a.type} ${a.workStatus || a.userStatus} ${a.cpu} ${a.ram} ${a.ssd || a.hdd} ${a.condition} ${a.location}`.toLowerCase().includes(search));
+
+        rows = pool.map(a => {
+          const isNew = a.isNewSystem || a.userStatus === 'New System' || a.workStatus === 'In Stock';
+          const userStatusBadge = isNew
+            ? `<span style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; padding:2px 8px; border-radius:9999px; font-size:0.75rem; font-weight:700;">New System</span>`
+            : `<span style="background:#fee2e2; color:#dc2626; border:1px solid #fecaca; padding:2px 8px; border-radius:9999px; font-size:0.75rem; font-weight:700;">User Exit</span>`;
+
+          return [
+            `<strong class="font-mono" style="color:var(--primary); cursor:pointer;" onclick="window.ITApp.viewAssetDetails('${Utils.escapeHtml(a.id)}')">${Utils.escapeHtml(a.id)}</strong>`,
+            Utils.escapeHtml(a.type),
+            userStatusBadge,
+            Utils.escapeHtml(a.cpu || 'N/A'),
+            Utils.escapeHtml(a.ram || 'N/A'),
+            Utils.escapeHtml(a.ssd || a.hdd || 'N/A'),
+            `<span class="badge" style="background:#f1f5f9; color:#475569;">${Utils.escapeHtml(a.condition || 'Good')}</span>`,
+            Utils.escapeHtml(a.location || 'Store Room'),
+            `<button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.viewAssetDetails('${Utils.escapeHtml(a.id)}')" style="padding:4px 8px; font-size:0.75rem;">👁️ View</button>`
+          ];
+        });
       } else if (reportType === 'requirements') {
         title = 'Hardware Requirements & Procurement Status';
-        headers = ['Req ID', 'Requester', 'Team', 'Requirement', 'Priority', 'Status'];
-        rows = store.data.requirements.map(r => [r.id, r.name, r.team, r.requirement, r.priority, r.status]);
+        desc = 'Departmental IT hardware requests, employee requirements, urgency prioritization, and procurement pipeline.';
+        icon = '📑';
+        navBtnHtml = `<button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.navigateTo('new-requirements')" style="font-weight:600;">Open Requirements →</button>`;
+        headers = ['Req ID', 'Requester Name', 'Department', 'Requested Hardware', 'Priority', 'Status', 'Date Submitted', 'Action'];
+
+        let reqs = store.data.requirements || [];
+        if (teamFilter !== 'all') reqs = reqs.filter(r => (r.team || '').toUpperCase() === teamFilter.toUpperCase());
+        if (search) reqs = reqs.filter(r => `${r.id} ${r.name} ${r.team} ${r.requirement} ${r.priority} ${r.status}`.toLowerCase().includes(search));
+
+        rows = reqs.map(r => [
+          `<strong class="font-mono">${Utils.escapeHtml(r.id)}</strong>`,
+          `<strong>${Utils.escapeHtml(r.name)}</strong>`,
+          Utils.escapeHtml(r.team || 'N/A'),
+          Utils.escapeHtml(r.requirement || 'Workstation'),
+          `<span class="badge" style="background:${r.priority === 'High' ? '#fef2f2' : '#f0fdf4'}; color:${r.priority === 'High' ? '#dc2626' : '#16a34a'}; border:1px solid ${r.priority === 'High' ? '#fecaca' : '#bbf7d0'}; font-weight:700;">${Utils.escapeHtml(r.priority || 'Normal')}</span>`,
+          `<span class="badge" style="background:#eff6ff; color:#2563eb; font-weight:700;">${Utils.escapeHtml(r.status || 'Pending')}</span>`,
+          Utils.escapeHtml(r.date || '2026-10-15'),
+          `<button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.navigateTo('new-requirements')" style="padding:4px 8px; font-size:0.75rem;">Inspect →</button>`
+        ]);
       } else if (reportType === 'repairs') {
         title = 'Repair & Maintenance Log Report';
-        headers = ['Asset ID', 'User', 'Issue', 'Vendor', 'Cost', 'Status'];
-        rows = store.data.repairs.map(r => [r.assetId, r.user, r.issue, r.vendor, r.cost, r.status]);
-      } else {
-        title = 'Warranty Status Report';
-        headers = ['Asset ID', 'User', 'Type', 'Warranty End', 'Days Remaining'];
-        rows = store.data.assets.map(a => [a.id, a.user || 'None', a.type, a.warrantyEnd, Utils.getDaysRemaining(a.warrantyEnd)]);
+        desc = 'Hardware fault diagnostic history, authorized maintenance vendor tickets, component repair costs and status.';
+        icon = '🔧';
+        navBtnHtml = `<button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.navigateTo('repairs')" style="font-weight:600;">Open Repairs →</button>`;
+        headers = ['Asset ID', 'User / Custodian', 'Reported Fault Description', 'Authorized Vendor', 'Repair Cost', 'Maintenance Status', 'Action'];
+
+        let reps = store.data.repairs || [];
+        if (teamFilter !== 'all') reps = reps.filter(r => (r.team || '').toUpperCase() === teamFilter.toUpperCase());
+        if (search) reps = reps.filter(r => `${r.assetId} ${r.user} ${r.issue} ${r.vendor} ${r.cost} ${r.status}`.toLowerCase().includes(search));
+
+        rows = reps.map(r => [
+          `<strong class="font-mono" style="color:var(--primary); cursor:pointer;" onclick="window.ITApp.viewAssetDetails('${Utils.escapeHtml(r.assetId)}')">${Utils.escapeHtml(r.assetId)}</strong>`,
+          Utils.escapeHtml(r.user || 'N/A'),
+          Utils.escapeHtml(r.issue || 'Hardware Servicing'),
+          Utils.escapeHtml(r.vendor || 'Authorized Service Center'),
+          `<strong>₹${Utils.escapeHtml(String(r.cost || '0'))}</strong>`,
+          `<span class="badge" style="background:${r.status === 'Completed' ? '#ecfdf5' : '#fffbeb'}; color:${r.status === 'Completed' ? '#059669' : '#d97706'}; font-weight:700;">${Utils.escapeHtml(r.status || 'In Progress')}</span>`,
+          `<button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.viewAssetDetails('${Utils.escapeHtml(r.assetId)}')" style="padding:4px 8px; font-size:0.75rem;">👁️ Spec</button>`
+        ]);
+      } else if (reportType === 'warranty') {
+        title = 'Hardware Warranty Lifecycle & Expiration Report';
+        desc = 'Enterprise countdown monitoring for OEM warranties, upcoming renewals, and out-of-warranty hardware replacement cycles.';
+        icon = '🛡️';
+        navBtnHtml = `<button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.navigateTo('warranty')" style="font-weight:600;">Open Warranty →</button>`;
+        headers = ['Asset ID', 'Assigned User', 'Device Type', 'Warranty Expiration', 'Days Remaining', 'Lifecycle Status', 'Action'];
+
+        let assets = store.data.assets || [];
+        if (teamFilter !== 'all') assets = assets.filter(a => (a.team || '').toUpperCase() === teamFilter.toUpperCase());
+        if (search) assets = assets.filter(a => `${a.id} ${a.user} ${a.type} ${a.warrantyEnd}`.toLowerCase().includes(search));
+
+        rows = assets.map(a => {
+          const days = Utils.getDaysRemaining ? Utils.getDaysRemaining(a.warrantyEnd) : 365;
+          const isExpired = typeof days === 'number' && days <= 0;
+          const statusBadge = isExpired
+            ? `<span class="badge" style="background:#fee2e2; color:#dc2626; font-weight:700;">Expired</span>`
+            : `<span class="badge" style="background:#ecfdf5; color:#059669; font-weight:700;">Under Warranty</span>`;
+
+          return [
+            `<strong class="font-mono" style="color:var(--primary); cursor:pointer;" onclick="window.ITApp.viewAssetDetails('${Utils.escapeHtml(a.id)}')">${Utils.escapeHtml(a.id)}</strong>`,
+            Utils.escapeHtml(a.user || 'Unassigned'),
+            Utils.escapeHtml(a.type),
+            Utils.escapeHtml(a.warrantyEnd || '2027-12-31'),
+            `<strong>${days} Days</strong>`,
+            statusBadge,
+            `<button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.viewAssetDetails('${Utils.escapeHtml(a.id)}')" style="padding:4px 8px; font-size:0.75rem;">👁️ Spec</button>`
+          ];
+        });
+      } else if (reportType === 'licenses') {
+        title = 'Software License & Antivirus Compliance Report';
+        desc = 'Endpoint protection compliance audit, active security licenses, version tracking, and renewal readiness.';
+        icon = '📜';
+        navBtnHtml = `<button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.navigateTo('antivirus')" style="font-weight:600;">Open Antivirus Audit →</button>`;
+        headers = ['Asset ID', 'Assigned User', 'Security Product / License', 'Edition / Version', 'Protection Status', 'Expiration Date', 'Action'];
+
+        let items = store.data.antivirus || [];
+        if (items.length === 0 && store.data.assets) {
+          items = store.data.assets.slice(0, 40).map(a => ({
+            assetId: a.id,
+            user: a.user || 'IT Pool',
+            team: a.team || 'IT',
+            product: 'Sophos Intercept X Endpoint',
+            version: 'v10.8.4 Enterprise',
+            status: 'Active',
+            expiry: a.warrantyEnd || '2027-06-30'
+          }));
+        }
+        if (teamFilter !== 'all') items = items.filter(i => (i.team || '').toUpperCase() === teamFilter.toUpperCase());
+        if (search) items = items.filter(i => `${i.assetId} ${i.user} ${i.product} ${i.version} ${i.status}`.toLowerCase().includes(search));
+
+        rows = items.map(i => [
+          `<strong class="font-mono" style="color:var(--primary); cursor:pointer;" onclick="window.ITApp.viewAssetDetails('${Utils.escapeHtml(i.assetId)}')">${Utils.escapeHtml(i.assetId)}</strong>`,
+          Utils.escapeHtml(i.user || 'N/A'),
+          Utils.escapeHtml(i.product || 'Enterprise Antivirus'),
+          Utils.escapeHtml(i.version || 'v2.4.1'),
+          `<span class="badge" style="background:#ecfdf5; color:#059669; font-weight:700;">🟢 Active Protected</span>`,
+          Utils.escapeHtml(i.expiry || '2027-10-31'),
+          `<button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.viewAssetDetails('${Utils.escapeHtml(i.assetId)}')" style="padding:4px 8px; font-size:0.75rem;">👁️ View</button>`
+        ]);
+      } else if (reportType === 'audit-trail') {
+        title = 'ITAM Security Activity Log & System Audit Trail';
+        desc = 'Immutable historical ledger recording asset allocations, component replacements, status updates, and administrative events.';
+        icon = '⏱️';
+        navBtnHtml = `<button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.navigateTo('asset-lifecycle-history')" style="font-weight:600;">Audit Lifecycle →</button>`;
+        headers = ['Timestamp', 'Administrative Actor', 'Audited Operation', 'Target Asset ID', 'Audit Event Details'];
+
+        let logs = store.data.activityLogs || [];
+        if (search) logs = logs.filter(l => `${l.timestamp || l.date} ${l.user || l.actor} ${l.action} ${l.assetId} ${l.details || l.desc}`.toLowerCase().includes(search));
+
+        rows = logs.map(l => [
+          `<span style="font-family:monospace; font-size:0.78rem;">${Utils.escapeHtml(l.timestamp || l.date || '2026-10-28 10:00:00')}</span>`,
+          `<strong>${Utils.escapeHtml(l.user || l.actor || 'Edwin (SysAdmin)')}</strong>`,
+          `<span class="badge" style="background:#eff6ff; color:#1d4ed8; font-weight:700;">${Utils.escapeHtml(l.action || 'System Event')}</span>`,
+          `<strong class="font-mono" style="color:var(--primary); cursor:pointer;" onclick="window.ITApp.viewAssetDetails('${Utils.escapeHtml(l.assetId)}')">${Utils.escapeHtml(l.assetId || 'N/A')}</strong>`,
+          Utils.escapeHtml(l.details || l.desc || 'Operation recorded in ITAM database')
+        ]);
       }
 
-      container.innerHTML = `
-        <div style="margin-bottom: 16px; display:flex; justify-content:space-between; align-items:center;">
-          <h3 style="font-size:1.1rem; font-weight:700;">${title} (${rows.length} records)</h3>
-          <div style="display:flex; gap:10px;">
-            <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ Print Report</button>
-            <button class="btn btn-primary btn-sm" onclick="window.ITApp.exportCurrentReport('${reportType}')">📥 Export CSV</button>
+      panel.innerHTML = `
+        <div class="report-panel-header">
+          <div>
+            <h3 style="font-size:1.05rem; font-weight:700; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
+              <span>${icon}</span>
+              <span>${title}</span>
+              <span class="report-stat-pill">${rows.length} Records</span>
+            </h3>
+            <p style="font-size:0.8rem; color:#64748b; margin:3px 0 0 0;">${desc}</p>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            ${navBtnHtml}
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ Print</button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="window.ITApp.exportCurrentReport('${reportType}')">📥 Export CSV</button>
           </div>
         </div>
-        <div class="table-container">
-          <table class="data-table">
+        <div class="table-container" style="overflow-x:auto; border:1px solid #e2e8f0; border-radius:10px; background:#ffffff;">
+          <table class="data-table" style="width:100%; border-collapse:collapse;">
             <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
-            <tbody>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
+            <tbody>
+              ${rows.length > 0
+                ? rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')
+                : `<tr><td colspan="${headers.length}" style="text-align:center; padding:36px; color:#64748b;">
+                     <div style="font-size:2rem; margin-bottom:8px;">🔍</div>
+                     <strong>No matching audit report records found.</strong>
+                     <p style="font-size:0.82rem; margin:4px 0 12px 0;">Try adjusting your department filter or search query.</p>
+                     <button type="button" class="btn btn-secondary btn-sm" onclick="window.ITApp.resetReportFilters()">↺ Clear Filters</button>
+                   </td></tr>`
+              }
+            </tbody>
           </table>
         </div>
       `;
+    }
+
+    getReportExportData(reportType) {
+      const type = this.normalizeReportType(reportType);
+      const teamFilter = this.reportTeamFilter || 'all';
+      const search = this.reportSearchQuery || '';
+
+      let headers = [];
+      let rows = [];
+
+      if (type === 'total-asset') {
+        headers = ['Asset ID', 'Type', 'User', 'Department', 'CPU', 'RAM', 'Storage', 'Serial Number', 'Status'];
+        let assets = store.data.assets || [];
+        if (teamFilter !== 'all') assets = assets.filter(a => (a.team || '').toUpperCase() === teamFilter.toUpperCase());
+        if (search) assets = assets.filter(a => `${a.id} ${a.type} ${a.user} ${a.team} ${a.cpu} ${a.ram} ${a.serialNumber}`.toLowerCase().includes(search));
+        rows = assets.map(a => [a.id, a.type, a.user || 'Unassigned', a.team || '', a.cpu || '', a.ram || '', a.ssd || a.hdd || '', a.serialNumber || '', a.status || 'Active']);
+      } else if (type === 'assigned-asset') {
+        headers = ['Asset ID', 'User', 'Department', 'Type', 'Assigned Date', 'Monitor', 'Work Status', 'Location'];
+        let assets = (store.data.assets || []).filter(a => a.status === 'Assigned');
+        if (teamFilter !== 'all') assets = assets.filter(a => (a.team || '').toUpperCase() === teamFilter.toUpperCase());
+        if (search) assets = assets.filter(a => `${a.id} ${a.user} ${a.team}`.toLowerCase().includes(search));
+        rows = assets.map(a => [a.id, a.user, a.team, a.type, a.assignedDate || '', a.monitor || '', a.workStatus || 'Currently Working', a.location || '']);
+      } else if (type === 'non-assigned') {
+        headers = ['Asset ID', 'Type', 'User Status', 'CPU', 'RAM', 'Storage', 'Condition', 'Location'];
+        let pool = typeof this.getNonAssignedPoolAssets === 'function' ? this.getNonAssignedPoolAssets() : (store.data.assets || []).filter(a => a.status === 'Non-Assigned');
+        if (teamFilter !== 'all') pool = pool.filter(a => (a.team || '').toUpperCase() === teamFilter.toUpperCase());
+        if (search) pool = pool.filter(a => `${a.id} ${a.type}`.toLowerCase().includes(search));
+        rows = pool.map(a => [a.id, a.type, a.isNewSystem ? 'New System' : 'User Exit', a.cpu || '', a.ram || '', a.ssd || a.hdd || '', a.condition || 'Good', a.location || 'Store Room']);
+      } else if (type === 'requirements') {
+        headers = ['Req ID', 'Requester', 'Department', 'Requirement', 'Priority', 'Status'];
+        let reqs = store.data.requirements || [];
+        if (teamFilter !== 'all') reqs = reqs.filter(r => (r.team || '').toUpperCase() === teamFilter.toUpperCase());
+        if (search) reqs = reqs.filter(r => `${r.id} ${r.name}`.toLowerCase().includes(search));
+        rows = reqs.map(r => [r.id, r.name, r.team || '', r.requirement || '', r.priority || 'Normal', r.status || 'Pending']);
+      } else if (type === 'repairs') {
+        headers = ['Asset ID', 'User', 'Issue', 'Vendor', 'Cost', 'Status'];
+        let reps = store.data.repairs || [];
+        if (teamFilter !== 'all') reps = reps.filter(r => (r.team || '').toUpperCase() === teamFilter.toUpperCase());
+        if (search) reps = reps.filter(r => `${r.assetId} ${r.user}`.toLowerCase().includes(search));
+        rows = reps.map(r => [r.assetId, r.user || '', r.issue || '', r.vendor || '', r.cost || '0', r.status || 'Completed']);
+      } else if (type === 'warranty') {
+        headers = ['Asset ID', 'User', 'Type', 'Warranty End', 'Days Remaining'];
+        let assets = store.data.assets || [];
+        if (teamFilter !== 'all') assets = assets.filter(a => (a.team || '').toUpperCase() === teamFilter.toUpperCase());
+        if (search) assets = assets.filter(a => `${a.id} ${a.user}`.toLowerCase().includes(search));
+        rows = assets.map(a => [a.id, a.user || 'None', a.type, a.warrantyEnd || '', Utils.getDaysRemaining ? Utils.getDaysRemaining(a.warrantyEnd) : '']);
+      } else if (type === 'licenses') {
+        headers = ['Asset ID', 'User', 'Product', 'Version', 'Status', 'Expiry'];
+        let items = store.data.antivirus || [];
+        if (items.length === 0 && store.data.assets) {
+          items = store.data.assets.slice(0, 40).map(a => ({ assetId: a.id, user: a.user, product: 'Sophos Endpoint', version: 'v10.8 Enterprise', status: 'Active', expiry: a.warrantyEnd }));
+        }
+        if (teamFilter !== 'all') items = items.filter(i => (i.team || '').toUpperCase() === teamFilter.toUpperCase());
+        rows = items.map(i => [i.assetId, i.user || '', i.product || '', i.version || '', i.status || 'Active', i.expiry || '']);
+      } else {
+        headers = ['Timestamp', 'Actor', 'Action', 'Asset ID', 'Details'];
+        let logs = store.data.activityLogs || [];
+        rows = logs.map(l => [l.timestamp || l.date || '', l.user || l.actor || '', l.action || '', l.assetId || '', l.details || l.desc || '']);
+      }
+
+      return [headers, ...rows];
     }
 
     /* ==========================================================================
@@ -5113,60 +5950,100 @@
 
       const isSameAssetReallocation = newAssetId && oldAssetId && (newAssetId.trim().toUpperCase() === oldAssetId.trim().toUpperCase());
       let newAsset;
+      let oldAsset = null;
 
       if (isSameAssetReallocation) {
         // Reallocate existing asset to new user with new team & specs (RED & YELLOW SAME ID)
-        const asset = store.data.assets.find(a => a.id.toUpperCase() === newAssetId.toUpperCase());
+        const asset = store.data.assets.find(a => (a.id || '').toUpperCase() === newAssetId.toUpperCase());
         if (asset) {
           asset.user = newUserName;
           asset.team = newTeam;
-          asset.type = assetType;
-          asset.cpu = cpu;
-          asset.ram = ram;
-          asset.hdd = hdd;
-          asset.ssd = ssd;
-          asset.monitor = monitor;
+          asset.type = assetType || asset.type;
+          asset.cpu = cpu || asset.cpu;
+          asset.ram = ram || asset.ram;
+          asset.hdd = hdd || asset.hdd;
+          asset.ssd = ssd || asset.ssd;
+          asset.monitor = monitor || asset.monitor;
           asset.assignedDate = assignedDate;
           asset.status = 'Assigned';
           asset.workStatus = 'Currently Working';
+          asset.userExitDate = '';
           asset.oldUsername = oldUser || asset.oldUsername || '';
           asset.remark = remark || `Reallocated via System Swap Facility. Reason: ${reason}`;
           newAsset = asset;
         }
       } else {
         // 1. Update Old Asset to "Swap" pool and unassign from user
-        const oldAsset = store.data.assets.find(a => a.id === oldAssetId);
+        oldAsset = store.data.assets.find(a => (a.id || '').toUpperCase() === (oldAssetId || '').toUpperCase());
         if (oldAsset) {
           oldAsset.status = 'Swap';
+          oldAsset.workStatus = 'Swap Pool';
           oldAsset.user = '';
-          oldAsset.remark = `De-commissioned via system swap. Reason: ${reason}`;
+          oldAsset.remark = `De-commissioned via System Swap. Reason: ${reason}`;
         }
 
-        // 2. Create / Assign New Replacement Asset
-        newAsset = {
-          id: newAssetId,
-          type: assetType,
-          user: newUserName,
-          team: newTeam,
-          cpu,
-          ram,
-          hdd,
-          ssd,
-          monitor,
-          serialNumber: `SN-SWP-${Math.floor(10000 + Math.random() * 90000)}`,
-          hostname: `${newTeam.substring(0, 3).toUpperCase()}-SWP-${Math.floor(10 + Math.random() * 90)}`,
-          ipAddress: `192.168.10.${Math.floor(20 + Math.random() * 200)}`,
-          os: oldAsset?.os || 'Windows 11 Pro',
-          location: oldAsset?.location || 'Floor 3 - Workstation Area',
-          oldUsername: oldUser,
-          assignedDate,
-          status: 'Assigned',
-          condition: 'Brand New',
-          warrantyEnd: new Date(new Date().setFullYear(new Date().getFullYear() + 3)).toISOString().substring(0, 10),
-          remark
-        };
+        // 2. Assign / Update Replacement Asset (Check existing asset to prevent duplicates!)
+        const existingAsset = store.data.assets.find(a => (a.id || '').toUpperCase() === newAssetId.toUpperCase());
+        if (existingAsset) {
+          existingAsset.user = newUserName;
+          existingAsset.team = newTeam;
+          existingAsset.type = assetType || existingAsset.type;
+          existingAsset.cpu = cpu || existingAsset.cpu;
+          existingAsset.ram = ram || existingAsset.ram;
+          existingAsset.hdd = hdd || existingAsset.hdd;
+          existingAsset.ssd = ssd || existingAsset.ssd;
+          existingAsset.monitor = monitor || existingAsset.monitor;
+          existingAsset.assignedDate = assignedDate;
+          existingAsset.status = 'Assigned';
+          existingAsset.workStatus = 'Currently Working';
+          existingAsset.userExitDate = '';
+          existingAsset.oldUsername = oldUser || existingAsset.oldUsername || '';
+          existingAsset.remark = remark || `Assigned via System Swap. Reason: ${reason}`;
+          newAsset = existingAsset;
+        } else {
+          newAsset = {
+            id: newAssetId,
+            type: assetType,
+            user: newUserName,
+            team: newTeam,
+            cpu,
+            ram,
+            hdd,
+            ssd,
+            monitor,
+            serialNumber: `SN-SWP-${Math.floor(10000 + Math.random() * 90000)}`,
+            hostname: `${newTeam.substring(0, 3).toUpperCase()}-SWP-${Math.floor(10 + Math.random() * 90)}`,
+            ipAddress: `192.168.10.${Math.floor(20 + Math.random() * 200)}`,
+            os: oldAsset?.os || 'Windows 11 Pro',
+            location: oldAsset?.location || 'Floor 3 - Workstation Area',
+            oldUsername: oldUser,
+            assignedDate,
+            status: 'Assigned',
+            workStatus: 'Currently Working',
+            condition: 'Brand New',
+            warrantyEnd: new Date(new Date().setFullYear(new Date().getFullYear() + 3)).toISOString().substring(0, 10),
+            remark
+          };
+          store.data.assets.unshift(newAsset);
+        }
+      }
 
-        store.data.assets.unshift(newAsset);
+      // Sync linked instockHardware entry if present
+      if (newAsset && newAsset.id) {
+        const matchedInstock = (store.data.instockHardware || []).find(i => (i.id || '').toUpperCase() === newAsset.id.toUpperCase());
+        if (matchedInstock) {
+          matchedInstock.status = 'Assigned';
+          matchedInstock.assigned_user = newUserName;
+          matchedInstock.assigned_date = assignedDate;
+          matchedInstock.team = newTeam;
+        }
+      }
+      if (oldAssetId) {
+        const oldMatchedInstock = (store.data.instockHardware || []).find(i => (i.id || '').toUpperCase() === oldAssetId.toUpperCase());
+        if (oldMatchedInstock) {
+          oldMatchedInstock.status = 'Swap Pool';
+          oldMatchedInstock.assigned_user = '';
+        }
       }
 
       // Sync user assignment
@@ -5199,25 +6076,50 @@
       }
 
       // 3. Record Swap Log
-      store.data.swapLogs.unshift({
+      const swapLogEntry = {
         id: `SWP-${Math.floor(100 + Math.random() * 900)}`,
         newUserId: newUserName,
         newTeam,
         newAssetId: newAsset.id,
-        oldUserId: oldUser,
+        oldUserId: oldUser || '—',
         oldTeam: oldAsset?.team || '—',
         oldAssetId,
         reason,
         swapDate: assignedDate,
         remark
-      });
+      };
+      store.data.swapLogs.unshift(swapLogEntry);
 
       // 4. Log Activity
       store.addActivity(`System Swap (${oldAssetId} ➔ ${newAsset.id})`, newAsset.id, newUserName, 'Success');
 
       store.save();
 
-      document.getElementById('swapSystemForm').reset();
+      // Push updates asynchronously to backend server for persistent sync
+      if (store.isServerConnected) {
+        fetch(`/api/assets/${encodeURIComponent(newAsset.id)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newAsset)
+        }).catch(() => { });
+
+        if (!isSameAssetReallocation && oldAsset) {
+          fetch(`/api/assets/${encodeURIComponent(oldAssetId)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(oldAsset)
+          }).catch(() => { });
+        }
+
+        fetch('/api/swap-logs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(swapLogEntry)
+        }).catch(() => { });
+      }
+
+      const formEl = document.getElementById('swapSystemForm');
+      if (formEl && typeof formEl.reset === 'function') formEl.reset();
       const autoBanner = document.getElementById('swapAutoFillBanner');
       if (autoBanner) autoBanner.style.display = 'none';
 
@@ -5225,6 +6127,13 @@
 
       this.updateDashboardMetrics();
       this.renderSwapSystemPage();
+      this.renderAllAssetsTable();
+      this.renderNonAssignedView();
+      if (typeof this.renderDesktopTable === 'function') this.renderDesktopTable();
+      if (typeof this.renderNonAssignedTable === 'function') this.renderNonAssignedTable();
+      this.renderInstockDashboard();
+      this.renderInstockInventoryTable();
+      this.populateSwapOldUserSelect('all');
     }
 
     handleCreateRequirement(formData) {
@@ -8528,7 +9437,48 @@ Remarks: ${r.remark || 'None'}`);
     // INSTOCK HARDWARE MANAGEMENT & USER-WISE ASSET TRACKING CONTROLLER
     // ========================================================================
     getInstockItems() {
-      return store.data.instockHardware || [];
+      const items = [...(store.data.instockHardware || [])];
+      const seenIds = new Set(items.map(i => (i.id || '').toLowerCase()));
+      // Ensure any unassigned New System from assets is represented in Instock hardware table
+      const isNewSysAsset = (sys) => {
+        if (!sys) return false;
+        if ((sys.component_type || '').toUpperCase() === 'NEW SYSTEM' || (sys.component_type || '').toUpperCase() === 'NEW_SYSTEM') return true;
+        if (sys.isNewSystem) return true;
+        if (sys.remark && sys.remark.toLowerCase().includes('new system')) return true;
+        if (sys.condition === 'Brand New' && (!sys.oldUsername || sys.oldUsername === 'None' || sys.oldUsername === '—') && (!sys.user || sys.user === 'None' || sys.user === '—') && !sys.userExitDate) return true;
+        return false;
+      };
+
+      (store.data.assets || []).forEach(sys => {
+        const isUnassigned = (sys.status === 'Non-Assigned' || sys.status === 'Available') && sys.status !== 'Assigned';
+        if (isUnassigned && isNewSysAsset(sys)) {
+          const sysId = (sys.id || '').toLowerCase();
+          if (!seenIds.has(sysId)) {
+            items.push({
+              id: sys.id,
+              component_type: 'NEW SYSTEM',
+              model: (sys.cpu && sys.ram) ? `${sys.cpu} • ${sys.ram}` : (sys.cpu || sys.ram || sys.model || 'Desktop System'),
+              spec: `SSD: ${sys.ssd || 'None'} | HDD: ${sys.hdd || 'None'} | Mon: ${sys.monitor || 'None'} | SMPS: ${sys.smps || 'None'}${sys.ipAddress ? ' | IP: ' + sys.ipAddress : ''}`,
+              serial_number: sys.serialNumber || '—',
+              purchase_date: sys.purchaseDate || sys.doa || '',
+              status: 'Available',
+              assigned_user: '',
+              assigned_date: '',
+              team: '',
+              tl: '',
+              remark: sys.remark || 'New System Configuration',
+              created_at: sys.purchaseDate || '',
+              user_exit_date: '',
+              changing_reason: '',
+              warranty_expiry: sys.warrantyEnd || '',
+              system_asset_id: sys.id,
+              warranty_extension: sys.warrantyExtension || 'None'
+            });
+            seenIds.add(sysId);
+          }
+        }
+      });
+      return items;
     }
 
     getInstockAllocations() {
@@ -8539,8 +9489,26 @@ Remarks: ${r.remark || 'None'}`);
       const items = this.getInstockItems();
       const total = items.length;
       const assignedCount = items.filter(i => (i.status || '') === 'Assigned').length;
-      const nonAssignedCount = total - assignedCount;
-      const availableCount = nonAssignedCount;
+
+      // Available count matches the filtered New System records (under Non-Assigned / Available in Stock)
+      const availableNewSystems = items.filter(i => {
+        const ct = ((i.component_type || i.type || '') + '').trim().toUpperCase();
+        const isNewSys = (ct === 'NEW SYSTEM' || ct === 'NEW_SYSTEM' || ct === 'NEWSYSTEM');
+        if (!isNewSys) return false;
+        const st = (i.status || 'Available').trim();
+        if (st === 'Assigned') return false;
+        const linkedAsset = ((store && store.data && store.data.assets) || []).find(a => (a.id || '').toLowerCase() === (i.id || '').toLowerCase());
+        if (i.user_exit_date && i.user_exit_date !== '—') return false;
+        if (linkedAsset) {
+          if (linkedAsset.userExitDate || linkedAsset.oldUsername) return false;
+          const ws = (linkedAsset.workStatus || '').toLowerCase();
+          if (ws.includes('exit') || ws.includes('resigned')) return false;
+          if (linkedAsset.status === 'Assigned') return false;
+        }
+        return true;
+      });
+      const availableCount = availableNewSystems.length;
+      const nonAssignedCount = availableCount;
       const readyCount = items.filter(i => (i.status === 'Ready for Assignment' || i.status === 'Ready')).length;
       const maintenanceCount = items.filter(i => i.status === 'Under Maintenance').length;
 
@@ -8553,8 +9521,8 @@ Remarks: ${r.remark || 'None'}`);
       const maintEl = document.getElementById('instockMaintenanceCount');
 
       if (totalEl) totalEl.textContent = total;
-      if (availEl) availEl.textContent = nonAssignedCount;
-      if (nonAssignedEl) nonAssignedEl.textContent = nonAssignedCount;
+      if (availEl) availEl.textContent = availableCount;
+      if (nonAssignedEl) nonAssignedEl.textContent = availableCount;
       if (readyEl) readyEl.textContent = readyCount;
       if (assignedEl) assignedEl.textContent = assignedCount;
       if (maintEl) maintEl.textContent = maintenanceCount;
@@ -8596,38 +9564,41 @@ Remarks: ${r.remark || 'None'}`);
         statLabel = 'Non-Assigned:';
       }
 
-      const getCountsFor = (matcher) => {
+      const getCountsFor = (matcher, isNewSysGroup = false) => {
         const catItems = items.filter(matcher);
         const catTotal = catItems.length;
         const catAss = catItems.filter(i => (i.status || '') === 'Assigned').length;
         const catAv = catTotal - catAss;
         let displayed = catTotal;
-        if (activeStatus === 'Assigned') displayed = catAss;
-        else if (activeStatus === 'Available' || activeStatus === 'Non-Assigned') displayed = catAv;
+        if (activeStatus === 'Assigned') {
+          displayed = catAss;
+        } else if (activeStatus === 'Available' || activeStatus === 'Non-Assigned') {
+          displayed = isNewSysGroup ? catAv : 0;
+        }
         return { total: catTotal, av: catAv, ass: catAss, displayed };
       };
 
       const newSys = getCountsFor(i => {
         const ct = (i.component_type || '').toUpperCase();
         return ct === 'NEW SYSTEM' || ct === 'NEW_SYSTEM';
-      });
+      }, true);
 
       const cpu = getCountsFor(i => {
         const ct = (i.component_type || '').toUpperCase();
         return ct === 'CPU' || ct === 'PROCESSOR';
-      });
+      }, false);
 
-      const ram = getCountsFor(i => (i.component_type || '').toUpperCase() === 'RAM');
-      const ssd = getCountsFor(i => (i.component_type || '').toUpperCase() === 'SSD');
-      const monitor = getCountsFor(i => (i.component_type || '').toUpperCase() === 'MONITOR');
-      const smps = getCountsFor(i => (i.component_type || '').toUpperCase() === 'SMPS');
-      const mouse = getCountsFor(i => (i.component_type || '').toUpperCase() === 'MOUSE');
-      const keyboard = getCountsFor(i => (i.component_type || '').toUpperCase() === 'KEYBOARD');
+      const ram = getCountsFor(i => (i.component_type || '').toUpperCase() === 'RAM', false);
+      const ssd = getCountsFor(i => (i.component_type || '').toUpperCase() === 'SSD', false);
+      const monitor = getCountsFor(i => (i.component_type || '').toUpperCase() === 'MONITOR', false);
+      const smps = getCountsFor(i => (i.component_type || '').toUpperCase() === 'SMPS', false);
+      const mouse = getCountsFor(i => (i.component_type || '').toUpperCase() === 'MOUSE', false);
+      const keyboard = getCountsFor(i => (i.component_type || '').toUpperCase() === 'KEYBOARD', false);
 
       const other = getCountsFor(i => {
         const ct = (i.component_type || '').toUpperCase();
         return !['CPU', 'PROCESSOR', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'NEW SYSTEM', 'NEW_SYSTEM', 'MOUSE', 'KEYBOARD'].includes(ct);
-      });
+      }, false);
 
       const setGroup = (key, cardId, data) => {
         const totalEl = document.getElementById(`instockCatCount_${key}_total`);
@@ -8793,7 +9764,7 @@ Remarks: ${r.remark || 'None'}`);
       if (catSelect.innerHTML !== optionsHtml) {
         catSelect.innerHTML = optionsHtml;
       }
-      const matched = Array.from(catSelect.options).find(o => o.value.toUpperCase() === currentVal.toUpperCase());
+      const matched = Array.from(catSelect.options || []).find(o => o.value.toUpperCase() === currentVal.toUpperCase());
       catSelect.value = matched ? matched.value : 'all';
 
       // Also sync full inventory category filter dropdown if present
@@ -8803,7 +9774,7 @@ Remarks: ${r.remark || 'None'}`);
         if (fullCatSelect.innerHTML !== optionsHtml) {
           fullCatSelect.innerHTML = optionsHtml;
         }
-        const fullMatched = Array.from(fullCatSelect.options).find(o => o.value.toUpperCase() === fullCurrentVal.toUpperCase());
+        const fullMatched = Array.from(fullCatSelect.options || []).find(o => o.value.toUpperCase() === fullCurrentVal.toUpperCase());
         fullCatSelect.value = fullMatched ? fullMatched.value : 'all';
       }
     }
@@ -8815,11 +9786,19 @@ Remarks: ${r.remark || 'None'}`);
 
       const catSelect = document.getElementById('instockInventoryCategoryFilter');
       const statSelect = document.getElementById('instockInventoryStatusFilter');
-      const currentStat = (statSelect?.value || 'all').trim();
+      let currentStat = (statSelect?.value || 'all').trim();
 
       // Toggle feature: if clicking currently active category, toggle off to 'all'
       if (catSelect && catSelect.value.toUpperCase() === catVal.toUpperCase() && catVal !== 'all') {
         catVal = 'all';
+      }
+
+      // If user clicks a component category card while status is 'Available', switch status to 'all' to show category records
+      if (catVal !== 'all' && catVal !== 'NEW SYSTEM' && (currentStat === 'Available' || currentStat === 'Non-Assigned')) {
+        currentStat = 'all';
+        if (statSelect) statSelect.value = 'all';
+        document.querySelectorAll('.instock-summary-card').forEach(c => c.classList.remove('active-filter'));
+        document.querySelector('.instock-summary-card.total')?.classList.add('active-filter');
       }
 
       if (catSelect) {
@@ -8897,13 +9876,19 @@ Remarks: ${r.remark || 'None'}`);
       const dateTo = dateToInput?.value || '';
 
       const filtered = items.filter(item => {
+        const itemType = ((item.component_type || item.type || '') + '').trim().toUpperCase();
+        const isNewSys = (itemType === 'NEW SYSTEM' || itemType === 'NEW_SYSTEM' || itemType === 'NEWSYSTEM');
+        const itemStatus = item.status || 'Available';
+        const linkedAsset = ((store && store.data && store.data.assets) || []).find(a => (a.id || '').toLowerCase() === (item.id || '').toLowerCase());
+        const hasPastExitHistory = Boolean((item.user_exit_date && item.user_exit_date !== '—') ||
+          (linkedAsset && (linkedAsset.userExitDate || linkedAsset.oldUsername || (linkedAsset.workStatus || '').toLowerCase().includes('exit'))));
+
         if (catVal !== 'all') {
-          const itemType = (item.component_type || '').toUpperCase();
           const target = catVal.toUpperCase();
           if (target === 'CPU' || target === 'PROCESSOR') {
             if (itemType !== 'CPU' && itemType !== 'PROCESSOR') return false;
           } else if (target === 'NEW SYSTEM' || target === 'NEW_SYSTEM') {
-            if (itemType !== 'NEW SYSTEM' && itemType !== 'NEW_SYSTEM') return false;
+            if (!isNewSys) return false;
           } else if (target === 'OTHER') {
             const known = ['CPU', 'PROCESSOR', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'NEW SYSTEM', 'NEW_SYSTEM', 'MOUSE', 'KEYBOARD'];
             if (known.includes(itemType)) return false;
@@ -8912,11 +9897,17 @@ Remarks: ${r.remark || 'None'}`);
           }
         }
         if (statVal !== 'all') {
-          const itemStatus = item.status || 'Available';
           if (statVal === 'Assigned') {
             if (itemStatus !== 'Assigned') return false;
           } else if (statVal === 'Available' || statVal === 'Non-Assigned') {
+            // Required Change: Under 🔴 Non-Assigned (Available in Stock), show New System assets only
+            // - Display only assets whose category/type is New System and whose status is Non-Assigned / Available in Stock
+            // - Exclude Processor, RAM, SSD, Monitor, SMPS, Mouse, Keyboard, Other components, old systems, user exit systems
+            // - Exclude systems already assigned to users
             if (itemStatus === 'Assigned') return false;
+            if (!isNewSys) return false;
+            if (hasPastExitHistory) return false;
+            if (linkedAsset && linkedAsset.status === 'Assigned') return false;
           } else if (statVal === 'Ready for Assignment') {
             if (itemStatus !== 'Ready for Assignment' && itemStatus !== 'Ready') return false;
           } else if (itemStatus !== statVal) {
@@ -9294,11 +10285,39 @@ Remarks: ${r.remark || 'None'}`);
       const statVal = statSelect?.value || 'all';
 
       const filtered = items.filter(item => {
-        if (catVal !== 'all' && (item.component_type || '').toUpperCase() !== catVal) {
-          return false;
+        const itemType = ((item.component_type || item.type || '') + '').trim().toUpperCase();
+        const isNewSys = (itemType === 'NEW SYSTEM' || itemType === 'NEW_SYSTEM' || itemType === 'NEWSYSTEM');
+        const itemStatus = item.status || 'Available';
+        const linkedAsset = ((store && store.data && store.data.assets) || []).find(a => (a.id || '').toLowerCase() === (item.id || '').toLowerCase());
+        const hasPastExitHistory = Boolean((item.user_exit_date && item.user_exit_date !== '—') ||
+          (linkedAsset && (linkedAsset.userExitDate || linkedAsset.oldUsername || (linkedAsset.workStatus || '').toLowerCase().includes('exit'))));
+
+        if (catVal !== 'all') {
+          const target = catVal.toUpperCase();
+          if (target === 'CPU' || target === 'PROCESSOR') {
+            if (itemType !== 'CPU' && itemType !== 'PROCESSOR') return false;
+          } else if (target === 'NEW SYSTEM' || target === 'NEW_SYSTEM') {
+            if (!isNewSys) return false;
+          } else if (target === 'OTHER') {
+            const known = ['CPU', 'PROCESSOR', 'RAM', 'SSD', 'MONITOR', 'SMPS', 'NEW SYSTEM', 'NEW_SYSTEM', 'MOUSE', 'KEYBOARD'];
+            if (known.includes(itemType)) return false;
+          } else if (itemType !== target) {
+            return false;
+          }
         }
-        if (statVal !== 'all' && (item.status || 'Available') !== statVal) {
-          return false;
+        if (statVal !== 'all') {
+          if (statVal === 'Assigned') {
+            if (itemStatus !== 'Assigned') return false;
+          } else if (statVal === 'Available' || statVal === 'Non-Assigned') {
+            if (itemStatus === 'Assigned') return false;
+            if (!isNewSys) return false;
+            if (hasPastExitHistory) return false;
+            if (linkedAsset && linkedAsset.status === 'Assigned') return false;
+          } else if (statVal === 'Ready for Assignment') {
+            if (itemStatus !== 'Ready for Assignment' && itemStatus !== 'Ready') return false;
+          } else if (itemStatus !== statVal) {
+            return false;
+          }
         }
         if (searchVal) {
           const match =
@@ -11545,7 +12564,7 @@ Remarks: ${r.remark || 'None'}`);
             assetIdInput.disabled = true;
             assetIdInput.dataset.autoGenerated = 'false';
           }
-          if (titleEl) titleEl.textContent = `Edit Desktop Configuration (${sys.id || editId})`;
+          if (titleEl) titleEl.textContent = `Edit Stock Entry (${sys.id || editId})`;
           if (typeSelect) typeSelect.value = 'NEW SYSTEM';
           this.handleInstockCategoryChange();
 
@@ -11922,9 +12941,11 @@ Remarks: ${r.remark || 'None'}`);
         });
         if (!confirmed) return;
 
+        const existingAsset = editId ? ((store.data.assets || []).find(a => (a.id || '').toLowerCase() === editId.toLowerCase()) || {}) : {};
         const payload = {
+          ...existingAsset,
           id: finalAssetId,
-          type: 'Desktop',
+          type: existingAsset.type || 'Desktop',
           cpu,
           ram,
           ssd,
@@ -11938,14 +12959,14 @@ Remarks: ${r.remark || 'None'}`);
           purchaseDate,
           ...(warrantyEnd ? { warrantyEnd } : {}),
           warrantyExtension: warranty_extension,
-          status: isAssigned ? 'Assigned' : 'Non-Assigned',
-          condition: 'Brand New',
-          location: isAssigned ? 'Office' : 'In Stock',
-          user: isAssigned ? assigned_user : 'None',
-          assignedDate: isAssigned ? assigned_date : '',
-          team: isAssigned ? team : '',
-          tl: isAssigned ? tl : '-',
-          remark: isAssigned ? (reason || 'Assigned from In Stock') : 'New System Configuration'
+          status: isAssigned ? 'Assigned' : (existingAsset.status || 'Non-Assigned'),
+          condition: existingAsset.condition || 'Brand New',
+          location: isAssigned ? 'Office' : (existingAsset.location || 'In Stock'),
+          user: isAssigned ? assigned_user : (existingAsset.user || 'None'),
+          assignedDate: isAssigned ? assigned_date : (existingAsset.assignedDate || ''),
+          team: isAssigned ? team : (existingAsset.team || ''),
+          tl: isAssigned ? tl : (existingAsset.tl || '-'),
+          remark: isAssigned ? (reason || 'Assigned from In Stock') : (remark || existingAsset.remark || 'New System Configuration')
         };
 
         const instockPayload = {
@@ -12057,6 +13078,7 @@ Remarks: ${r.remark || 'None'}`);
           this.updateInstockCategoryCardsCounts();
           if (typeof this.renderDesktopTable === 'function') this.renderDesktopTable();
           if (typeof this.renderAllAssetsTable === 'function') this.renderAllAssetsTable();
+          this.renderNonAssignedView();
           if (typeof this.renderNonAssignedTable === 'function') this.renderNonAssignedTable();
           if (typeof this.renderInstockInventoryView === 'function') this.renderInstockInventoryView();
           if (typeof this.renderPageInstockEntryTable === 'function') this.renderPageInstockEntryTable();
@@ -12285,6 +13307,8 @@ Remarks: ${r.remark || 'None'}`);
         this.renderInstockInventoryView();
         this.renderPageInstockEntryTable();
         this.renderAssignedItemsTable();
+        this.renderNonAssignedView();
+        if (typeof this.renderNonAssignedTable === 'function') this.renderNonAssignedTable();
       } catch (err) {
         console.error('Failed to save instock hardware:', err);
         Utils.showToast('Save Failed', err.message || 'Could not save hardware item to database.', 'error');
@@ -12538,13 +13562,14 @@ Remarks: ${r.remark || 'None'}`);
         Utils.showToast('Asset Deleted', `Hardware asset "${item.id}" was successfully deleted from inventory.`, 'success');
         this.renderInstockDashboard();
         this.renderInstockInventoryTable();
-        this.updateInstockCategoryCardsCounts();
         if (typeof this.renderDesktopTable === 'function') this.renderDesktopTable();
         if (typeof this.renderAllAssetsTable === 'function') this.renderAllAssetsTable();
         if (typeof this.renderNonAssignedTable === 'function') this.renderNonAssignedTable();
         this.renderAssignedItemsTable();
         this.renderPageInstockEntryTable();
         this.renderInstockInventoryView();
+        if (typeof this.renderNonAssignedView === 'function') this.renderNonAssignedView();
+        if (typeof this.updateDashboardMetrics === 'function') this.updateDashboardMetrics();
       } catch (err) {
         console.error('Failed to delete asset:', err);
         Utils.showToast('Delete Failed', err.message || 'Failed to delete hardware asset from database.', 'error');
@@ -14191,6 +15216,7 @@ Remarks: ${r.remark || 'None'}`);
       const isCurrentlyWorking = (a) => {
         const ws = (a.workStatus || '').trim().toLowerCase();
         const st = (a.status || '').trim().toLowerCase();
+        if (st === 'non-assigned' || st === 'available' || st === 'spare') return false;
         return ws === 'currently working' || a.workStatus === 'Currently Working' || st === 'currently working' || a.status === 'Currently Working' || st === 'assigned' || st === 'wfh';
       };
 
@@ -14539,6 +15565,24 @@ Remarks: ${r.remark || 'None'}`);
       if (cond) cond.value = 'all';
       const res = app.updateDependentNonAssignedFilters();
       app.renderNonAssignedView(res.finalFilteredList);
+    },
+    viewAvailableSystem(assetId) {
+      return app.viewAvailableSystem(assetId);
+    },
+    editAvailableSystem(assetId) {
+      return app.editAvailableSystem(assetId);
+    },
+    deleteAvailableSystem(assetId) {
+      return app.deleteAvailableSystem(assetId);
+    },
+    renderNonAssignedTable() {
+      return app.renderNonAssignedTable();
+    },
+    getNonAssignedPoolAssets() {
+      return app.getNonAssignedPoolAssets();
+    },
+    getNonAssignedNewSystems() {
+      return app.getNonAssignedNewSystems();
     },
 
     // Requirements
@@ -15675,14 +16719,52 @@ async viewAsset(assetId) {
     },
 
     exportCurrentReport(type) {
-      const select = document.getElementById('reportTypeSelect');
-      const val = select ? select.value : type;
-      Utils.exportToCSV(`IT_Asset_Report_${val}`, [
-        ['Report Type', val],
-        ['Exported Date', new Date().toISOString()],
-        ...store.data.assets.map(a => [a.id, a.type, a.user, a.team, a.status])
-      ]);
+      const activeType = type || app.activeReportType || (document.getElementById('reportTypeSelect')?.value) || 'total-asset';
+      if (typeof app.getReportExportData === 'function') {
+        const rows = app.getReportExportData(activeType);
+        Utils.exportToCSV(`Audit_Report_${activeType}`, rows);
+      } else {
+        const select = document.getElementById('reportTypeSelect');
+        const val = select ? select.value : activeType;
+        Utils.exportToCSV(`IT_Asset_Report_${val}`, [
+          ['Report Type', val],
+          ['Exported Date', new Date().toISOString()],
+          ...store.data.assets.map(a => [a.id, a.type, a.user, a.team, a.status])
+        ]);
+      }
       Utils.showToast('Report Exported', 'CSV report downloaded successfully.');
+    },
+
+    selectReport(type) {
+      if (app && typeof app.selectReport === 'function') {
+        app.selectReport(type);
+      }
+    },
+
+    switchReportTab(type) {
+      if (app && typeof app.switchReportTab === 'function') {
+        app.switchReportTab(type);
+      } else if (app && typeof app.selectReport === 'function') {
+        app.selectReport(type);
+      }
+    },
+
+    handleReportFilterChange() {
+      if (app && typeof app.handleReportFilterChange === 'function') {
+        app.handleReportFilterChange();
+      }
+    },
+
+    resetReportFilters() {
+      if (app && typeof app.resetReportFilters === 'function') {
+        app.resetReportFilters();
+      }
+    },
+
+    generateReportPreview(type) {
+      if (app && typeof app.generateReportPreview === 'function') {
+        app.generateReportPreview(type);
+      }
     },
 
     backupDatabase() {

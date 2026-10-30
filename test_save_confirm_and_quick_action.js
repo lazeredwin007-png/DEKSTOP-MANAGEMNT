@@ -35,19 +35,19 @@ test('Available Systems table in index.html does NOT contain Quick Action header
   assert(!tableChunk.includes('Quick Action'), 'thead must not contain Quick Action');
 });
 
-test('Available Systems table header in index.html has exactly 10 columns', () => {
+test('Available Systems table header in index.html has exactly 11 columns with Actions', () => {
   const idx = html.indexOf('id="nonAssignedTableBody"');
   const prevTableIdx = html.lastIndexOf('<table', idx);
   const tableChunk = html.substring(prevTableIdx, idx);
   const thMatches = tableChunk.match(/<th[\s\S]*?<\/th>/g) || [];
-  assert.strictEqual(thMatches.length, 10, `Expected 10 <th> elements, found ${thMatches.length}`);
+  assert.strictEqual(thMatches.length, 11, `Expected 11 <th> elements, found ${thMatches.length}`);
+  assert(tableChunk.includes('Actions'), 'thead must contain Actions column');
 });
 
-test('renderNonAssignedView in app.js uses colspan="10" for empty state', () => {
+test('renderNonAssignedView in app.js uses colspan="11" for empty state', () => {
   const checkIdx = appJs.indexOf('nonAssigned.length === 0');
   const emptyChunk = appJs.substring(checkIdx, checkIdx + 200);
-  assert(emptyChunk.includes('colspan="10"'), 'Empty state must use colspan="10"');
-  assert(!emptyChunk.includes('colspan="11"'), 'Empty state must not use colspan="11"');
+  assert(emptyChunk.includes('colspan="11"'), 'Empty state must use colspan="11"');
 });
 
 test('renderNonAssignedView does NOT render Quick Action cell or quick assign button in table rows', () => {

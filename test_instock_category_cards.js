@@ -29,16 +29,16 @@ const expectedOrder = [
   { key: 'SSD', id: 'instockCatCard_SSD', name: 'SSD', arg: "'SSD'", iconClass: 'cat-icon-ssd' },
   { key: 'MONITOR', id: 'instockCatCard_MONITOR', name: 'Monitor', arg: "'MONITOR'", iconClass: 'cat-icon-monitor' },
   { key: 'SMPS', id: 'instockCatCard_SMPS', name: 'SMPS', arg: "'SMPS'", iconClass: 'cat-icon-smps' },
-  { key: 'OTHER', id: 'instockCatCard_OTHER', name: 'Other', arg: "'OTHER'", iconClass: 'cat-icon-other' },
   { key: 'MOUSE', id: 'instockCatCard_MOUSE', name: 'Mouse', arg: "'MOUSE'", iconClass: 'cat-icon-mouse' },
-  { key: 'KEYBOARD', id: 'instockCatCard_KEYBOARD', name: 'Keyboard', arg: "'KEYBOARD'", iconClass: 'cat-icon-keyboard' }
+  { key: 'KEYBOARD', id: 'instockCatCard_KEYBOARD', name: 'Keyboard', arg: "'KEYBOARD'", iconClass: 'cat-icon-keyboard' },
+  { key: 'OTHER', id: 'instockCatCard_OTHER', name: 'Other', arg: "'OTHER'", iconClass: 'cat-icon-other' }
 ];
 
 test('instockCategoryCardsContainer exists in index.html', () => {
   assert(html.includes('id="instockCategoryCardsContainer"'), 'Container exists');
 });
 
-test('Cards follow strict order: New System first, Keyboard last', () => {
+test('Cards follow strict order: New System first, Other last', () => {
   let lastIndex = -1;
   expectedOrder.forEach((c) => {
     const cardIndex = html.indexOf(`id="${c.id}"`);

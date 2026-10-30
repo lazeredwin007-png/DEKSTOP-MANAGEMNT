@@ -1,0 +1,2209 @@
+[
+  {
+    "no": 1,
+    "name": "Gomez Edwin Lazer Y",
+    "assetId": "PIX_DSK_01",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "user": {
+        "db": "",
+        "oldUser": "YOWAAN V",
+        "img": "Gomez Edwin Lazer Y"
+      },
+      "os": {
+        "db": "Windows 11 Pro",
+        "img": "Windows 10"
+      },
+      "workStatus": {
+        "db": "In Stock",
+        "img": "Currently working"
+      },
+      "status": {
+        "db": "Non-Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_01",
+      "user": "",
+      "oldUsername": "YOWAAN V",
+      "team": "Admin",
+      "ipAddress": "192.168.6.99",
+      "status": "Non-Assigned",
+      "workStatus": "In Stock",
+      "remark": "Re-allocated to YOWAAN V via System Swap. Reason: USER EXIT"
+    },
+    "extractedRecord": {
+      "no": 1,
+      "name": "Gomez Edwin Lazer Y",
+      "team": "Admin",
+      "tl": "Management",
+      "ip": "192.168.6.99",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 6th Gen",
+      "ram": "8 DDR4",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 22 inch",
+      "os": "Windows 10",
+      "location": "1ST FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "Bypass IP",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 2,
+    "name": "Siva Ganesh S",
+    "assetId": "PIX_DSK_02",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_02",
+      "user": "Siva Ganesh S",
+      "oldUsername": "Siva Ganesh S",
+      "team": "SEO",
+      "ipAddress": "192.168.6.77",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Re-allocated to Siva Ganesh S via System Swap. Reason: USER "
+    },
+    "extractedRecord": {
+      "no": 2,
+      "name": "Siva Ganesh S",
+      "team": "SEO",
+      "tl": "Sundar Sir",
+      "ip": "192.168.6.77",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i3 2nd Gen",
+      "ram": "8 DDR3",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 19.5 inch",
+      "os": "UBNTHU 24",
+      "location": "1ST FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 3,
+    "name": "Charanya D",
+    "assetId": "PIX_LAP_01",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "ipAddress": {
+        "db": "192.168.6.78",
+        "img": "192.168.6.98"
+      },
+      "workStatus": {
+        "db": "User Exit",
+        "img": "Currently working"
+      },
+      "status": {
+        "db": "Non-Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_LAP_01",
+      "user": "",
+      "oldUsername": "Charanya D",
+      "team": "SEO",
+      "ipAddress": "192.168.6.78",
+      "status": "Non-Assigned",
+      "workStatus": "User Exit",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 3,
+      "name": "Charanya D",
+      "team": "SEO",
+      "tl": "Sundar Sir",
+      "ip": "192.168.6.98",
+      "assigned": "-",
+      "assetType": "Lenovo ideapad 3",
+      "cpu": "i5 10th GEN",
+      "ram": "8 DDR3",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "LAPTOP - LENOVO - IDEAPAD3",
+      "os": "WINDOWS 11 (Original)",
+      "location": "1ST FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 4,
+    "name": "Ramees Fathima M",
+    "assetId": "PIX_DSK_03",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_03",
+      "user": "HASI",
+      "oldUsername": "Ramees Fathima M",
+      "team": "SEO",
+      "ipAddress": "192.168.6.153",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Re-allocated to HASI via System Swap. Reason: USER EXIT"
+    },
+    "extractedRecord": {
+      "no": 4,
+      "name": "Ramees Fathima M",
+      "team": "SEO",
+      "tl": "Sundar Sir",
+      "ip": "192.168.6.153",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i3 2nd Gen",
+      "ram": "8 DDR3",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 19.5 inch",
+      "os": "UBNTHU 24",
+      "location": "1ST FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 5,
+    "name": "Rajeshwari M",
+    "assetId": "PIX_DSK_04",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "workStatus": {
+        "db": "User Exit",
+        "img": "Currently working"
+      },
+      "status": {
+        "db": "Non-Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_04",
+      "user": "",
+      "oldUsername": "Rajeshwari M",
+      "team": "SEO",
+      "ipAddress": "192.168.6.112",
+      "status": "Non-Assigned",
+      "workStatus": "User Exit",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 5,
+      "name": "Rajeshwari M",
+      "team": "SEO",
+      "tl": "Sundar Sir",
+      "ip": "192.168.6.112",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 4th GEN",
+      "ram": "8 DDR3",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 19.5 inch",
+      "os": "UBNTHU 24",
+      "location": "1ST FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 6,
+    "name": "Mohamed Sahil M",
+    "assetId": "PIX_DSK_05",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_05",
+      "user": "Mohamed Sahil M",
+      "oldUsername": "Mohamed Sahil M",
+      "team": "SEO",
+      "ipAddress": "192.168.6.91",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Re-allocated to Mohamed Sahil M via System Swap. Reason: USER EXIT"
+    },
+    "extractedRecord": {
+      "no": 6,
+      "name": "Mohamed Sahil M",
+      "team": "SEO",
+      "tl": "Sundar Sir",
+      "ip": "192.168.6.91",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i3 2nd Gen",
+      "ram": "16 DDR3",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 19.5 inch",
+      "os": "UBNTHU 24",
+      "location": "1ST FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "Slowness",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 7,
+    "name": "Ragul S V",
+    "assetId": "PIX_DSK_06",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "workStatus": {
+        "db": "User Exit",
+        "img": "Currently working"
+      },
+      "status": {
+        "db": "Non-Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_06",
+      "user": "",
+      "oldUsername": "Ragul S V",
+      "team": "SEO",
+      "ipAddress": "192.168.6.85",
+      "status": "Non-Assigned",
+      "workStatus": "User Exit",
+      "remark": "Network issue"
+    },
+    "extractedRecord": {
+      "no": 7,
+      "name": "Ragul S V",
+      "team": "SEO",
+      "tl": "Sundar Sir",
+      "ip": "192.168.6.85",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 4th GEN",
+      "ram": "12 DDR3",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 18.5 inch",
+      "os": "UBNTHU 24",
+      "location": "1ST FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "Netwrok issue",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 8,
+    "name": "Prabhakaran S",
+    "assetId": "PIX_DSK_07",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "workStatus": {
+        "db": "User Exit",
+        "img": "Currently working"
+      },
+      "status": {
+        "db": "Non-Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_07",
+      "user": "",
+      "oldUsername": "Prabhakaran S",
+      "team": "SEO",
+      "ipAddress": "192.168.6.95",
+      "status": "Non-Assigned",
+      "workStatus": "User Exit",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 8,
+      "name": "Prabhakaran S",
+      "team": "SEO",
+      "tl": "Sundar Sir",
+      "ip": "192.168.6.95",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 6th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 21.5 inch",
+      "os": "Windows 10",
+      "location": "1ST FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 9,
+    "name": "Mohanapriya S",
+    "assetId": "PIX_DSK_08",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "workStatus": {
+        "db": "User Exit",
+        "img": "Currently working"
+      },
+      "status": {
+        "db": "Non-Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_08",
+      "user": "",
+      "oldUsername": "Mohanapriya S",
+      "team": "SEO",
+      "ipAddress": "192.168.6.96",
+      "status": "Non-Assigned",
+      "workStatus": "User Exit",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 9,
+      "name": "Mohanapriya S",
+      "team": "SEO",
+      "tl": "Sundar Sir",
+      "ip": "192.168.6.96",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i3 2nd Gen",
+      "ram": "8 GB DDR3",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 18.5 inch",
+      "os": "Windows 10",
+      "location": "1ST FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 10,
+    "name": "Gayathri K",
+    "assetId": "PIX_DSK_09",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "workStatus": {
+        "db": "User Exit",
+        "img": "Currently working"
+      },
+      "status": {
+        "db": "Non-Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_09",
+      "user": "",
+      "oldUsername": "Gayathri K",
+      "team": "HR",
+      "ipAddress": "192.168.6.53",
+      "status": "Non-Assigned",
+      "workStatus": "User Exit",
+      "remark": "Bypass IP"
+    },
+    "extractedRecord": {
+      "no": 10,
+      "name": "Gayathri K",
+      "team": "HR",
+      "tl": "Sundar Sir",
+      "ip": "192.168.6.53",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i3 2nd Gen",
+      "ram": "8 GB DDR3",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 19.5 inch",
+      "os": "UBNTHU 24",
+      "location": "1ST FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "Bypass IP",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 11,
+    "name": "Sugitha Sri S",
+    "assetId": "PIX_DSK_10",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "workStatus": {
+        "db": "User Exit",
+        "img": "Currently working"
+      },
+      "status": {
+        "db": "Non-Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_10",
+      "user": "",
+      "oldUsername": "Sugitha Sri S",
+      "team": "HR",
+      "ipAddress": "192.168.6.78",
+      "status": "Non-Assigned",
+      "workStatus": "User Exit",
+      "remark": "Bypass IP"
+    },
+    "extractedRecord": {
+      "no": 11,
+      "name": "Sugitha Sri S",
+      "team": "HR",
+      "tl": "Sundar Sir",
+      "ip": "192.168.6.78",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i3 2nd Gen",
+      "ram": "8 GB DDR3",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 19.5 inch",
+      "os": "UBNTHU 24",
+      "location": "1ST FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "Bypass IP",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 12,
+    "name": "Nishalini S",
+    "assetId": "PIX_LAP_02",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "ipAddress": {
+        "db": "192.168.6.53",
+        "img": "192.168.6.94"
+      },
+      "workStatus": {
+        "db": "User Exit",
+        "img": "Currently working"
+      },
+      "status": {
+        "db": "Non-Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_LAP_02",
+      "user": "",
+      "oldUsername": "Nishalini S",
+      "team": "HR",
+      "ipAddress": "192.168.6.53",
+      "status": "Non-Assigned",
+      "workStatus": "User Exit",
+      "remark": "Returned to stock from Nishalini S on 2026-10-08"
+    },
+    "extractedRecord": {
+      "no": 12,
+      "name": "Nishalini S",
+      "team": "HR",
+      "tl": "Sundar Sir",
+      "ip": "192.168.6.94",
+      "assigned": "-",
+      "assetType": "Lenovo ideapad 3",
+      "cpu": "i5 10th GEN",
+      "ram": "8 DDR3",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "LAPTOP - LENOVO - IDEALPAD3",
+      "os": "WINDOWS 11 (Original)",
+      "location": "1ST FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "Bypass IP",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 13,
+    "name": "Bindo J",
+    "assetId": "PIX_DSK_11",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Windows",
+        "img": "Windows 10"
+      },
+      "workStatus": {
+        "db": "User Exit",
+        "img": "Currently working"
+      },
+      "status": {
+        "db": "Non-Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_11",
+      "user": "",
+      "oldUsername": "Bindo J",
+      "team": "ADMIN",
+      "ipAddress": "192.168.1.93",
+      "status": "Non-Assigned",
+      "workStatus": "User Exit",
+      "remark": "Bypass IP"
+    },
+    "extractedRecord": {
+      "no": 13,
+      "name": "Bindo J",
+      "team": "Admin",
+      "tl": "Management",
+      "ip": "192.168.1.93",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i3 2nd Gen",
+      "ram": "8 DDR3",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 19.5 inch",
+      "os": "Windows 10",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "Bypass IP",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 15,
+    "name": "Karthick C N",
+    "assetId": "PIX_DSK_12",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "workStatus": {
+        "db": "User Exit",
+        "img": "Currently working"
+      },
+      "status": {
+        "db": "Non-Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_12",
+      "user": "",
+      "oldUsername": "Karthick C N",
+      "team": "PHP",
+      "ipAddress": "192.168.1.94",
+      "status": "Non-Assigned",
+      "workStatus": "User Exit",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 15,
+      "name": "Karthick C N",
+      "team": "PHP",
+      "tl": "Ram Kumar R",
+      "ip": "192.168.1.94",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 6th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "View Sonic 18.5",
+      "os": "UBNTHU 24",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 16,
+    "name": "Veerapandi L",
+    "assetId": "PIX_DSK_13",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "ipAddress": {
+        "db": "192.168.1.94",
+        "img": "WIFI"
+      },
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_13",
+      "user": "Veerapandi L",
+      "oldUsername": "None",
+      "team": "PHP",
+      "ipAddress": "192.168.1.94",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 16,
+      "name": "Veerapandi L",
+      "team": "PHP",
+      "tl": "Ram Kumar R",
+      "ip": "WIFI",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 7th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "500 GB",
+      "monitor": "DELL 19.5 inch",
+      "os": "UBNTHU 24",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 17,
+    "name": "Ramkumar R",
+    "assetId": "PIX_DSK_14",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_14",
+      "user": "Ramkumar R",
+      "oldUsername": "None",
+      "team": "PHP",
+      "ipAddress": "192.168.1.54",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 17,
+      "name": "Ramkumar R",
+      "team": "PHP",
+      "tl": "Ram Kumar R",
+      "ip": "192.168.1.54",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 7th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "Samsung 20 inch",
+      "os": "UBNTHU 24",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 18,
+    "name": "Deenadhayalan R",
+    "assetId": "PIX_DSK_15",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_15",
+      "user": "Deenadhayalan R",
+      "oldUsername": "None",
+      "team": "PHP",
+      "ipAddress": "192.168.1.58",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 18,
+      "name": "Deenadhayalan R",
+      "team": "PHP",
+      "tl": "Ram Kumar R",
+      "ip": "192.168.1.58",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 6th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "500 GB",
+      "monitor": "Samsung 20 inch",
+      "os": "UBNTHU 24",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 19,
+    "name": "Arunkumar U",
+    "assetId": "PIX_DSK_16",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_16",
+      "user": "Arunkumar U",
+      "oldUsername": "None",
+      "team": "PHP",
+      "ipAddress": "192.168.1.96",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 19,
+      "name": "Arunkumar U",
+      "team": "PHP",
+      "tl": "Ram Kumar R",
+      "ip": "192.168.1.96",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 7th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "1TB",
+      "monitor": "DELL 19.5 inch",
+      "os": "UBNTHU 24",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 20,
+    "name": "Saravanan S",
+    "assetId": "PIX_LAP_03",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_LAP_03",
+      "user": "Saravanan S",
+      "oldUsername": "NEW SYSTEM",
+      "team": "BA",
+      "ipAddress": "192.168.1.65",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 20,
+      "name": "Saravanan S",
+      "team": "BA",
+      "tl": "Sundar Sir",
+      "ip": "192.168.1.65",
+      "assigned": "-",
+      "assetType": "Lenovo ideapad 3",
+      "cpu": "i3 11th GEN",
+      "ram": "8 GB DDR4",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "LAPTOP - LENOVO - DEALPAD3",
+      "os": "WINDOWS 11 (Original)",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 21,
+    "name": "Balaraman S",
+    "assetId": "PIX_DSK_17",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_17",
+      "user": "Balaraman S",
+      "oldUsername": "None",
+      "team": "PHP",
+      "ipAddress": "192.168.1.82",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 21,
+      "name": "Balaraman S",
+      "team": "PHP",
+      "tl": "Bal Ganesan B",
+      "ip": "192.168.1.82",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 6th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 19.5 inch",
+      "os": "UBNTHU 24",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 22,
+    "name": "Guruvarasu",
+    "assetId": "PIX_DSK_18",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "workStatus": {
+        "db": "User Exit",
+        "img": "EXIT USER"
+      },
+      "status": {
+        "db": "Non-Assigned",
+        "img": "NOT ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_18",
+      "user": "Guruvarasu",
+      "oldUsername": "Guruvarasu",
+      "team": "PHP",
+      "ipAddress": "192.168.1.52",
+      "status": "Non-Assigned",
+      "workStatus": "User Exit",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 22,
+      "name": "Guruvarasu",
+      "team": "PHP",
+      "tl": "Guruvarasu",
+      "ip": "192.168.1.52",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 6th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 19.5 inch",
+      "os": "UBNTHU 24",
+      "location": "2ND FLOOR",
+      "workStatus": "EXIT USER",
+      "remarks": "GW",
+      "status": "NOT ASSINGED",
+      "fontColor": "red"
+    }
+  },
+  {
+    "no": 23,
+    "name": "Venkatesh M",
+    "assetId": "PIX_DSK_19",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_19",
+      "user": "Venkatesh M",
+      "oldUsername": "None",
+      "team": "PHP",
+      "ipAddress": "192.168.1.116",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 23,
+      "name": "Venkatesh M",
+      "team": "PHP",
+      "tl": "Bal Ganesan B",
+      "ip": "192.168.1.116",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 4th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 19.5 inch",
+      "os": "UBNTHU 24",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 24,
+    "name": "Sabarivasan S",
+    "assetId": "PIX_DSK_20",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_20",
+      "user": "Sabarivasan S",
+      "oldUsername": "None",
+      "team": "PHP",
+      "ipAddress": "192.168.1.125",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 24,
+      "name": "Sabarivasan S",
+      "team": "PHP",
+      "tl": "Bal Ganesan B",
+      "ip": "192.168.1.125",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 7th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 21 inch",
+      "os": "UBNTHU 24",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 25,
+    "name": "Ravindran J",
+    "assetId": "PIX_DSK_21",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_21",
+      "user": "Ravindran J",
+      "oldUsername": "None",
+      "team": "PHP",
+      "ipAddress": "192.168.1.89",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 25,
+      "name": "Ravindran J",
+      "team": "PHP",
+      "tl": "Arunmozhi A",
+      "ip": "192.168.1.89",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 6th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 21 inch",
+      "os": "UBNTHU 24",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 26,
+    "name": "Senthilkumar M",
+    "assetId": "PIX_DSK_22",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_22",
+      "user": "Senthilkumar M",
+      "oldUsername": "None",
+      "team": "PHP",
+      "ipAddress": "192.168.1.104",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 26,
+      "name": "Senthilkumar M",
+      "team": "PHP",
+      "tl": "Arunmozhi A",
+      "ip": "192.168.1.104",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 6th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "500 GB",
+      "monitor": "DELL 19.5 inch",
+      "os": "UBNTHU 24",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 27,
+    "name": "Arunmozhi A",
+    "assetId": "PIX_DSK_23",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_23",
+      "user": "Arunmozhi A",
+      "oldUsername": "None",
+      "team": "PHP",
+      "ipAddress": "192.168.1.62",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 27,
+      "name": "Arunmozhi A",
+      "team": "PHP",
+      "tl": "Arunmozhi A",
+      "ip": "192.168.1.62",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 7th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "1TB",
+      "monitor": "DELL 20 INCH",
+      "os": "UBNTHU 24",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 28,
+    "name": "Mobile Team",
+    "assetId": "PIX_DSK_24",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "workStatus": {
+        "db": "Currently Working",
+        "img": "EXIT USER"
+      },
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_24",
+      "user": "Mobile Team",
+      "oldUsername": "None",
+      "team": "Mobile Team",
+      "ipAddress": "WIFI",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 28,
+      "name": "Mobile Team",
+      "team": "Mobile Team",
+      "tl": "Arunmozhi A",
+      "ip": "WIFI",
+      "assigned": "-",
+      "assetType": "MAC 2",
+      "cpu": "i3 GEN",
+      "ram": "8 GB DDR3",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 19.5 inch",
+      "os": "MAC OS",
+      "location": "2ND FLOOR",
+      "workStatus": "EXIT USER",
+      "remarks": "MOBILE TEAM COMMON SYSTEM",
+      "status": "ASSINGED",
+      "fontColor": "red"
+    }
+  },
+  {
+    "no": 29,
+    "name": "Mahalakshmi P",
+    "assetId": "PIX_DSK_25",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_25",
+      "user": "Mahalakshmi P",
+      "oldUsername": "None",
+      "team": "Mobile",
+      "ipAddress": "192.168.1.120",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 29,
+      "name": "Mahalakshmi P",
+      "team": "Mobile",
+      "tl": "Arunmozhi A",
+      "ip": "192.168.1.120",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 7th GEN",
+      "ram": "32 GB RAM DDR4",
+      "ssd": "240",
+      "hdd": "1TB",
+      "monitor": "DELL 19.5 inch",
+      "os": "Windows 10",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 30,
+    "name": "Deepan B",
+    "assetId": "PIX_DSK_26",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_26",
+      "user": "Deepan B",
+      "oldUsername": "None",
+      "team": "Testing",
+      "ipAddress": "192.168.1.77",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 30,
+      "name": "Deepan B",
+      "team": "Testing",
+      "tl": "Arunmozhi A",
+      "ip": "192.168.1.77",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i3 2nd Gen",
+      "ram": "16GB DDR3",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 19.5 inch",
+      "os": "Windows 10",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 31,
+    "name": "Balakrishnan N",
+    "assetId": "PIX_DSK_27",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "ipAddress": {
+        "db": "192.168.1.51",
+        "img": "192.168.1.72"
+      },
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_27",
+      "user": "Balakrishnan N",
+      "oldUsername": "Xavier",
+      "team": "Testing",
+      "ipAddress": "192.168.1.51",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 31,
+      "name": "Balakrishnan N",
+      "team": "Testing",
+      "tl": "Arunmozhi A",
+      "ip": "192.168.1.72",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 7th GEN",
+      "ram": "12GB DDR4",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 18.5 inch",
+      "os": "Windows 10",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 32,
+    "name": "Veeramani R",
+    "assetId": "PIX_DSK_28",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_28",
+      "user": "Veeramani R",
+      "oldUsername": "None",
+      "team": "PHP",
+      "ipAddress": "192.168.1.88",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 32,
+      "name": "Veeramani R",
+      "team": "PHP",
+      "tl": "Bal Ganesan B",
+      "ip": "192.168.1.88",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 6th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 19.5 inch",
+      "os": "UBNTHU 24",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 33,
+    "name": "BalGanesan B",
+    "assetId": "PIX_DSK_27",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "user": {
+        "db": "Balakrishnan N",
+        "oldUser": "Xavier",
+        "img": "BalGanesan B"
+      },
+      "team": {
+        "db": "Testing",
+        "img": "PHP"
+      },
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_27",
+      "user": "Balakrishnan N",
+      "oldUsername": "Xavier",
+      "team": "Testing",
+      "ipAddress": "192.168.1.51",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 33,
+      "name": "BalGanesan B",
+      "team": "PHP",
+      "tl": "Bal Ganesan B",
+      "ip": "192.168.1.51",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 7th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "1TB",
+      "monitor": "DELL 21.5 inch",
+      "os": "Windows 10",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 34,
+    "name": "Arun Karthick K",
+    "assetId": "PIX_DSK_30",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_30",
+      "user": "Arun Karthick K",
+      "oldUsername": "None",
+      "team": "PHP",
+      "ipAddress": "192.168.1.50",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 34,
+      "name": "Arun Karthick K",
+      "team": "PHP",
+      "tl": "Bal Ganesan B",
+      "ip": "192.168.1.50",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 6th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "500 GB",
+      "monitor": "Samsung 20 inch",
+      "os": "UBNTHU 24",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 35,
+    "name": "Karthic Raja C",
+    "assetId": "PIX_DSK_31",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_31",
+      "user": "Karthic Raja C",
+      "oldUsername": "None",
+      "team": "ADMIN",
+      "ipAddress": "192.168.1.64",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Bypass IP"
+    },
+    "extractedRecord": {
+      "no": 35,
+      "name": "Karthic Raja C",
+      "team": "Admin",
+      "tl": "Management",
+      "ip": "192.168.1.64",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "intel pentium 2ng",
+      "ram": "16GB DDR3",
+      "ssd": "240",
+      "hdd": "500 GB",
+      "monitor": "DELL 19.5 inch",
+      "os": "Windows 10",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "Bypass IP",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 36,
+    "name": "Vinoth",
+    "assetId": "PIX_DSK_32",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "workStatus": {
+        "db": "User Exit",
+        "img": "EXIT USER"
+      },
+      "status": {
+        "db": "Non-Assigned",
+        "img": "NOT ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_32",
+      "user": "Vinoth",
+      "oldUsername": "Vinoth",
+      "team": "UI",
+      "ipAddress": "192.168.1.84",
+      "status": "Non-Assigned",
+      "workStatus": "User Exit",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 36,
+      "name": "Vinoth",
+      "team": "UI",
+      "tl": "Bal Ganesan B",
+      "ip": "192.168.1.84",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 7th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "500 GB",
+      "monitor": "DELL 19.5 inch",
+      "os": "Windows 10",
+      "location": "2ND FLOOR",
+      "workStatus": "EXIT USER",
+      "remarks": "GW",
+      "status": "NOT ASSINGED",
+      "fontColor": "red"
+    }
+  },
+  {
+    "no": 37,
+    "name": "Sivabalan S",
+    "assetId": "PIX_DSK_33",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_33",
+      "user": "Sivabalan S",
+      "oldUsername": "None",
+      "team": "UI",
+      "ipAddress": "192.168.1.99",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 37,
+      "name": "Sivabalan S",
+      "team": "UI",
+      "tl": "Bal Ganesan B",
+      "ip": "192.168.1.99",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 7th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "1TB",
+      "monitor": "DELL 21.5 inch",
+      "os": "Windows 10",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 40,
+    "name": "Chandru Mouli",
+    "assetId": "PIX_DSK_34",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "workStatus": {
+        "db": "User Exit",
+        "img": "EXIT USER"
+      },
+      "status": {
+        "db": "Non-Assigned",
+        "img": "NOT ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_34",
+      "user": "Chandru Mouli",
+      "oldUsername": "Chandru Mouli",
+      "team": "UI",
+      "ipAddress": "192.168.1.68",
+      "status": "Non-Assigned",
+      "workStatus": "User Exit",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 40,
+      "name": "Chandru Mouli",
+      "team": "UI",
+      "tl": "Bal Ganesan B",
+      "ip": "192.168.1.68",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 10th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 19.5 inch",
+      "os": "Windows 10",
+      "location": "2ND FLOOR",
+      "workStatus": "EXIT USER",
+      "remarks": "GW",
+      "status": "NOT ASSINGED",
+      "fontColor": "red"
+    }
+  },
+  {
+    "no": 41,
+    "name": "PHP TEAM",
+    "assetId": "PIX_DSK_35",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "user": {
+        "db": "Ravindran 2",
+        "oldUser": "None",
+        "img": "PHP TEAM"
+      },
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_35",
+      "user": "Ravindran 2",
+      "oldUsername": "None",
+      "team": "PHP",
+      "ipAddress": "192.168.1.101",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 41,
+      "name": "PHP TEAM",
+      "team": "PHP",
+      "tl": "Arunmozhi A",
+      "ip": "192.168.1.101",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 6th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 19.5 inch",
+      "os": "Windows 10",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "PHP TEAM COMMON SYSTEM",
+      "status": "ASSINGED",
+      "fontColor": "red"
+    }
+  },
+  {
+    "no": 42,
+    "name": "Suresh Krishna A",
+    "assetId": "PIX_DSK_36",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_36",
+      "user": "Suresh Krishna A",
+      "oldUsername": "None",
+      "team": "UI",
+      "ipAddress": "192.168.1.85",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 42,
+      "name": "Suresh Krishna A",
+      "team": "UI",
+      "tl": "Bal Ganesan B",
+      "ip": "192.168.1.85",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 7th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "500 GB",
+      "monitor": "DELL 19.5 inch",
+      "os": "Windows 10",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 43,
+    "name": "Prasanna R",
+    "assetId": "PIX_DSK_37",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_37",
+      "user": "Prasanna R",
+      "oldUsername": "None",
+      "team": "PHP",
+      "ipAddress": "192.168.1.87",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 43,
+      "name": "Prasanna R",
+      "team": "PHP",
+      "tl": "Bal Ganesan B",
+      "ip": "192.168.1.87",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 4th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 19.5 inch",
+      "os": "Windows 10",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 44,
+    "name": "Sudhakar R",
+    "assetId": "PIX_DSK_38",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_38",
+      "user": "Sudhakar R",
+      "oldUsername": "None",
+      "team": "UI",
+      "ipAddress": "192.168.1.92",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 44,
+      "name": "Sudhakar R",
+      "team": "UI",
+      "tl": "Bal Ganesan B",
+      "ip": "192.168.1.92",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 6th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "DELL 19.5 inch",
+      "os": "Windows 10",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 45,
+    "name": "Praveen Kumar K A",
+    "assetId": "PIX_DSK_39",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_39",
+      "user": "Praveen Kumar K A",
+      "oldUsername": "None",
+      "team": "UI",
+      "ipAddress": "192.168.1.90",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 45,
+      "name": "Praveen Kumar K A",
+      "team": "UI",
+      "tl": "Sundar Sir",
+      "ip": "192.168.1.90",
+      "assigned": "-",
+      "assetType": "CPU",
+      "cpu": "i5 6th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "1TB",
+      "monitor": "DELL 19.5 inch",
+      "os": "Windows 10",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 46,
+    "name": "Mohammed Ibrahim S",
+    "assetId": "PIX_LAP_04",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_LAP_04",
+      "user": "Mohammed Ibrahim S",
+      "oldUsername": "None",
+      "team": "Mobile",
+      "ipAddress": "WIFI",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 46,
+      "name": "Mohammed Ibrahim S",
+      "team": "Mobile",
+      "tl": "Arunmozhi A",
+      "ip": "WIFI",
+      "assigned": "-",
+      "assetType": "Laptop APPLE",
+      "cpu": "Apple M1 Pro",
+      "ram": "16GB DDR4",
+      "ssd": "500",
+      "hdd": "",
+      "monitor": "LAPTOP Apple M1 Pro",
+      "os": "MAC OS",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 47,
+    "name": "Joel Jones J",
+    "assetId": "PIX_DSK_40",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "os": {
+        "db": "Ubuntu 24.04",
+        "img": "UBNTHU 24"
+      },
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_DSK_40",
+      "user": "Joel Jones J",
+      "oldUsername": "None",
+      "team": "Mobile",
+      "ipAddress": "192.168.1.115",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 47,
+      "name": "Joel Jones J",
+      "team": "Mobile",
+      "tl": "Arunmozhi A",
+      "ip": "192.168.1.115",
+      "assigned": "01-10-2026",
+      "assetType": "CPU",
+      "cpu": "i5 12th GEN",
+      "ram": "16GB DDR4",
+      "ssd": "240",
+      "hdd": "1TB",
+      "monitor": "DELL 19.5 inch",
+      "os": "UBNTHU 24",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 48,
+    "name": "Roshan V",
+    "assetId": "PIX_LAP_05",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_LAP_05",
+      "user": "Roshan V",
+      "oldUsername": "None",
+      "team": "BA",
+      "ipAddress": "WIFI",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 48,
+      "name": "Roshan V",
+      "team": "BA",
+      "tl": "Sundar Sir",
+      "ip": "WIFI",
+      "assigned": "-",
+      "assetType": "Lenovo ideapad 3",
+      "cpu": "i3 11th GEN",
+      "ram": "8 GB DDR4",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "LAPTOP - LENOVO - DEALPAD3",
+      "os": "WINDOWS 11 (Original)",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 58,
+    "name": "Jeeva V",
+    "assetId": "PIX_LAP_06",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_LAP_06",
+      "user": "Jeeva V",
+      "oldUsername": "None",
+      "team": "BDE",
+      "ipAddress": "WIFI",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 58,
+      "name": "Jeeva V",
+      "team": "BDE",
+      "tl": "Gopi Sir",
+      "ip": "WIFI",
+      "assigned": "-",
+      "assetType": "Lenovo ideapad 3",
+      "cpu": "i3 11th GEN",
+      "ram": "8 GB DDR4",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "LAPTOP - LENOVO - IDEALPAD3",
+      "os": "WINDOWS 11 (Original)",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 59,
+    "name": "Praveen G",
+    "assetId": "PIX_LAP_07",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_LAP_07",
+      "user": "Praveen G",
+      "oldUsername": "None",
+      "team": "BDE",
+      "ipAddress": "WIFI",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 59,
+      "name": "Praveen G",
+      "team": "BDE",
+      "tl": "Gopi Sir",
+      "ip": "WIFI",
+      "assigned": "-",
+      "assetType": "Lenovo ideapad 3",
+      "cpu": "i3 11th GEN",
+      "ram": "8 GB DDR4",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "LAPTOP - LENOVO - DEALPAD3",
+      "os": "WINDOWS 11 (Original)",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  },
+  {
+    "no": 60,
+    "name": "Janarthan M",
+    "assetId": "PIX_LAP_08",
+    "hasDiffs": true,
+    "fieldDiffs": {
+      "status": {
+        "db": "Assigned",
+        "img": "ASSINGED"
+      }
+    },
+    "dbRecord": {
+      "id": "PIX_LAP_08",
+      "user": "Janarthan M",
+      "oldUsername": "None",
+      "team": "BDE",
+      "ipAddress": "WIFI",
+      "status": "Assigned",
+      "workStatus": "Currently Working",
+      "remark": "Good Working"
+    },
+    "extractedRecord": {
+      "no": 60,
+      "name": "Janarthan M",
+      "team": "BDE",
+      "tl": "Gopi Sir",
+      "ip": "WIFI",
+      "assigned": "-",
+      "assetType": "Lenovo ideapad 3",
+      "cpu": "i3 11th GEN",
+      "ram": "8 GB DDR4",
+      "ssd": "240",
+      "hdd": "Nil",
+      "monitor": "LAPTOP - LENOVO - IDEALPAD3",
+      "os": "WINDOWS 11 (Original)",
+      "location": "2ND FLOOR",
+      "workStatus": "Currently working",
+      "remarks": "GW",
+      "status": "ASSINGED",
+      "fontColor": "black"
+    }
+  }
+]

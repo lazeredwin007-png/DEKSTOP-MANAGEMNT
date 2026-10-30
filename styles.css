@@ -2421,6 +2421,12 @@ th.sortable-th:hover {
   box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.22), 0 0 6px rgba(245, 158, 11, 0.45);
 }
 
+/* 5. Cyan/Sky Blue Indicator: New System */
+.workstatus-light-cyan .workstatus-led {
+  background: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.22), 0 0 6px rgba(2, 132, 199, 0.45);
+}
+
 /* Modal / Detailed pill with light */
 .workstatus-light-pill {
   display: inline-flex;
@@ -5724,3 +5730,136 @@ body.dark-theme .sidebar-footer {
 [data-theme="dark"] .eye-view-detail-label {
   color: #94a3b8 !important;
 }
+
+/* ==========================================================================
+   AUDIT REPORT & EXECUTIVE REPORTS GENERATOR - MODERN TAB SYSTEM
+   ========================================================================== */
+.reports-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-bottom: 2px solid var(--border-color, #e2e8f0);
+  margin-bottom: 20px;
+  padding-bottom: 2px;
+}
+
+.report-tab-btn,
+.report-type-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-bottom: 3px solid transparent;
+  background: #f8fafc;
+  color: var(--text-secondary, #475569);
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.report-tab-btn:hover,
+.report-type-btn:hover {
+  background: #eff6ff;
+  color: var(--primary, #2563eb);
+  border-bottom-color: #93c5fd;
+  transform: translateY(-1px);
+}
+
+.report-tab-btn.active,
+.report-type-btn.active,
+.tab-btn.active {
+  background: #ffffff;
+  color: var(--primary, #2563eb) !important;
+  font-weight: 700;
+  border-color: var(--border-color, #e2e8f0);
+  border-bottom: 3px solid var(--primary, #2563eb) !important;
+  box-shadow: 0 -2px 6px rgba(37, 99, 235, 0.08);
+}
+
+[data-theme="dark"] .report-tab-btn,
+[data-theme="dark"] .report-type-btn,
+.dark-theme .report-tab-btn,
+.dark-theme .report-type-btn {
+  background: #1e293b;
+  color: #94a3b8;
+  border-color: #334155;
+  border-bottom-color: transparent;
+}
+
+[data-theme="dark"] .report-tab-btn:hover,
+[data-theme="dark"] .report-type-btn:hover,
+.dark-theme .report-tab-btn:hover,
+.dark-theme .report-type-btn:hover {
+  background: #334155;
+  color: #60a5fa;
+}
+
+[data-theme="dark"] .report-tab-btn.active,
+[data-theme="dark"] .report-type-btn.active,
+.dark-theme .report-tab-btn.active,
+.dark-theme .report-type-btn.active {
+  background: #0f172a;
+  color: #60a5fa !important;
+  border-color: #334155;
+  border-bottom: 3px solid #3b82f6 !important;
+}
+
+.report-content-panel {
+  display: block;
+  animation: fadeInReport 0.2s ease-in-out;
+}
+
+.report-content-panel.hidden,
+.report-content-panel[style*="display: none"] {
+  display: none !important;
+}
+
+@keyframes fadeInReport {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.report-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 18px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+[data-theme="dark"] .report-panel-header,
+.dark-theme .report-panel-header {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.report-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+[data-theme="dark"] .report-stat-pill,
+.dark-theme .report-stat-pill {
+  background: #1e3a8a;
+  color: #93c5fd;
+  border-color: #2563eb;
+}
+

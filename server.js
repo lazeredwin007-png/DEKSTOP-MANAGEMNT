@@ -295,33 +295,84 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
-      // 6. System Swap API
+      // 6. System Swap API & Logs
+      if (pathname === '/api/swap-logs') {
+        if (method === 'GET') {
+          return sendJson(res, 200, db.getSwapLogs());
+        }
+        if (method === 'POST') {
+          const body = await parseJsonBody(req);
+          const saved = db.insertSwapLog(body);
+          return sendJson(res, 201, saved);
+        }
+      }
+
       if (pathname === '/api/swap' && method === 'POST') {
         const body = await parseJsonBody(req);
-        const { oldAssetId, newUserName, newTeam, newCpu, newRam, newSsd, reason, oldUser } = body;
-
-        // Update old system
-        db.updateAsset(oldAssetId, {
-          status: 'Swap',
-          remark: `Swapped out for ${newUserName}. Reason: ${reason || 'Hardware Upgrade'}`
-        });
-
-        // Insert new system
+        const { oldAssetId, newUserName, newTeam, newCpu, newRam, newSsd, reason, oldUser, assetType } = body;
         const newAssetId = body.newAssetId || `AST-DSK-${Math.floor(1000 + Math.random() * 9000)}`;
-        const newAsset = db.insertAsset({
-          id: newAssetId,
-          type: 'Desktop',
-          user: newUserName,
-          team: newTeam,
-          cpu: newCpu,
-          ram: newRam || '32GB DDR5',
-          ssd: newSsd || '1TB NVMe M.2',
-          hdd: 'None',
-          monitor: body.newMonitor || 'Dell 24" FHD',
-          serialNumber: `SN-SWP-${Math.floor(10000 + Math.random() * 90000)}`,
-          assignedDate: new Date().toISOString().substring(0, 10),
-          status: 'Assigned',
-          warrantyEnd: new Date(Date.now() + 3 * 365 * 86400000).toISOString().substring(0, 10)
+        const isSameAsset = (oldAssetId && newAssetId && oldAssetId.trim().toUpperCase() === newAssetId.trim().toUpperCase());
+
+        let newAsset;
+        const allAssets = db.getAllAssets();
+        const existingAsset = allAssets.find(a => (a.id || '').toUpperCase() === newAssetId.trim().toUpperCase());
+
+        if (existingAsset) {
+          newAsset = db.updateAsset(existingAsset.id, {
+            user: newUserName,
+            team: newTeam || existingAsset.team,
+            type: assetType || existingAsset.type || 'Desktop',
+            cpu: newCpu || existingAsset.cpu,
+            ram: newRam || existingAsset.ram,
+            ssd: newSsd || existingAsset.ssd,
+            status: 'Assigned',
+            workStatus: 'Currently Working',
+            userExitDate: '',
+            oldUsername: oldUser || existingAsset.oldUsername || '',
+            assignedDate: body.assignedDate || new Date().toISOString().substring(0, 10),
+            remark: body.remark || `Reallocated via System Swap. Reason: ${reason || 'Hardware Upgrade'}`
+          });
+        } else {
+          newAsset = db.insertAsset({
+            id: newAssetId,
+            type: assetType || 'Desktop',
+            user: newUserName,
+            team: newTeam,
+            cpu: newCpu,
+            ram: newRam || '32GB DDR5',
+            ssd: newSsd || '1TB NVMe M.2',
+            hdd: body.newHdd || 'None',
+            monitor: body.newMonitor || 'Dell 24" FHD',
+            serialNumber: `SN-SWP-${Math.floor(10000 + Math.random() * 90000)}`,
+            assignedDate: body.assignedDate || new Date().toISOString().substring(0, 10),
+            status: 'Assigned',
+            workStatus: 'Currently Working',
+            oldUsername: oldUser || '',
+            warrantyEnd: new Date(Date.now() + 3 * 365 * 86400000).toISOString().substring(0, 10),
+            remark: body.remark || `Assigned via System Swap. Reason: ${reason || 'Hardware Upgrade'}`
+          });
+        }
+
+        if (!isSameAsset && oldAssetId) {
+          db.updateAsset(oldAssetId, {
+            status: 'Swap',
+            workStatus: 'Swap Pool',
+            user: '',
+            remark: `De-commissioned via System Swap. Reason: ${reason || 'Hardware Upgrade'}`
+          });
+        }
+
+        db.insertSwapLog({
+          id: body.id || `SWP-${Math.floor(100 + Math.random() * 900)}`,
+          newUserId: newUserName,
+          newTeam: newTeam || '—',
+          newAssetId: newAssetId,
+          oldUserId: oldUser || '—',
+          oldTeam: body.oldTeam || '—',
+          oldAssetId: oldAssetId || '—',
+          reason: reason || 'Hardware Upgrade',
+          swapDate: body.swapDate || body.assignedDate || new Date().toISOString().substring(0, 10),
+          remark: body.remark || ''
         });
 
         db.addActivity(`System Swap (${oldAssetId} ➔ ${newAssetId})`, newAssetId, newUserName, 'Success');
@@ -626,6 +677,18 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
+      // System Swap Facility Logs CRUD
+      if (pathname === '/api/swap-logs') {
+        if (method === 'GET') {
+          return sendJson(res, 200, db.getSwapLogs());
+        }
+        if (method === 'POST') {
+          const body = await parseJsonBody(req);
+          const saved = db.insertSwapLog(body);
+          return sendJson(res, 201, saved);
+        }
+      }
+
       // 11. Full Database Dump / Backup
       if (pathname === '/api/database/dump' && method === 'GET') {
         return sendJson(res, 200, db.getEntireDatabase());
@@ -653,6 +716,9 @@ const server = http.createServer(async (req, res) => {
   // STATIC FILE SERVING
   // =========================================================================
   let relativePath = pathname === '/' ? '/index.html' : pathname;
+  if (relativePath.startsWith('/public/src/')) {
+    relativePath = relativePath.replace('/public/src/', '/src/');
+  }
   let safePath = path.normalize(path.join(PUBLIC_DIR, relativePath));
 
   // Security guard against directory traversal

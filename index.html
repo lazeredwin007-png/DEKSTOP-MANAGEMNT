@@ -1681,6 +1681,7 @@
                     <th>Serial Number</th>
                     <th style="min-width:130px;">User Status</th>
                     <th>Condition</th>
+                    <th style="min-width:110px; width:110px; text-align:center;">Actions</th>
                   </tr>
                 </thead>
                 <tbody id="nonAssignedTableBody">
@@ -1952,7 +1953,7 @@
               </div>
             </div>
 
-            <!-- 4. Inventory Summary Cards (Total Assets, Assigned Assets, Non-Assigned Assets) -->
+            <!-- 4. Inventory Summary Cards (Total Assets, Non-Assigned Assets, Assigned Assets) -->
             <div class="instock-summary-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-bottom:20px;">
               <!-- 1. Total Assets Card -->
               <div class="instock-summary-card total" onclick="window.ITApp.filterDashboardByStatus('all')" title="Click to view all stock items" style="cursor:pointer; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:18px 20px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
@@ -1971,24 +1972,7 @@
                 <div class="summary-click-hint" style="font-size:0.75rem; font-weight:700; color:#2563eb; margin-top:12px; display:flex; align-items:center; gap:4px;">Click to show all stock →</div>
               </div>
 
-              <!-- 2. Assigned Assets Card -->
-              <div class="instock-summary-card assigned" onclick="window.ITApp.filterDashboardByStatus('Assigned')" title="Click to filter assigned items" style="cursor:pointer; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:18px 20px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-                  <span class="summary-label" style="font-size:0.82rem; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:0.04em;">Assigned Assets</span>
-                  <div class="summary-icon-box assigned" style="width:38px; height:38px; border-radius:10px; background:#f5f3ff; color:#7c3aed; display:inline-flex; align-items:center; justify-content:center;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/>
-                    </svg>
-                  </div>
-                </div>
-                <div>
-                  <div class="summary-count" id="instockAssignedCount" style="font-size:2.25rem; font-weight:800; color:#7c3aed; line-height:1; margin-bottom:6px;">0</div>
-                  <div class="summary-subtext" style="font-size:0.82rem; color:#64748b;">Hardware items allocated &amp; currently in use</div>
-                </div>
-                <div class="summary-click-hint" style="font-size:0.75rem; font-weight:700; color:#7c3aed; margin-top:12px; display:flex; align-items:center; gap:4px;">Click to filter assigned items →</div>
-              </div>
-
-              <!-- 3. Non-Assigned Assets Card -->
+              <!-- 2. Non-Assigned Assets Card -->
               <div class="instock-summary-card available" onclick="window.ITApp.filterDashboardByStatus('Available')" title="Click to filter available items ready in storage" style="cursor:pointer; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:18px 20px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
                   <span class="summary-label" style="font-size:0.82rem; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:0.04em;">Non-Assigned Assets</span>
@@ -2005,11 +1989,28 @@
                 </div>
                 <div class="summary-click-hint" style="font-size:0.75rem; font-weight:700; color:#16a34a; margin-top:12px; display:flex; align-items:center; gap:4px;">Click to filter non-assigned stock →</div>
               </div>
+
+              <!-- 3. Assigned Assets Card -->
+              <div class="instock-summary-card assigned" onclick="window.ITApp.filterDashboardByStatus('Assigned')" title="Click to filter assigned items" style="cursor:pointer; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:18px 20px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                  <span class="summary-label" style="font-size:0.82rem; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:0.04em;">Assigned Assets</span>
+                  <div class="summary-icon-box assigned" style="width:38px; height:38px; border-radius:10px; background:#f5f3ff; color:#7c3aed; display:inline-flex; align-items:center; justify-content:center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/>
+                    </svg>
+                  </div>
+                </div>
+                <div>
+                  <div class="summary-count" id="instockAssignedCount" style="font-size:2.25rem; font-weight:800; color:#7c3aed; line-height:1; margin-bottom:6px;">0</div>
+                  <div class="summary-subtext" style="font-size:0.82rem; color:#64748b;">Hardware items allocated &amp; currently in use</div>
+                </div>
+                <div class="summary-click-hint" style="font-size:0.75rem; font-weight:700; color:#7c3aed; margin-top:12px; display:flex; align-items:center; gap:4px;">Click to filter assigned items →</div>
+              </div>
             </div>
 
             <!-- 5. Instock Inventory Section (Category Cards & Clean Inventory Table) -->
             <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:22px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
-              <!-- Clickable Category Cards: Strictly Ordered (1. New System, 2. Processor, 3. RAM, 4. SSD, 5. Monitor, 6. SMPS, 7. Other) -->
+              <!-- Clickable Category Cards: Strictly Ordered (1. New System, 2. Processor, 3. RAM, 4. SSD, 5. Monitor, 6. SMPS, 7. Mouse, 8. Keyboard, 9. Other) -->
               <div class="instock-category-cards-grid" id="instockCategoryCardsContainer">
                 <!-- Hidden legacy / all categories reference for backwards compatibility -->
                 <div id="instockCatCard_all" style="display:none;" aria-hidden="true"><span id="instockCatCount_all">0</span></div>
@@ -2128,26 +2129,7 @@
                   </div>
                 </div>
 
-                <!-- 7. Other -->
-                <div class="instock-category-card" id="instockCatCard_OTHER" onclick="window.ITApp.filterInventoryByCategory('OTHER')" role="button" tabindex="0" title="Filter by Other">
-                  <div class="cat-card-header">
-                    <div class="cat-card-icon cat-icon-other">
-                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
-                      </svg>
-                    </div>
-                    <span class="cat-card-title">Other</span>
-                  </div>
-                  <div class="cat-card-total-row">
-                    <span class="cat-stat-label">Total Assets:</span>
-                    <strong class="cat-stat-total" id="instockCatCount_OTHER_total">0</strong>
-                    <span id="instockCatCount_OTHER" style="display:none;">0</span>
-                    <span id="instockCatCount_OTHER_av" style="display:none;">0</span>
-                    <span id="instockCatCount_OTHER_ass" style="display:none;">0</span>
-                  </div>
-                </div>
-
-                <!-- 8. Mouse -->
+                <!-- 7. Mouse -->
                 <div class="instock-category-card" id="instockCatCard_MOUSE" onclick="window.ITApp.filterInventoryByCategory('MOUSE')" role="button" tabindex="0" title="Filter by Mouse">
                   <div class="cat-card-header">
                     <div class="cat-card-icon cat-icon-mouse">
@@ -2166,7 +2148,7 @@
                   </div>
                 </div>
 
-                <!-- 9. Keyboard -->
+                <!-- 8. Keyboard -->
                 <div class="instock-category-card" id="instockCatCard_KEYBOARD" onclick="window.ITApp.filterInventoryByCategory('KEYBOARD')" role="button" tabindex="0" title="Filter by Keyboard">
                   <div class="cat-card-header">
                     <div class="cat-card-icon cat-icon-keyboard">
@@ -2182,6 +2164,25 @@
                     <span id="instockCatCount_KEYBOARD" style="display:none;">0</span>
                     <span id="instockCatCount_KEYBOARD_av" style="display:none;">0</span>
                     <span id="instockCatCount_KEYBOARD_ass" style="display:none;">0</span>
+                  </div>
+                </div>
+
+                <!-- 9. Other -->
+                <div class="instock-category-card" id="instockCatCard_OTHER" onclick="window.ITApp.filterInventoryByCategory('OTHER')" role="button" tabindex="0" title="Filter by Other">
+                  <div class="cat-card-header">
+                    <div class="cat-card-icon cat-icon-other">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+                      </svg>
+                    </div>
+                    <span class="cat-card-title">Other</span>
+                  </div>
+                  <div class="cat-card-total-row">
+                    <span class="cat-stat-label">Total Assets:</span>
+                    <strong class="cat-stat-total" id="instockCatCount_OTHER_total">0</strong>
+                    <span id="instockCatCount_OTHER" style="display:none;">0</span>
+                    <span id="instockCatCount_OTHER_av" style="display:none;">0</span>
+                    <span id="instockCatCount_OTHER_ass" style="display:none;">0</span>
                   </div>
                 </div>
               </div>
@@ -2988,46 +2989,152 @@
         </div>
 
         <!-- ==================================================================
-             PANEL 13: REPORTS
+             PANEL 13: REPORTS & AUDIT
              ================================================================== -->
-        <div class="view-panel" id="view-reports">
+        <div class="view-panel" id="view-reports" data-alias="view-audit-report">
           <div class="section-card">
-            <div class="section-header-row">
-              <h3 class="section-heading-title">📊 Executive Reports Generator</h3>
+            <div class="section-header-row" style="flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+              <div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="font-size:1.3rem;">📊</span>
+                  <h3 class="section-heading-title" style="margin:0;">Executive Asset Management &amp; Audit Reports</h3>
+                  <span class="badge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:0.75rem; font-weight:700;">Live ITAM Audit</span>
+                </div>
+                <p style="color:var(--text-muted); font-size:0.84rem; margin:4px 0 0 0;">
+                  Select an audit report to preview live analytics, inspect filtered fleet records, or generate formatted CSV and print outputs.
+                </p>
+              </div>
             </div>
 
-            <div style="display:flex; gap:16px; align-items:flex-end; margin-bottom: 24px; flex-wrap:wrap;">
-              <div class="form-group" style="min-width: 260px;">
-                <label class="form-label" for="empHistorySearchInput">Select Report Template</label>
-                <select class="form-control" id="reportTypeSelect" onchange="window.ITApp.navTo('reports')">
-                  <option value="total-asset">Total Asset Report</option>
-                  <option value="assigned-asset">Assigned Asset Report</option>
-                  <option value="non-assigned">Non-Assigned Inventory Report</option>
-                  <option value="requirements">Requirement &amp; Procurement Report</option>
-                  <option value="repairs">Repair &amp; Maintenance Report</option>
-                  <option value="warranty">Warranty Lifecycle Report</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Department Filter</label>
-                <select class="form-control" id="reportsTeamFilter">
-                  <option value="all">All Departments</option>
-                  <option value="SYSTEM ADMIN">SYSTEM ADMIN</option>
-                  <option value="PHP">PHP</option>
-                  <option value="MOBIL TEAM">MOBIL TEAM</option>
-                  <option value="AI">AI</option>
-                  <option value="ADMIN">ADMIN</option>
-                  <option value="ACCOUNT">ACCOUNT</option>
-                  <option value="HR">HR</option>
-                </select>
-              </div>
-
-              <button class="btn btn-primary" onclick="window.ITApp.navTo('reports')">Generate Report</button>
+            <!-- AUDIT REPORT TABS -->
+            <div class="nav-tabs reports-tabs" id="auditReportTabs" role="tablist" aria-label="Audit Report Tabs">
+              <button type="button" role="tab" aria-selected="true" aria-controls="reportPanel-total-asset" class="tab-btn report-tab-btn active" id="repTab-total-asset" data-report="total-asset" onclick="window.ITApp.selectReport('total-asset')">
+                <span>📋</span> Asset Inventory
+              </button>
+              <button type="button" role="tab" aria-selected="false" aria-controls="reportPanel-assigned-asset" class="tab-btn report-tab-btn" id="repTab-assigned-asset" data-report="assigned-asset" onclick="window.ITApp.selectReport('assigned-asset')">
+                <span>👤</span> Assigned Assets
+              </button>
+              <button type="button" role="tab" aria-selected="false" aria-controls="reportPanel-non-assigned" class="tab-btn report-tab-btn" id="repTab-non-assigned" data-report="non-assigned" onclick="window.ITApp.selectReport('non-assigned')">
+                <span>📦</span> Available Pool
+              </button>
+              <button type="button" role="tab" aria-selected="false" aria-controls="reportPanel-requirements" class="tab-btn report-tab-btn" id="repTab-requirements" data-report="requirements" onclick="window.ITApp.selectReport('requirements')">
+                <span>📑</span> Requirements
+              </button>
+              <button type="button" role="tab" aria-selected="false" aria-controls="reportPanel-repairs" class="tab-btn report-tab-btn" id="repTab-repairs" data-report="repairs" onclick="window.ITApp.selectReport('repairs')">
+                <span>🔧</span> Maintenance &amp; Cost
+              </button>
+              <button type="button" role="tab" aria-selected="false" aria-controls="reportPanel-warranty" class="tab-btn report-tab-btn" id="repTab-warranty" data-report="warranty" onclick="window.ITApp.selectReport('warranty')">
+                <span>🛡️</span> Warranty Expirations
+              </button>
+              <button type="button" role="tab" aria-selected="false" aria-controls="reportPanel-licenses" class="tab-btn report-tab-btn" id="repTab-licenses" data-report="licenses" onclick="window.ITApp.selectReport('licenses')">
+                <span>📜</span> License Compliance
+              </button>
+              <button type="button" role="tab" aria-selected="false" aria-controls="reportPanel-audit-trail" class="tab-btn report-tab-btn" id="repTab-audit-trail" data-report="audit-trail" onclick="window.ITApp.selectReport('audit-trail')">
+                <span>⏱️</span> Audit Activity Log
+              </button>
             </div>
 
+            <!-- CONTROLS & FILTER TOOLBAR -->
+            <div class="table-toolbar" style="margin-bottom:18px; background:#f8fafc; padding:12px 16px; border-radius:10px; border:1px solid #e2e8f0; display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;">
+              <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; flex:1;">
+                <!-- Live Search -->
+                <div style="position:relative; min-width:220px; flex:1; max-width:280px;">
+                  <input type="text" class="filter-input" id="reportsSearchInput" placeholder="🔍 Search current report records..." oninput="window.ITApp.handleReportFilterChange()" style="width:100%; padding-left:12px;" aria-label="Search current report records">
+                </div>
+
+                <!-- Template Dropdown Selector (Syncs with Tabs) -->
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <label class="form-label" for="reportTypeSelect" style="margin:0; font-size:0.78rem; font-weight:700; color:#475569; white-space:nowrap;">Template:</label>
+                  <select class="form-control" id="reportTypeSelect" onchange="window.ITApp.selectReport(this.value)" style="width:auto; min-width:210px; padding:6px 10px; font-size:0.85rem;" aria-label="Select Report Template">
+                    <option value="total-asset">Total Asset Report</option>
+                    <option value="assigned-asset">Assigned Asset Report</option>
+                    <option value="non-assigned">Non-Assigned Inventory Report</option>
+                    <option value="requirements">Requirement &amp; Procurement Report</option>
+                    <option value="repairs">Repair &amp; Maintenance Report</option>
+                    <option value="warranty">Warranty Lifecycle Report</option>
+                    <option value="licenses">License Compliance Report</option>
+                    <option value="audit-trail">Audit Trail &amp; Activity Log</option>
+                  </select>
+                </div>
+
+                <!-- Department Filter -->
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <label class="form-label" for="reportsTeamFilter" style="margin:0; font-size:0.78rem; font-weight:700; color:#475569; white-space:nowrap;">Department:</label>
+                  <select class="form-control" id="reportsTeamFilter" onchange="window.ITApp.handleReportFilterChange()" style="width:auto; min-width:160px; padding:6px 10px; font-size:0.85rem;" aria-label="Filter by department">
+                    <option value="all">All Departments</option>
+                    <option value="SYSTEM ADMIN">SYSTEM ADMIN</option>
+                    <option value="PHP">PHP</option>
+                    <option value="MOBIL TEAM">MOBIL TEAM</option>
+                    <option value="AI">AI</option>
+                    <option value="ADMIN">ADMIN</option>
+                    <option value="ACCOUNT">ACCOUNT</option>
+                    <option value="HR">HR</option>
+                  </select>
+                </div>
+
+                <!-- Generate Report Button -->
+                <button type="button" class="btn btn-primary btn-sm" id="btnGenerateReport" onclick="window.ITApp.generateReportPreview()" style="display:inline-flex; align-items:center; gap:5px; padding:7px 14px; font-weight:600; border-radius:6px;">
+                  <span>⚡</span> Generate Report
+                </button>
+
+                <!-- Clear Filters Button -->
+                <button type="button" class="btn btn-secondary btn-sm" id="btnResetReportFilters" onclick="window.ITApp.resetReportFilters()" style="display:none; align-items:center; gap:4px; font-size:0.78rem; font-weight:600; padding:6px 10px; border-radius:6px;" title="Reset filters">
+                  ✕ Reset
+                </button>
+              </div>
+
+              <!-- Output Actions -->
+              <div style="display:flex; align-items:center; gap:8px;">
+                <button type="button" class="btn btn-secondary btn-sm" id="btnPrintReport" onclick="window.print()" style="display:inline-flex; align-items:center; gap:5px; font-weight:600; padding:6px 12px; border-radius:6px;">
+                  🖨️ Print
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" id="btnExportReportCSV" onclick="window.ITApp.exportCurrentReport()" style="display:inline-flex; align-items:center; gap:5px; font-weight:600; padding:6px 12px; border-radius:6px;">
+                  📥 Export CSV
+                </button>
+              </div>
+            </div>
+
+            <!-- CONTENT PANELS CONTAINER (DEDICATED PANEL FOR EACH TAB) -->
             <div id="reportResultsContainer">
-              <!-- Dynamically generated preview -->
+              <!-- Panel 1: Total Asset Fleet -->
+              <div class="report-content-panel" id="reportPanel-total-asset" role="tabpanel" aria-labelledby="repTab-total-asset">
+                <!-- Dynamically populated -->
+              </div>
+
+              <!-- Panel 2: Assigned Asset Allocation -->
+              <div class="report-content-panel hidden" id="reportPanel-assigned-asset" role="tabpanel" aria-labelledby="repTab-assigned-asset" style="display:none;">
+                <!-- Dynamically populated -->
+              </div>
+
+              <!-- Panel 3: Available Non-Assigned Pool -->
+              <div class="report-content-panel hidden" id="reportPanel-non-assigned" role="tabpanel" aria-labelledby="repTab-non-assigned" style="display:none;">
+                <!-- Dynamically populated -->
+              </div>
+
+              <!-- Panel 4: Requirements & Procurement -->
+              <div class="report-content-panel hidden" id="reportPanel-requirements" role="tabpanel" aria-labelledby="repTab-requirements" style="display:none;">
+                <!-- Dynamically populated -->
+              </div>
+
+              <!-- Panel 5: Maintenance & Cost -->
+              <div class="report-content-panel hidden" id="reportPanel-repairs" role="tabpanel" aria-labelledby="repTab-repairs" style="display:none;">
+                <!-- Dynamically populated -->
+              </div>
+
+              <!-- Panel 6: Warranty Expirations -->
+              <div class="report-content-panel hidden" id="reportPanel-warranty" role="tabpanel" aria-labelledby="repTab-warranty" style="display:none;">
+                <!-- Dynamically populated -->
+              </div>
+
+              <!-- Panel 7: License Compliance -->
+              <div class="report-content-panel hidden" id="reportPanel-licenses" role="tabpanel" aria-labelledby="repTab-licenses" style="display:none;">
+                <!-- Dynamically populated -->
+              </div>
+
+              <!-- Panel 8: ITAM Audit Trail & Activity Log -->
+              <div class="report-content-panel hidden" id="reportPanel-audit-trail" role="tabpanel" aria-labelledby="repTab-audit-trail" style="display:none;">
+                <!-- Dynamically populated -->
+              </div>
             </div>
           </div>
         </div>
